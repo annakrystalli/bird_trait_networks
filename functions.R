@@ -113,14 +113,15 @@ matchQcRef <- function(dat, file, qcref, var.omit, taxo.var, observer, qc, ref, 
     # if qc.cat in qcref NULL, check whether there is a corresponding qc.cat file and assign
     # to qc.cats
     if(is.null(qc.cats)){
-      if(!file %in% list.files(paste(input.folder, qc.cat, "/", sep =""))){}else{
+      if(is.null(file)){}else{
+        if(!file %in% list.files(paste(input.folder, qc.cat, "/", sep =""))){}else{
         qc.cats <- read.csv(paste(input.folder, qc.cat, "/", file, sep = ""),
                             stringsAsFactors = F)
         
         # clean qc data
         qc.cats[qc.cats == ""] <- NA
         while(sum(na.omit(qc.cats == " ")) > 0){qc.cats[qc.cats == " "] <- NA}
-      }}
+      }}}
     
     if(!is.null(qc.cats)){
       if("all" %in% names(qc.cats)){qcref[[qc.cat]] <- qc.cats[,c("species", "all")]}else{
@@ -195,13 +196,14 @@ matchQcRef <- function(dat, file, qcref, var.omit, taxo.var, observer, qc, ref, 
 #process data set ready for matching. Calls separateQcRef to separate  qcref variables from data,
 # matchQcRef to match qcref variables to data variables, prepares data for compiling and checks
 # that metadata information has been supplied for all data variables. 
-processDat <- function(file = "ASR_mortality_to_Anna_Gavin.csv",label = F,
+processDat <- function(file = "ASR_mortality_to_Anna_Gavin.csv", dat, label = F,
                        taxo.dat, var.omit, input.folder = input.folder,
                        observer = NULL, qc = NULL, ref = NULL, n = NULL, notes = NULL,
                        master.vname = "master.vname"){
   
+  if(is.null(dat)){
+  dat <- read.csv(paste(input.folder, "csv/", file, sep = ""),  stringsAsFactors=FALSE)}
   
-  dat <- read.csv(paste("csv/", file, sep = ""),  stringsAsFactors=FALSE)
   
   
   if(anyDuplicated(dat$species) > 0){stop("duplicate species name in match dat")}
@@ -429,7 +431,7 @@ matchObj <- function(data.ID, spp.list, data = dl[[data.ID]], status = "unmatche
 # If list is of unmatched data species (ie dataset species is a subset of spp.list), 
 # match to known synonyms. If list is of unmatched spp.list species (ie spp.list a subset of 
 # data$species), match to known species. 
-sppMatch <- function(X, unmatched = unmatched, lookup.dat){
+sppMatch <- function(X, unmatched = unmatched, lookup.dat, retain.dup = T){
   
   data <- X$data
   spp.list <- X$spp.list
@@ -458,23 +460,26 @@ sppMatch <- function(X, unmatched = unmatched, lookup.dat){
   if(sub == "data"){match.data <- data.frame(synonyms = spp, species = syns, stringsAsFactors = F)}
   if(sub == "spp.list"){match.data <- data.frame(synonyms = syns, species = spp, stringsAsFactors = F)}
   
-  # Check there are no duplicate species matches in match.data table. If so add duplicates to spp list
-  # and keep datapoint under synonym species name. Mark as subspp 
+  match.data <- unique(match.data)
+  
+  # Check there are no duplicate species matches in match.data table. If so, add duplicates to spp list
+  # and keep datapoint under synonym species name. Mark as subspp ONLY IF retain.dup = T
   if(any(duplicated(match.data$species))){
     master.add <- match.data$synonyms[duplicated(match.data$species)]
     
+    if(retain.dup){
     data$subspp[data$synonyms %in% master.add] <- TRUE
     data$parent.spp[match(master.add, data$synonyms)] <- match.data$species[
       match(master.add, match.data$synonyms)]
     
-    spp.list <- rbind(spp.list, data.frame(species = master.add))
+    spp.list <- rbind(spp.list, data.frame(species = master.add))}
     
     #remove any species from match.data already added to master
     match.data <- match.data[-which(match.data$synonyms %in% master.add),]
   }
   
   #Check that data spp name change won't cause a single master species name to be associated with two
-  # different data points. This would cause the original data point (which is a straught match to the dataset)
+  # different data points. This would cause the original data point (which is a straight match to the dataset)
   # to be overwritten with most likely data for a subspecies. Identify such cases and add them to the master.
   # The data point can then form a straight match and is identified by the column subspp.
   
@@ -482,25 +487,38 @@ sppMatch <- function(X, unmatched = unmatched, lookup.dat){
     
     master.add <- match.data$synonyms[match.data$species %in% data$species]
     
+    if(retain.dup){
     data$subspp[data$synonyms %in% master.add] <- TRUE
     data$parent.spp[match(master.add, data$synonyms)] <- match.data$species[
       match(master.add, match.data$synonyms)]
     
-    spp.list <- rbind(spp.list, data.frame(species = master.add))
+    spp.list <- rbind(spp.list, data.frame(species = master.add))}
     
     #remove any species from match.data already added to master
     match.data <- match.data[-which(match.data$synonyms %in% master.add),]
   } 
   
-  # Also check that any of the data species names about to be replaced do not already map to another species in the master.
-  # Identify and duplicate any such datarows so that the orginal link to the master will remain. Species can be linked back
-  # to data via the synonoys column in data. Additionally check against previously added species to avoid duplicate additions.
+  # Also check that any of the data species names about to be replaced do not already map 
+  # to another species in the master. Identify and duplicate any such datarows so that the
+  # orginal link to the master will remain. Species can be linked back
+  # to data via the synonoys column in data. Additionally check against previously 
+  # added species to avoid duplicate additions.
+  
+  if(any(duplicated(match.data$synonyms))){
+    data.add <- match.data[duplicated(match.data$synonyms),]
+    match.data <- match.data[!duplicated(match.data$synonyms),]
+  }
+  
   if(any(match.data$synonyms %in% spp.list$species)){
     
     #find synonyms in master species
-    data.add <- match.data[match.data$synonyms %in% spp.list$species,]
-    
-    if(nrow(data.add)>=1){
+    if(exists("data.add")){
+      data.add <- rbind(data.add, match.data[match.data$synonyms %in% spp.list$species,])}else{
+        data.add <- match.data[match.data$synonyms %in% spp.list$species,]}
+    }
+  
+
+   if(exists("data.add")){
       #duplicate data row for species to be added to data
       add.dd <- data.frame(species = data.add$species, data[match(data.add$synonyms, 
                                                                   data$species),names(data) != "species"],
@@ -509,10 +527,9 @@ sppMatch <- function(X, unmatched = unmatched, lookup.dat){
       
       #add to data
       data <- rbind(data, add.dd)
-    }
-    
-    match.data <- match.data[-which(match.data$species %in% add.dd$species),]
-  }   
+      
+      match.data <- match.data[-which(match.data$species %in% add.dd$species),]
+      }   
   
   #update species names in data$species
   data$species[match(match.data$synonyms, data$species)] <- match.data$species
@@ -525,7 +542,8 @@ sppMatch <- function(X, unmatched = unmatched, lookup.dat){
 
 
 # match data set to master species list using all available known match pair tables.
-dataSppMatch <- function(m, unmatched, ignore.unmatched = ignore.unmatched, synonyms){
+dataSppMatch <- function(m, unmatched, ignore.unmatched = ignore.unmatched, synonyms, 
+                         trim.dat = T, retain.dup = T){
   
   
   sub <- m$sub
@@ -537,7 +555,7 @@ dataSppMatch <- function(m, unmatched, ignore.unmatched = ignore.unmatched, syno
     m$data <- m$data[!(m$data$species %in% rm),]
   }
   
-    m <- sppMatch(m, unmatched = unmatched, lookup.dat = synonyms)
+    m <- sppMatch(m, unmatched = unmatched, lookup.dat = synonyms, retain.dup = retain.dup)
     
     #generate next unmatched species list
     unmatched <- m[[sub]]$species[!(m[[sub]]$species %in% m[[set]]$species)]
@@ -545,7 +563,8 @@ dataSppMatch <- function(m, unmatched, ignore.unmatched = ignore.unmatched, syno
     
     # if no more species unmatched break loop
     if(length(unmatched) == 0){
-      print(paste(data.ID, "match complete"))
+      print(paste(m$data.ID, "match complete"))
+      if(sub == "spp.list" & trim.dat){m$data <- m$data[m$data$species %in% m$spp.list$species,]}
      }else{
     
         print(paste("match incomplete,",length(unmatched), sub, "datapoints unmatched"))
@@ -559,12 +578,10 @@ dataSppMatch <- function(m, unmatched, ignore.unmatched = ignore.unmatched, syno
       
       write.csv(data.frame(synonyms = if(sub == "spp.list"){""}else{unmatched},
                            species = if(sub == "spp.list"){unmatched}else{""}),
-                paste("r data/match data/",data.ID," mmatch.csv", sep = ""),
+                paste("r data/match data/",m$data.ID," mmatch.csv", sep = ""),
                 row.names = F)
       print(paste("unmatched species list saved in file 'Data.IDmmatch.csv'"))
       stop("manually match and save as 'Data.IDmmatched.csv' to continue")}}
-    
-    if(sub == "spp.list"){m$data <- m$data[m$data$species %in% spp.list$species,]}  
     return(m)}
 
 
