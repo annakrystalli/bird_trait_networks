@@ -12,6 +12,66 @@ library(PHYLOGR)
 
 source(paste(script.folder, "functions.R", sep = ""))
 
+
+# produce named vector of variable data to use for phyloCor analysis
+getNamedVector <- function(var, data, spp){
+  x.dat <- data[data$var == var,]
+  x <- as.numeric(x.dat$value[match(spp, x.dat$species)])
+  if(any(is.na(x))){warning("NAs in data vector")}
+  names(x) <- spp
+  return(x)
+}
+
+# Produce new phylo.matrix for subset of species
+subsetPhylomat <- function(spp, phylomat, match.dat = NULL){
+  
+  nsps <- length(spp) 
+  vmat <- matrix(NA, nrow = nsps, ncol = nsps, dimnames = list(spp, spp))
+  
+  m.id <- cbind(rep(spp, times = nsps), rep(spp, each = nsps))
+  
+  if(is.null(match.dat)){
+    if(all(spp %in% unlist(dimnames(phylomat)))){p.id <- m.id}else{
+      stop("data species names do not match phylogeny tip names. correct or provide match.dat data.frame")}
+  }else{
+    p.id <- cbind(rep(match.dat$synonyms[match(spp, match.dat$species)], times = nsps), 
+                  rep(match.dat$synonyms[match(spp, match.dat$species)], each = nsps))}
+  
+  vmat[m.id] <- phylomat[p.id]
+  
+  return(vmat)
+}
+
+phylo.mean <- function(x, phylomat){
+  mean <-colSums(phylomat%*%x)/sum(phylomat)}
+
+phylo.var <- function(x, mean, phylomat, nsps){
+  var.x <-t(x-mean) %*% phylomat%*%(x-mean)/(nsps-1)
+}
+
+
+getPhyloCor <- function(x, y, phylomat){
+  
+  if(!all(names(x) == names(y))){stop("vector species names mismatch")}
+  if(dim(phylomat)[[1]] != dim(phylomat)[[2]]){stop("phylomat not square")}
+  if(dimnames(phylomat)[1] != dimnames(phylomat)[2]){stop("phylomat dimnames mismatch")}
+  if(any(names(x) != dimnames(phylomat)[[1]], names(x) != dimnames(phylomat)[[2]])){stop("x and phylomat name mismatch")}
+  if(any(names(y) != dimnames(phylomat)[[1]], names(y) != dimnames(phylomat)[[2]])){stop("x and phylomat name mismatch")}
+  
+  
+  mean.x <- phylo.mean(x, phylomat)
+  mean.y <- phylo.mean(y, phylomat)
+  
+  var.x <- phylo.var(x, mean.x, phylomat, nsps)
+  var.y <- phylo.var(y, mean.y, phylomat, nsps)
+  
+  cor.xy <-(t(x-mean.x) %*% phylomat%*%(y-mean.x)/(nsps-1))/sqrt(var.x*var.y)
+  
+  return(cor.xy)
+}
+
+
+
 # SETTINGS ###############################################################
 
 qcmnames = c("qc", "observer", "ref", "n", "notes")
@@ -75,13 +135,16 @@ m <- dataSppMatch(m, unmatched, ignore.unmatched = F, synonyms = m.synonyms,
 
 ################################################################################
 
+#METHOD 1 using phylogenetic relatedness matrix:
+#----------------------------------------------------
 #Prepare phylogenetic relatedness matrix
 
-tdat <- m$data
+match.dat <- m$data
 
 
-invC <-solve(vcv.phylo(tree))
-
+# phylomat <-solve(vcv.phylo(tree))  #REALLY TIME CONSUMING
+# save(phylomat, file = "tree/phylomat.RData")
+load(file = "tree/phylomat.RData")
 
 ## vars 
 
@@ -89,38 +152,44 @@ var.n <- sort(table(D0$var), decreasing = T)
 var1 <- names(var.n)[1]
 var2 <- names(var.n)[2]
 
-x.dat <- D0[D0$var == var1,]
-y.dat <- D0[D0$var == var2,]
-
-x <- as.numeric(x.dat$value[match(spp, x.dat$species)])
-y <- as.numeric(x.dat$value[match(spp, y.dat$species)])
-
-
 spp <- intersect(unique(D0$species[D0$var == var1]), unique(D0$species[D0$var == var2]))
 nsps <- length(spp)
 
 
-tdat$synonyms[match(spp, tdat$species)]
+x <- getNamedVector(var1, data = D0, spp)
+y <- getNamedVector(var1, data = D0, spp)
 
-vmat <- matrix(NA, nrow = nsps, ncol = nsps, dimnames = list(spp,spp))
+sub.phymat <- subsetPhylomat(spp, phylomat, match.dat)
 
-
-m.id <- cbind(rep(spp, times = nsps), rep(spp, each = nsps))
-p.id <- cbind(rep(tdat$synonyms[match(spp, tdat$species)], times = nsps), 
-              rep(tdat$synonyms[match(spp, tdat$species)], each = nsps))
-
-# Produce new phylo.matrix for species available for variable combination
-vmat[m.id] <- invC[p.id]
+getPhyloCor(x, y, phylomat = sub.phymat)
 
 
 
-mean.x <-colSums(vmat%*%x)/sum(vmat)
-mean.y <-colSums(vmat%*%y)/sum(vmat)
+################################################################################
 
-var.x <-t(x-mean.x) %*% vmat%*%(x-mean.x)/(nsps-1)
-var.y <-t(y-mean.x) %*% vmat%*%(y-mean.x)/(nsps-1)
-cor.xy <-(t(x-mean.x) %*% vmat%*%(y-mean.x)/(nsps-1))/sqrt(var.x*var.y)
-cor.xy
+#METHOD 1 using phylogenetic relatedness matrix:
+#----------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
