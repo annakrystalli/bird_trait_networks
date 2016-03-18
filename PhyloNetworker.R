@@ -1,11 +1,14 @@
 # SETUP ###############################################################
 
 rm(list=ls())
+
+# DOWNLOAD FILE FROM GITHUB, UPDATE AND SOURCE FROM APPROPRIATE PATH
 source("~/Documents/workflows/bird_trait_networks/setup.R")
-setwd(input.folder) #googledrive/bird trait networks/inputs/data
+setwd(input.folder) # e.g. googledrive/bird trait networks/inputs/data. Set in setup script
 
 # PACKAGES & FUNCTIONS ###############################################################
 
+# packages might need installing
 library(caper)
 library(geiger)
 library(PHYLOGR)
@@ -83,9 +86,8 @@ pglsPhyloCor <- function(x, data, match.dat, tree, log.vars){
 }
 
 # SETTINGS ###############################################################
-
-# dir.create(paste(output.folder, "data/phylocors/", sep = ""))
-# dir.create(paste(output.folder, "data/networks/", sep = ""))
+dir.create(paste(output.folder, "data/phylocors/", sep = ""))
+dir.create(paste(output.folder, "data/networks/", sep = ""))
 
 an.ID <- "100spp"
 log <- T
@@ -102,6 +104,8 @@ spp.list <- data.frame(species = unique(wide$species))
 # trees <- read.tree(file = "tree/Stage2_MayrAll_Hackett_set10_decisive.tre")
 # tree <- trees[[1]]
 # save(tree, file = "tree/tree.RData")
+
+# LOAD TREE
 load(file = "tree/tree.RData")
 
 #load match data
@@ -140,11 +144,9 @@ var.grid <- var.grid[order(var.grid$n, decreasing = T),]
 
 # PHYLOGENTICALLY CORRECTED CORRELATIONS ####################################################
 
-var.combs <- var.grid[var.grid$Var1 == res[i,"var1"] & var.grid$Var2 == res[i,"var2"],]
-var.combs <- 1:dim(var.grid)[1]
 
 res <- NULL
-for(i in var.combs){
+for(i in 1:dim(var.grid)[1]){
   
   res <- rbind(res, pglsPhyloCor(var.grid[i, 1:2], data = num.dat, 
                                  match.dat = match.dat, tree = tree, log.vars = log.vars))
@@ -176,5 +178,5 @@ write.csv(cbind(net[[1]], modularity = net[[2]]), paste(output.folder, "data/net
 # RCytoscape ###############################################################################
 
 #source('http://bioconductor.org/biocLite.R')
-biocLite ('RCytoscape')
+#biocLite ('RCytoscape')
 
