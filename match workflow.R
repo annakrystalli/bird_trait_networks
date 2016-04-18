@@ -1,11 +1,13 @@
 rm(list=ls())
 
-source("~/Documents/workflows/bird_trait_networks/Setup.R")
+source("~/Documents/workflows/bird_trait_networks/setup.R")
 
 
 # PACKAGES & FUNCTIONS ###############################################################
 
 source(paste(script.folder, "functions.R", sep = ""))
+source('~/Documents/workflows/Sex Roles in Birds/birds/bird app/app_output_functions.R', 
+       chdir = TRUE)
 
 require(plotly)
 require(knitr)
@@ -41,7 +43,7 @@ synonyms  <- read.csv("r data/synonyms.csv", stringsAsFactors=FALSE)
 
 # WORKFLOW ###############################################################
 
-dl <- list(D1 = processDat(file = "D1.tidy.csv", label = F, taxo.dat, var.omit, input.folder,
+dl <- list(D1 = processDat(file = "D1.tidy.csv", dat = NULL, label = F, taxo.dat, var.omit, input.folder,
                            observer = NULL, qc = NULL, ref = NULL, n = NULL, notes = NULL,
                            master.vname = "master.vname"))
 
@@ -64,11 +66,11 @@ data.ID <- "D1"
   # Match data set to spp.list and process
   output <- matchMSToMaster(m, taxo.var = taxo.var, var.omit = var.omit, input.folder = input.folder, 
                             output.folder = output.folder, ignore.unmatched = T,
-                            synonyms = synonyms, taxo.table = taxo.table)
+                            synonyms = synonyms, taxo.table = taxo.table,
+                            trim.dat = T, retain.dup = F)
   
-  write.csv(output$mdat, file =  "csv/D1.long.csv", row.names = F)
+  write.csv(output$mdat, file =  "csv/D1.long.csv", row.names = F, fileEncoding = "mac")
   
-  master <- rbind(master, output$mdat)
   spp.list <- output$spp.list
   
   
@@ -76,20 +78,40 @@ data.ID <- "D1"
   
   # MERGE DATASETS
   
+  # Transform D0
+  
+  master <- data.frame(D0[,c("species", "order", "family")], subspp = F, parent.spp = NA,  
+                D0[,c("var", "value")], data = "D0", synonyms = D0$species, 
+                data.status = "original", "qc" = NA, observer = NA, ref = D0$ref, n = NA)
+  
+  
   D1 <- output$mdat
-  outliers <- read.csv("r data/outliers.csv")
+  outliers <- read.csv("r data/R03/outliers.csv")
   
-  outRowSelect <- function(x, species, var){x[x$species == species & x$var == var, c("species", "var", "value", "ref")]} 
-  outRowSelect1 <- function(x, species, var){x[x$species == species & x$var == var, c("species", "var", "value", "ref")]} 
   
-out.refs <- c()
-    for(i in 1:dim(outliers)[1]){
-    out.refs <- rbind(cbind(outRowSelect1(D0, species = outliers[i,"species"], var = outliers[i,"var"]), dataset = "D0"),
-                      cbind(outRowSelect(D1, outliers[i,1], outliers[i,2]), dataset = "D1"))
-    }, 
-    D1 = D1, D0 = D0)
+  # select outliers
   
-  cbind(D1[D1$species == outliers$species & D1$var == outliers$var, "species", "var", "value", "ref"], D1["species", "var", "value", "ref"])
+  for(i in 1:dim(outliers)[1]){
+    if(outliers$select[i] == "D0"){
+      D1[!(D1$species == outliers$species[i] & D1$var == outliers$var[i]),]
+    }else{
+      master[!(master$species == outliers$species[i] & master$var == outliers$var[i]),]
+    }
+  }
   
-  duplicated(rbind(D0[,c("species", "var")], D1[,c("species", "var")]))
+  master <- rbind(master, D1)
+  
+  master <- master[-which(master$var == "repro.age" & 
+                 duplicated(master[,c("species", "var")], fromLast = T)),]
+  
+  master <- master[!duplicated(master[,c("species", "var")]),]
+  
+  write.csv(master, file =  "csv/master.csv", row.names = F, fileEncoding = "mac")
+  
+  # Create wide dataset ################################################################################### 
+  wide <- widenMaster(vars = unique(master$var), species = unique(master$species), 
+                      master = master, metadata = metadata)
+  
+  
+  write.csv(wide, file =  "csv/master wide.csv", row.names = F, fileEncoding = "mac")
   

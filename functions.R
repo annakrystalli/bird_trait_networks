@@ -1,208 +1,233 @@
 
-# Creates a folder in the data input folder for each qcref variable. These folders can then be 
-# populated with qcref data to integrated into the long data format. 
-setupInputFolder <- function(input.folder, qcmnames){
+#' Setup meta folders in inputs folder.
+#' 
+#' Creates a folder in the data input folder for each meta variable. These folders can then be 
+#' populated with meta data to integrated into the long data format. 
+#' @param input.folder file path to input data folder.
+#' @param meta.vars vector containing names of meta.vars
+#' @keywords meta 
+#' @export
+#' setupInputFolder()
 
-  lapply(qcmnames, FUN = function(x){dir.create(paste(input.folder, x, sep =""), 
-                                               showWarnings = F)})
+setupInputFolder <- function(input.folder, meta.vars){
+  
+  lapply(meta.vars, FUN = function(x){dir.create(paste(input.folder, x, sep =""), 
+                                                 showWarnings = F)})
 }
 
-# Separates qcref variables from data. qcref variables defined in qcmnames. Columns are separated 
-# if they are appended with the appropriate qcref variable label (eg ..._ref). 
-separateQcRef <- function(dat, qcmnames = c("qc", "observer", "ref", "n", "notes")){
+#' Create metadata list
+#' 
+#' Creates a named metadata list of the appropriate length to match supplied vector of meta.vars
+#' @param meta.vars vector containing names of meta.vars
+#' @keywords meta 
+#' @export
+#' createMeta()
+
+createMeta <- function(meta.vars){
   
-  qcref <- vector("list", length(qcmnames))
-  names(qcref) <- qcmnames
+  meta <- vector("list", length(meta.vars))
+  names(meta) <- meta.vars
   
-  for(qc.cat in names(qcref)){
-    dir.create(paste(qc.cat, "/", sep = ""), showWarnings = F) 
+  return(meta)
+}
+
+#############################################
+
+#' Separate meta.vars
+#' 
+#' Separates meta variables from data into a `data` and a `meta` dataframe. Columns are separated if their name matches a meta.var 
+#' or if they are appended with the appropriate meta variable label (eg ..._ref). Return a list
+#' containing the data and separated metadata data.frames.
+#' @param dat data.frame containg data in the form species (row) by variable (columns)
+#' @param meta named metadata list to collect metadata
+#' @keywords meta 
+#' @export
+#' separateDatMeta()
+
+separateDatMeta <- function(dat, meta){
+  
+  for(meta.var in names(meta)){
     
-    if(any(names(dat) == qc.cat)){
-      qcref[[qc.cat]] <- data.frame(species = dat$species, all = dat[, names(dat) == qc.cat])
-      dat <- dat[, !names(dat) == qc.cat]
-    }else{if(length(names(dat)[grep(paste("_", qc.cat, sep = ""), names(dat))]) > 0){
-      qc.var <- names(dat)[grep(paste("_", qc.cat, sep = ""), names(dat))]
-      qcref[[qc.cat]] <- dat[, c("species", qc.var)]
-      names(qcref[[qc.cat]]) <- gsub(paste("_",qc.cat, sep = ""), "", names(qcref[[qc.cat]]))
-      dat <- dat[, !names(dat) %in% qc.var]
-    }
+    if(any(names(dat) == meta.var)){
+      # if meta.var data for all variables is single column named `meta.var`
+      meta[[meta.var]] <- data.frame(species = dat$species, all = dat[, names(dat) == meta.var])
+      dat <- dat[, !names(dat) == meta.var]
+    }else{# if meta.var data for individual variables is in columns named `_meta.var`
+      if(length(names(dat)[grep(paste("_", meta.var, sep = ""), names(dat))]) > 0){
+        vmeta.var <- names(dat)[grep(paste("_", meta.var, sep = ""), names(dat))]
+        meta[[meta.var]] <- dat[, c("species", vmeta.var)]
+        names(meta[[meta.var]]) <- gsub(paste("_",meta.var, sep = ""), "", names(meta[[meta.var]]))
+        dat <- dat[, !names(dat) %in% vmeta.var]
+      }
     }}
-  return(list(data = dat, qcref = qcref))
+  return(list(data = dat, meta = meta))
 }
 
-# Extracts appropriate qcref value for data point
-getQc <- function(qc.cat, qcref = qcref, spp = spp, var = var){
-  if(is.null(qcref[[qc.cat]])){return(NA)}
-  if(is.null(dim(qcref[[qc.cat]]))){return(qcref[[qc.cat]])}else{
-    if("all" %in% names(qcref[[qc.cat]])){
-      return(qcref[[qc.cat]]$all[match(spp, qcref[[qc.cat]]$species)])}else{
-        return(qcref[[qc.cat]][cbind(match(spp, qcref[[qc.cat]]$species), 
-                                     match(var, names(qcref[[qc.cat]])))])
+
+#############################################
+
+#' Get metadata values associated with observations
+#' 
+#' Extracts appropriate metadata values for specified species vs variable data points. 
+#' Data points specified by vectors of species and variable names.   
+#' @param input.folder file path to input data folder.
+#' @param meta.var name of meta.var
+#' @param meta metadata list
+#' @param spp vector of species names
+#' @param var vector of variable names
+#' @keywords meta 
+#' @export
+#' getMeta()
+
+
+getMeta <- function(meta.var, meta = meta, spp = spp, var = var){
+  
+  if(is.null(meta[[meta.var]])){return(NA)}
+  if(is.null(dim(meta[[meta.var]]))){return(meta[[meta.var]])}else{
+    if("all" %in% names(meta[[meta.var]])){
+      return(meta[[meta.var]]$all[match(spp, meta[[meta.var]]$species)])}else{
+        return(meta[[meta.var]][cbind(match(spp, meta[[meta.var]]$species), 
+                                      match(var, names(meta[[meta.var]])))])
       }
   }
   
 }        
 
-# Matches reference code to full reference. Looks for files with the same name
-# as the data file, appended with _code for the file containing the codes and _source containing
-# the full references. Source table can also be supplied. Takes filename without extension        
-refCode2Source <- function(filename = "bird_ssd7", sources = NULL){
+#############################################
+
+#' Substitute reference code with full reference
+#' 
+#' Sustitutes reference codes with full references across cells of a data.frame
+#' @param ref.codes data.frame containing coded reference data. 
+#' @param ref.table data.frame containing code to full reference look up table. Columns must 
+#' be named `code` and `ref`.
+#' @keywords meta 
+#' @export
+#' code2FullRef()
+
+code2FullRef <- function(ref.codes, ref.table){
   
-  code <- read.csv(paste("ref/", filename, "_code.csv", sep = ""), stringsAsFactors = F) 
-  if(is.null(sources)){
-    sources <- read.csv(paste("ref/", filename, "_source.csv", sep = ""), stringsAsFactors = F)
-  }else{
-    sources <- read.csv(paste("ref/", sources, "_source.csv", sep = ""), stringsAsFactors = F)
-    
-  }
+  cols <- which(names(ref.codes) != "species")
   
-  cols <- which(names(code) != "species")
-  
-  for(i in dim(sources)[1]:1){
+  for(i in dim(ref.table)[1]:1){
     for(j in cols){
-      code[,j]  <-  gsub(sources$code[i], sources$ref[i], code[,j])
+      ref.codes[,j]  <-  gsub(ref.table$code[i], ref.table$ref[i], ref.codes[,j])
       
     }}
-  
-  write.csv(code, paste("ref/", filename, ".csv", sep = ""), row.names = F)
+
+  return(ref.codes)
 }
 
-# processes BirdFuncTxt file
-processBirdFuncTxt <- function(){
-  
-  BirdFuncDat <- read.delim("raw data/BirdFuncDat.txt")
-  code <- read.delim("raw data/BirdFuncDatSources.txt")
-  
-  
-  # clean rows
-  BirdFuncDat <- BirdFuncDat[-which(BirdFuncDat$Scientific == ""),]
-  
-  # rename variable columns
-  names(BirdFuncDat)[names(BirdFuncDat) == 'Scientific'] <- "species"
-  names(BirdFuncDat)[names(BirdFuncDat) == 'BodyMass.Value'] <- "unsexed.mass"
-  names(BirdFuncDat)[names(BirdFuncDat) == 'BodyMass.Source'] <- "unsexed.mass_ref"
-  names(BirdFuncDat)[names(BirdFuncDat) == "ForStrat.SpecLevel"] <- "ForStrat_qc"
-  names(BirdFuncDat)[names(BirdFuncDat) == "BodyMass.SpecLevel"] <- "unsexed.mass_qc"
-  
-  names(BirdFuncDat) <- gsub(".Source", "_ref", names(BirdFuncDat))
-  names(BirdFuncDat) <- gsub(".Certainty", "_qc", names(BirdFuncDat))
-  names(BirdFuncDat) <- gsub(".EnteredBy", "_observer", names(BirdFuncDat))
-  
-  for(i in 1:length(code$Ref_ID)){
-    for(var in grep("_ref", names(BirdFuncDat), value = T)){
-      BirdFuncDat[,var] <- gsub(code$Ref_ID[i], code$Full.Reference[i], BirdFuncDat[,var])
-    }
-  }
-  
-  BirdFuncDat <- BirdFuncDat[,-c(1:7,9,39:40)]
-  
-  write.csv(BirdFuncDat, "standardised csv data/BirdFuncDat.csv", row.names = F)
-}
 
-# Checks whether qcref variable are appropriately allocated to data columns. Allows the
-# assignment of qcref columns to more than one data variable columns. Produces
-# appropriately named data.frame with qcref variables assigned to appropriate data variables. 
-matchQcRef <- function(dat, file, qcref, var.omit, taxo.var, observer, qc, ref, n, notes, 
-                       input.folder){
+# Checks whether meta variable are appropriately allocated to data columns. Allows the
+# assignment of meta columns to more than one data variable columns. Produces
+# appropriately named data.frame with meta variables assigned to appropriate data variables. 
+matchmeta <- function(dat, meta, meta.var, file, input.folder, metav.dd = NULL, 
+                      ignore.vars = c(var.omit, taxo.var), write = T){
   
-
-  
-  for(qc.cat in names(qcref)){
-    qc.cats <- qcref[[qc.cat]]
+    metav.dd <- meta[[meta.var]]
     
-    # if qc.cat in qcref NULL, check whether there is a corresponding qc.cat file and assign
-    # to qc.cats
-    if(is.null(qc.cats)){
+    # if meta.var in meta NULL, check whether there is a corresponding meta.var file and assign
+    # to metav.dd
+    if(is.null(metav.dd)){
       if(is.null(file)){}else{
-        if(!file %in% list.files(paste(input.folder, qc.cat, "/", sep =""))){}else{
-        qc.cats <- read.csv(paste(input.folder, qc.cat, "/", file, sep = ""),
-                            stringsAsFactors = F)
-        
-        # clean qc data
-        qc.cats[qc.cats == ""] <- NA
-        while(sum(na.omit(qc.cats == " ")) > 0){qc.cats[qc.cats == " "] <- NA}
-      }}}
+        if(!file %in% list.files(paste(input.folder, meta.var, "/", sep =""))){}else{
+          metav.dd <- read.csv(file, stringsAsFactors = F)
+        }}}
     
-    if(!is.null(qc.cats)){
-      if("all" %in% names(qc.cats)){qcref[[qc.cat]] <- qc.cats[,c("species", "all")]}else{
+    if(!is.null(metav.dd)){
+      if("all" %in% names(metav.dd)){meta[[meta.var]] <- metav.dd[,c("species", "all")]}else{
         
-        # vector of data vars to check for qc.caterences
-        check.vars <- names(dat)[!(names(dat) %in% c(var.omit, taxo.var))]
+        # vector of data vars to check for meta.varerences
+        check.vars <- names(dat)[!(names(dat) %in% ignore.vars)]
         
-        if(all(check.vars %in%  names(qc.cats))){qcref[[qc.cat]] <- qc.cats[c("species", check.vars)]}else{
-          
-          if(length(grep(paste("_", qc.cat, "_group", sep = ""), 
-                         grep(gsub(".csv", "",file), list.files(paste(qc.cat, "/", sep ="")), 
-                              value = T))) == 0){
+        # if all meta variable names match data var names, return data
+        if(all(check.vars %in% names(metav.dd))){meta[[meta.var]] <- metav.dd[c("species", 
+                                                                                 check.vars)]}else{
+          # if
+          if(length(grep(paste("_", meta.var, "_group", sep = ""), 
+                         grep(gsub(".csv", "",file), 
+                              list.files(paste(input.folder, meta.var, "/", sep ="")), 
+                              value = T)
+                         )
+                    ) == 0){
             
-            # create csv in which qcref group names can be assigned to individual data variables
-            qc.cat.grp <- data.frame(var = check.vars, qc.cat.grp = "")
-            qc.cat.grp$qc.cat.grp[qc.cat.grp$var %in% names(qc.cats)] <- qc.cat.grp$var[qc.cat.grp$var %in% names(qc.cats)]
-            write.csv(qc.cat.grp, paste(paste(input.folder, qc.cat, "/", sep =""), 
-                                        gsub(".csv", "",file), "_", qc.cat, "_group.csv", sep = ""),
+            # create csv in which individual data variables can be assigned to meta group names
+            meta.var.grp <- data.frame(var = check.vars, meta.var.grp = "")
+            meta.var.grp$meta.var.grp[
+              meta.var.grp$var %in% names(metav.dd)] <- meta.var.grp$var[
+                meta.var.grp$var %in% names(metav.dd)]
+            
+            
+
+            write.csv(meta.var.grp, paste(paste(input.folder, meta.var, "/", sep =""), 
+                                          gsub(".csv", "",file), "_", meta.var, "_group.csv", 
+                                          sep = ""),
                       row.names = F)
             
-            stop(paste(qc.cat,".group file created, ","update _",qc.cat,".group file to proceed", sep = ""))
+            stop(paste(meta.var,".group file created, ","update _",meta.var,
+                       ".group file to proceed", sep = ""))
           }else{
-            # load csv in which qcref group names are assigned to individual data variables
-            qc.cat.grp  <- read.csv(paste(paste(input.folder, qc.cat, "/", sep =""), gsub(".csv", "",file), "_", 
-                                          qc.cat, "_group.csv", sep = ""), 
-                                    stringsAsFactors = F)
+            # load csv in which meta group names are assigned to individual data variables
+            meta.var.grp  <- read.csv(paste(paste(input.folder, meta.var, "/", sep =""), gsub(".csv", "",file), "_", 
+                                            meta.var, "_group.csv", sep = ""), 
+                                      stringsAsFactors = F)
             
-            # Check that all variables are assigned to valid qcref data columns
-            if(!all(na.omit(qc.cat.grp$qc.cat.grp) %in% names(qc.cats))){
-              stop(paste("assigned qcref group names does not match supplied qcref data names, update _",
-                         qc.cat,".group file to proceed", sep = ""))}else{
+            # Check that all variables are assigned to valid meta data columns
+            if(!all(na.omit(meta.var.grp$meta.var.grp) %in% names(metav.dd))){
+              stop(paste("assigned meta group names does not match supplied meta data names, update _",
+                         meta.var,".group file to proceed", sep = ""))}else{
                            # Make sure ALL variables have reference data         
-                           if(qc.cat == "ref" & any(is.na(qc.cat.grp$qc.cat.grp))){
+                           if(meta.var == "ref" & any(is.na(meta.var.grp$meta.var.grp))){
                              stop(paste("variables missing reference column. update ", 
-                                        qc.cat,".group file to proceed", sep = ""))
+                                        meta.var,".group file to proceed", sep = ""))
                            }
                            
-                           # Isolate variables to be assigned qcref data. Create new dataframe containing the 
-                           # appropriate qcref column for each variable. 
-                           # Name with data variables and update appropriate qcref slot           
-                           check.vars <- qc.cat.grp$var[which(!is.na(qc.cat.grp$qc.cat.grp))]
-                           qc.cat.table <- data.frame(species = dat$species, matrix(NA, nrow = dim(dat)[1], 
-                                                                                    ncol = length(check.vars)))
-                           names(qc.cat.table) <- c("species", check.vars)
-                           qc.cat.table[,check.vars] <- qc.cats[match(qc.cat.table$species, qc.cats$species), 
-                                                                qc.cat.grp$qc.cat.grp[match(check.vars, qc.cat.grp$var)]]
+                           # Isolate variables to be assigned meta data. Create new dataframe containing the 
+                           # appropriate meta column for each variable. 
+                           # Name with data variables and update appropriate meta slot           
+                           check.vars <- meta.var.grp$var[which(!is.na(meta.var.grp$meta.var.grp))]
+                           meta.var.table <- data.frame(species = dat$species, matrix(NA, nrow = dim(dat)[1], 
+                                                                                      ncol = length(check.vars)))
+                           names(meta.var.table) <- c("species", check.vars)
+                           meta.var.table[,check.vars] <- metav.dd[match(meta.var.table$species, metav.dd$species), 
+                                                                    meta.var.grp$meta.var.grp[match(check.vars, meta.var.grp$var)]]
                            
-                           print("vars matched successfully to _qc.cat_group")
+                           print("vars matched successfully to _meta.var_group")
                            
-                           qcref[[qc.cat]] <- qc.cat.table
+                           meta[[meta.var]] <- meta.var.table
                          }}}
         
         
         
       }}
     
-    # if value for qcref variable has been supplied through function, set as value for all
+    # if value for meta variable has been supplied through function, set as value for all
     # data points and variables
-    if(is.null(qcref[[qc.cat]])){
-      if(!is.null(get(qc.cat))){
-        qcref[[qc.cat]] <- data.frame(species = dat$species, all = get(qc.cat))}else{
-          if(qc.cat == "ref"){stop("Processing stopped: no reference information")}else{
-            print(paste("Warning: NULL data for qc.cat:", qc.cat))
+    if(is.null(meta[[meta.var]])){
+      if(!is.null(get(meta.var))){
+        meta[[meta.var]] <- data.frame(species = dat$species, all = get(meta.var))}else{
+          if(meta.var == "ref"){stop("Processing stopped: no reference information")}else{
+            print(paste("Warning: NULL data for meta.var:", meta.var))
           }
         }
       
-    }}
-  return(qcref)
+    }
+    
+    
+  return(meta)
 }
 
 
-#process data set ready for matching. Calls separateQcRef to separate  qcref variables from data,
-# matchQcRef to match qcref variables to data variables, prepares data for compiling and checks
+#process data set ready for matching. Calls separateDatMeta to separate  meta variables from data,
+# matchmeta to match meta variables to data variables, prepares data for compiling and checks
 # that metadata information has been supplied for all data variables. 
 processDat <- function(file = "ASR_mortality_to_Anna_Gavin.csv", dat, label = F,
-                       taxo.dat, var.omit, input.folder = input.folder,
-                       observer = NULL, qc = NULL, ref = NULL, n = NULL, notes = NULL,
+                       taxo.dat, var.omit, input.folder = input.folder, meta,
                        master.vname = "master.vname"){
   
   if(is.null(dat)){
-  dat <- read.csv(paste(input.folder, "csv/", file, sep = ""),  stringsAsFactors=FALSE)}
+    dat <- read.csv(paste(input.folder, "csv/", file, sep = ""),  stringsAsFactors=FALSE)}
   
   
   
@@ -222,22 +247,27 @@ processDat <- function(file = "ASR_mortality_to_Anna_Gavin.csv", dat, label = F,
   
   dat$species <- gsub(" ", "_", dat$species)
   
-  # separate qcref data
-  dat.l <- separateQcRef(dat)
+  # separate meta data
+  dat.l <- separateDatMeta(dat)
   
-  # create qcref object
-  dat.l$qcref <- matchQcRef(dat = dat.l$data, file, qcref = dat.l$qcref, var.omit, taxo.var,
-                            observer, qc, ref, n, notes, input.folder)
+  for(meta.var in meta.vars){
+    
+    metav.dd <- read.csv(paste(input.folder, meta.var, "/", file, sep = ""),
+             stringsAsFactors = F)
+  
+   # create meta object
+    dat.l$meta <- matchmeta(dat = dat.l$data, meta.var = meta.var, meta = dat.l$meta, 
+                            metav.dd = metav.dd)}
   
   if("parent.spp" %in% names(dat.l$data)){
     parent.spp <- dat.l$data$parent.spp
     dat.l$data <- dat.l$data[,names(dat.l$data) != "parent.spp"]
   }else{parent.spp <- NULL}
-    
+  
   # prepare dataset
   dat.l$data <- dataMatchPrep(dat.l$data)
   
-
+  
   if(!is.null(parent.spp)){
     dat.l$data$parent.spp <- parent.spp
     dat.l$data$subspp[!is.na(dat.l$data$parent.spp)] <- T
@@ -260,13 +290,13 @@ processDat <- function(file = "ASR_mortality_to_Anna_Gavin.csv", dat, label = F,
 spp2taxoMatch <- function(spp, parent.spp, taxo.table){
   
   if(is.null(taxo.table)){
-  spp2taxo <- read.csv("r data/spp_to_taxo.csv", stringsAsFactors = F)}else{
-  spp2taxo <- taxo.table
-  }
+    spp2taxo <- read.csv("r data/spp_to_taxo.csv", stringsAsFactors = F)}else{
+      spp2taxo <- taxo.table
+    }
   
   spp.id <- spp %in% spp2taxo$species
   pspp.id <- parent.spp %in% spp2taxo$species
-
+  
   taxo.id <- spp.id == T | pspp.id == T
   
   if(!all(taxo.id)){
@@ -278,13 +308,13 @@ spp2taxoMatch <- function(spp, parent.spp, taxo.table){
         p <- parent.spp %in% spp2taxo$species & !spp %in% spp2taxo$species
         sppp[p] <- parent.spp[p]
         dat <- spp2taxo[match(sppp, spp2taxo$species),]
-      
+        
         if(is.null(taxo.table)){  
-        # Update spp2taxo file
-        add.dat <- cbind(species = spp[p],spp2taxo[match(parent.spp[p], spp2taxo$species),-1])
-        add.dat$subspp <- TRUE
-        add.dat$parent.spp <- parent.spp[p]
-        write.csv(rbind(spp2taxo, add.dat), "r data/spp_to_taxo.csv", row.names = F)}
+          # Update spp2taxo file
+          add.dat <- cbind(species = spp[p],spp2taxo[match(parent.spp[p], spp2taxo$species),-1])
+          add.dat$subspp <- TRUE
+          add.dat$parent.spp <- parent.spp[p]
+          write.csv(rbind(spp2taxo, add.dat), "r data/spp_to_taxo.csv", row.names = F)}
       }
     }
   
@@ -297,28 +327,29 @@ spp2taxoMatch <- function(spp, parent.spp, taxo.table){
 # match object m.
 matchMSToMaster <-  function(m, master, taxo.var = taxo.var, var.omit = var.omit, 
                              input.folder, output.folder, ignore.unmatched = F, synonyms,
-                             taxo.table){
+                             taxo.table, trim.dat = T, retain.dup = T){
   
   data <- m$data
   sub <- m$sub
   set <- m$set
-  qcref <- m$qcref
+  meta <- m$meta
   spp.list <- m$spp.list
   
   # Check whether matching required and match
   unmatched <- get(sub)$species[!(get(sub)$species %in% get(set)$species)]
   if(length(unmatched) != 0){
     
-    m <- dataSppMatch(m, unmatched = unmatched, ignore.unmatched = ignore.unmatched, synonyms = synonyms)
+    m <- dataSppMatch(m, unmatched = unmatched, ignore.unmatched = ignore.unmatched, 
+                      synonyms = synonyms, trim.dat = trim.dat, retain.dup = retain.dup)
     data <- m$data
     
   }
   
   # Load taxo variable lookup table
   if(is.null(taxo.table)){
-  spp2taxo <- read.csv(paste(input.folder, "r data/spp_to_taxo.csv", sep = ""), stringsAsFactors = F)}else{
-    spp2taxo <- taxo.table
-  }
+    spp2taxo <- read.csv(paste(input.folder, "r data/spp_to_taxo.csv", sep = ""), stringsAsFactors = F)}else{
+      spp2taxo <- taxo.table
+    }
   
   #make vector of data variables to be added
   match.vars <- names(data)[!names(data) %in% c(taxo.var, var.omit, c("synonyms", "data.status"))]
@@ -333,26 +364,26 @@ matchMSToMaster <-  function(m, master, taxo.var = taxo.var, var.omit = var.omit
   var <- as.character(match.vars[id[, "col"]])
   
   mdat <- try(cbind(spp2taxoMatch(spp, parent.spp, taxo.table), 
-                subspp = data[id[,"row"], "subspp"],
-                parent.spp = parent.spp,
-                var = var, 
-                value = match.dat[id], data = m$data.ID,
-                synonyms = syns, 
-                data.status = data[id[,"row"], "data.status"],
-                qc = getQc("qc", qcref = qcref, spp = spp, var = var),
-                observer = getQc("observer", qcref = qcref, spp = spp, var = var),
-                ref = getQc("ref", qcref = qcref, spp = spp, var = var),
-                n = getQc("n", qcref = qcref, spp = spp, var = var)))
+                    subspp = data[id[,"row"], "subspp"],
+                    parent.spp = parent.spp,
+                    var = var, 
+                    value = match.dat[id], data = m$data.ID,
+                    synonyms = syns, 
+                    data.status = data[id[,"row"], "data.status"],
+                    qc = getMeta("qc", meta = meta, spp = spp, var = var),
+                    observer = getMeta("observer", meta = meta, spp = spp, var = var),
+                    ref = getMeta("ref", meta = meta, spp = spp, var = var),
+                    n = getMeta("n", meta = meta, spp = spp, var = var)))
   
   if(class(mdat) == "try-error"){return(m)}else{
-  
+    
     dir.create(paste(output.folder, "data/", sep = ""), showWarnings = F)
     dir.create(paste(output.folder, "data/match objects/", sep = ""), showWarnings = F)
     
-  save(m, file = paste(output.folder, "data/match objects/", m$data.ID, " match object.RData", 
-                       sep = ""))
-  
-  return(list(mdat = mdat, spp.list = m$spp.list))}
+    save(m, file = paste(output.folder, "data/match objects/", m$data.ID, " match object.RData", 
+                         sep = ""))
+    
+    return(list(mdat = mdat, spp.list = m$spp.list))}
 }
 
 # Processes ITIS synonyms data into a species synonym dataset 
@@ -409,7 +440,7 @@ dataMatchPrep <- function(data){
 # Create match object
 matchObj <- function(data.ID, spp.list, data = dl[[data.ID]], status = "unmatched", 
                      sub = data.match.params$sub[data.match.params$data.ID == data.ID],
-                     qcref = qcref){
+                     meta = meta){
   
   
   if(sub == "spp.list"){
@@ -420,7 +451,7 @@ matchObj <- function(data.ID, spp.list, data = dl[[data.ID]], status = "unmatche
   }   
   
   m <- list(data.ID = data.ID, spp.list = spp.list, data = data, sub = sub, 
-            set = set, status = status, qcref = qcref)
+            set = set, status = status, meta = meta)
   return(m)
 }
 
@@ -468,11 +499,11 @@ sppMatch <- function(X, unmatched = unmatched, lookup.dat, retain.dup = T){
     master.add <- match.data$synonyms[duplicated(match.data$species)]
     
     if(retain.dup){
-    data$subspp[data$synonyms %in% master.add] <- TRUE
-    data$parent.spp[match(master.add, data$synonyms)] <- match.data$species[
-      match(master.add, match.data$synonyms)]
-    
-    spp.list <- rbind(spp.list, data.frame(species = master.add))}
+      data$subspp[data$synonyms %in% master.add] <- TRUE
+      data$parent.spp[match(master.add, data$synonyms)] <- match.data$species[
+        match(master.add, match.data$synonyms)]
+      
+      spp.list <- rbind(spp.list, data.frame(species = master.add))}
     
     #remove any species from match.data already added to master
     match.data <- match.data[-which(match.data$synonyms %in% master.add),]
@@ -488,11 +519,11 @@ sppMatch <- function(X, unmatched = unmatched, lookup.dat, retain.dup = T){
     master.add <- match.data$synonyms[match.data$species %in% data$species]
     
     if(retain.dup){
-    data$subspp[data$synonyms %in% master.add] <- TRUE
-    data$parent.spp[match(master.add, data$synonyms)] <- match.data$species[
-      match(master.add, match.data$synonyms)]
-    
-    spp.list <- rbind(spp.list, data.frame(species = master.add))}
+      data$subspp[data$synonyms %in% master.add] <- TRUE
+      data$parent.spp[match(master.add, data$synonyms)] <- match.data$species[
+        match(master.add, match.data$synonyms)]
+      
+      spp.list <- rbind(spp.list, data.frame(species = master.add))}
     
     #remove any species from match.data already added to master
     match.data <- match.data[-which(match.data$synonyms %in% master.add),]
@@ -515,28 +546,28 @@ sppMatch <- function(X, unmatched = unmatched, lookup.dat, retain.dup = T){
     if(exists("data.add")){
       data.add <- rbind(data.add, match.data[match.data$synonyms %in% spp.list$species,])}else{
         data.add <- match.data[match.data$synonyms %in% spp.list$species,]}
-    }
+  }
   
-
-   if(exists("data.add")){
-      #duplicate data row for species to be added to data
-      add.dd <- data.frame(species = data.add$species, data[match(data.add$synonyms, 
-                                                                  data$species),names(data) != "species"],
-                           stringsAsFactors = F)
-      add.dd$data.status <- "duplicate"
-      
-      #add to data
-      data <- rbind(data, add.dd)
-      
-      match.data <- match.data[-which(match.data$species %in% add.dd$species),]
-      }   
+  
+  if(exists("data.add")){
+    #duplicate data row for species to be added to data
+    add.dd <- data.frame(species = data.add$species, data[match(data.add$synonyms, 
+                                                                data$species),names(data) != "species"],
+                         stringsAsFactors = F)
+    add.dd$data.status <- "duplicate"
+    
+    #add to data
+    data <- rbind(data, add.dd)
+    
+    match.data <- match.data[-which(match.data$species %in% add.dd$species),]
+  }   
   
   #update species names in data$species
   data$species[match(match.data$synonyms, data$species)] <- match.data$species
   
   
   m <- matchObj(data.ID=X$data.ID, spp.list = spp.list, data, status = X$status,
-                sub = X$sub, qcref = X$qcref)
+                sub = X$sub, meta = X$meta)
   
   return(m)}
 
@@ -548,31 +579,32 @@ dataSppMatch <- function(m, unmatched, ignore.unmatched = ignore.unmatched, syno
   
   sub <- m$sub
   set <- m$set
-
+  
   # unmatched
   if(sub == "data"){
     rm <- synonyms$synonyms[synonyms$synonyms %in% unmatched & synonyms$species %in% c("Extinct", "New")]
     m$data <- m$data[!(m$data$species %in% rm),]
   }
   
-    m <- sppMatch(m, unmatched = unmatched, lookup.dat = synonyms, retain.dup = retain.dup)
+  m <- sppMatch(m, unmatched = unmatched, lookup.dat = synonyms, retain.dup = retain.dup)
+  
+  #generate next unmatched species list
+  unmatched <- m[[sub]]$species[!(m[[sub]]$species %in% m[[set]]$species)]
+  
+  
+  # if no more species unmatched break loop
+  if(length(unmatched) == 0){
+    print(paste(m$data.ID, "match complete"))
+    if(sub == "spp.list" & trim.dat){m$data <- m$data[m$data$species %in% m$spp.list$species,]}
+  }else{
     
-    #generate next unmatched species list
-    unmatched <- m[[sub]]$species[!(m[[sub]]$species %in% m[[set]]$species)]
+    print(paste("match incomplete,",length(unmatched), sub, "datapoints unmatched"))
     
-    
-    # if no more species unmatched break loop
-    if(length(unmatched) == 0){
-      print(paste(m$data.ID, "match complete"))
-      if(sub == "spp.list" & trim.dat){m$data <- m$data[m$data$species %in% m$spp.list$species,]}
-     }else{
-    
-        print(paste("match incomplete,",length(unmatched), sub, "datapoints unmatched"))
-        
-        if(ignore.unmatched){if(sub == "data"){m$data <- m$data[!m$data$species %in% unmatched,]}}else{
+    if(sub == "spp.list" & trim.dat){m$data <- m$data[m$data$species %in% m$spp.list$species,]}
+    if(ignore.unmatched){if(sub == "data"){m$data <- m$data[!m$data$species %in% unmatched,]}}else{
       
-        
-    # if all match pair datasets checked and species remain unmatched write manual match spp list
+      
+      # if all match pair datasets checked and species remain unmatched write manual match spp list
       dir.create(paste(input.folder, "r data/", sep = ""), showWarnings = F)
       dir.create(paste(input.folder, "r data/match data/", sep = ""), showWarnings = F)
       
@@ -582,7 +614,7 @@ dataSppMatch <- function(m, unmatched, ignore.unmatched = ignore.unmatched, syno
                 row.names = F)
       print(paste("unmatched species list saved in file 'Data.IDmmatch.csv'"))
       stop("manually match and save as 'Data.IDmmatched.csv' to continue")}}
-    return(m)}
+  return(m)}
 
 
 addVars <- function(data, master){
