@@ -1,1 +1,1 @@
-install.packages(c("dplyr", "taxize","caper", "geiger","PHYLOGR", "rnetcarto"))
+install.packages(c("dplyr", "taxize","caper", "geiger","PHYLOGR", "rnetcarto", "igraph"))
