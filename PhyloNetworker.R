@@ -13,6 +13,7 @@ library(caper)
 library(geiger)
 library(PHYLOGR)
 library(rnetcarto)
+library(igraph)
 
 calcTraitPairN <- function(data){
   
@@ -69,7 +70,7 @@ pglsPhyloCor <- function(x, data, match.dat, tree, log.vars){
     phylocor2 <- NA
     lambda <- NA
     error <- gsub(pattern = ".*\n  ", "", geterrmessage())
-
+    
   }else{
     
     t <- summary(result.pgls)$coefficients[var2,3]
@@ -77,7 +78,7 @@ pglsPhyloCor <- function(x, data, match.dat, tree, log.vars){
     phylocor2 <- sqrt((t*t)/((t*t)+df))*sign(summary(result.pgls)$coefficients[var2,1])
     lambda <- result.pgls$param["lambda"]
     error <- NA
-
+    
   }
   
   
