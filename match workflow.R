@@ -5,9 +5,9 @@ source("~/Documents/workflows/bird_trait_networks/setup.R")
 
 # PACKAGES & FUNCTIONS ###############################################################
 
+# source rmacroRDM functions
 source(paste(script.folder, "functions.R", sep = ""))
-source('~/Documents/workflows/Sex Roles in Birds/birds/bird app/app_output_functions.R', 
-       chdir = TRUE)
+source(paste(script.folder, "wideData_function.R", sep = ""))
 
 require(plotly)
 require(knitr)
@@ -15,13 +15,19 @@ require(RColorBrewer)
 
 
 # SETTINGS ###############################################################
+# master settings
+var.vars <- c("var", "value", "data.ID")
+match.vars <- c("synonyms", "data.status")
+meta.vars = c("qc", "observer", "ref", "n", "notes")
+master.vars <- c("species", match.vars, var.vars, meta.vars)
 
-qcmnames = c("qc", "observer", "ref", "n", "notes")
-taxo.var <- c("species", "order","family", "subspp", "parent.spp")
-var.var <- c("var", "value", "data")
+# spp.list settings
+taxo.vars <- c("genus", "family", "order")
+
+# var.omit settings
 var.omit <- c("no_sex_maturity_d", "adult_svl_cm", "male_maturity_d")
 
-setupInputFolder(input.folder, qcmnames)
+setupInputFolder(input.folder, meta.vars)
 
 setwd(input.folder)
 
@@ -33,84 +39,95 @@ setwd(input.folder)
 
 D0 <- read.csv(file = "csv/D0.csv" ,fileEncoding = "mac")                    
 
-taxo.table <- unique(D0[, c("species", "order", "family")])
 
 # Load match data.....................................................................
 synonyms  <- read.csv("r data/synonyms.csv", stringsAsFactors=FALSE)
 
-
-
+syn.links <- synonyms[!duplicated(t(apply(synonyms[,1:2], 1, sort))),1:2]
 
 # WORKFLOW ###############################################################
 
-dl <- list(D1 = processDat(file = "D1.tidy.csv", dat = NULL, label = F, taxo.dat, var.omit, input.folder,
-                           observer = NULL, qc = NULL, ref = NULL, n = NULL, notes = NULL,
-                           master.vname = "master.vname"))
 
 # CREATE MASTER
 
-# Assign spp.list from species in original dataset D3
-spp.list <- data.frame(species = unique(D0$species))
+# Create taxo.table
+taxo.dat <- unique(D0[,c("species", taxo.vars)])
 
+# Assign spp.list from species in original dataset D0
+spp.list <- createSpp.list(species = taxo.dat$species, 
+                           taxo.dat = taxo.dat, 
+                           taxo.vars)
+
+# extract and order D0 into master format
+D0 <- longMasterFormat(data, master.vars, data.ID = "D0")
+  
 # create master shell
-master <- c()
+master <- list(data = newMasterData(master.vars), spp.list = spp.list, metadata = metadata)
+master <- updateMaster(master, data = D0, spp.list = NULL)
+
 
 # match and append processed data to master
-data.ID <- "D1"
 
-  # Create match object
-  m <-  matchObj(data.ID, spp.list, data = dl[[data.ID]]$data, status = "unmatched", 
-                 sub = "spp.list",
-                 qcref = dl[[data.ID]]$qcref) 
+
+  filename <- "D1.tidy"
+  
+  m <- matchObj(data.ID = "D1", spp.list = spp.list, status = "unmatched",
+                data = read.csv(paste(input.folder, "csv/", filename, ".csv", sep = ""),
+                                stringsAsFactors=FALSE, fileEncoding = "mac"),
+                sub = "spp.list", filename = filename, 
+                meta = createMeta(meta.vars)) # use addMeta function to manually add metadata.
+  
+  m <- processDat(m, input.folder, var.omit) %>% 
+    separateDatMeta() %>% 
+    compileMeta(input.folder = input.folder) %>%
+    checkVarMeta(master$metadata) %>%
+    dataMatchPrep()
+
+  m <- dataSppMatch(m, ignore.unmatched = T, 
+                    syn.links = syn.links, addSpp = T)
   
   # Match data set to spp.list and process
-  output <- matchMSToMaster(m, taxo.var = taxo.var, var.omit = var.omit, input.folder = input.folder, 
-                            output.folder = output.folder, ignore.unmatched = T,
-                            synonyms = synonyms, taxo.table = taxo.table,
-                            trim.dat = T, retain.dup = F)
+  output <- masterDataFormat(m, meta.vars, match.vars, var.vars)
   
-  write.csv(output$mdat, file =  "csv/D1.long.csv", row.names = F, fileEncoding = "mac")
+  write.csv(output$data, file =  "csv/D1.long.csv", row.names = F, fileEncoding = "mac")
   
   spp.list <- output$spp.list
+  
+  
+    # dir.create(paste(output.folder, "data/", sep = ""), showWarnings = F)
+    # dir.create(paste(output.folder, "data/match objects/", sep = ""), showWarnings = F)
+    
+  save(m, file = paste(output.folder, "data/match objects/", m$data.ID, "m.RData", sep = ""))
   
   
 
   
   # MERGE DATASETS
   
-  # Transform D0
-  
-  master <- data.frame(D0[,c("species", "order", "family")], subspp = F, parent.spp = NA,  
-                D0[,c("var", "value")], data = "D0", synonyms = D0$species, 
-                data.status = "original", "qc" = NA, observer = NA, ref = D0$ref, n = NA)
+  master <- updateMaster(master, data = output$data, spp.list = output$spp.list)
   
   
-  D1 <- output$mdat
   outliers <- read.csv("r data/R03/outliers.csv")
+  outliers$data.ID <- "D0"
+  outliers$data.ID[outliers$select == "D0"] <- "D1"
+
+  # remove outliers
+  master$data <- removeData(data = master$data, remove = outliers)
   
+  # remove duplicates 
+  # 
+  # from D0 for variable "repro.age"
+  master$data <- master$data[-which(master$data$var == "repro.age" & 
+                 duplicated(master$data[,c("species", "var")], fromLast = T)),]
   
-  # select outliers
+  # from D1 for all other variables
+  master$data <- master$data[!duplicated(master$data[,c("species", "var")]),]
   
-  for(i in 1:dim(outliers)[1]){
-    if(outliers$select[i] == "D0"){
-      D1[!(D1$species == outliers$species[i] & D1$var == outliers$var[i]),]
-    }else{
-      master[!(master$species == outliers$species[i] & master$var == outliers$var[i]),]
-    }
-  }
-  
-  master <- rbind(master, D1)
-  
-  master <- master[-which(master$var == "repro.age" & 
-                 duplicated(master[,c("species", "var")], fromLast = T)),]
-  
-  master <- master[!duplicated(master[,c("species", "var")]),]
-  
-  write.csv(master, file =  "csv/master.csv", row.names = F, fileEncoding = "mac")
+  write.csv(master$data, file =  "csv/master.csv", row.names = F, fileEncoding = "mac")
   
   # Create wide dataset ################################################################################### 
-  wide <- widenMaster(vars = unique(master$var), species = unique(master$species), 
-                      master = master, metadata = metadata)
+  wide <- widenMaster(vars = unique(master$data$var), species = unique(master$data$species), 
+                      master = master, add.taxo = T, taxo.vars)
   
   
   write.csv(wide, file =  "csv/master wide.csv", row.names = F, fileEncoding = "mac")
