@@ -55,7 +55,7 @@ getPhyloCor <- function(x, y, phylomat, nsps){
   if(dim(phylomat)[1] != dim(phylomat)[2]){stop("phylomat not square")}
   if(any(dimnames(phylomat)[[1]] != dimnames(phylomat)[[2]])){stop("phylomat dimnames mismatch")}
   if(any(names(x) != dimnames(phylomat)[[1]], names(x) != dimnames(phylomat)[[2]])){stop("x and phylomat name mismatch")}
-  if(any(names(y) != dimnames(phylomat)[[1]], names(y) != dimnames(phylomat)[[2]])){stop("x and phylomat name mismatch")}
+  if(any(names(y) != dimnames(phylomat)[[1]], names(y) != dimnames(phylomat)[[2]])){stop("y and phylomat name mismatch")}
   
   
   mean.x <- phylo.mean(x, phylomat)
@@ -97,14 +97,7 @@ var.omit <- c("no_sex_maturity_d", "adult_svl_cm", "male_maturity_d")
 # FILES ##################################################################
 
 D0 <- read.csv(file = "csv/D0.csv", fileEncoding = "mac")
-
-D0 <- D0[!D0$species == "Conuropsis_carolinensis",] #species extinct
-D0 <- D0[!D0$species == "Podilymbus_gigas",] #species extinct
-D0 <- D0[!D0$species == "Xenicus_longipes",] #species extinct
-D0 <- D0[!D0$species == "Ectopistes_migratorius",] #species extinct
-D0 <- D0[!D0$species == "Pezophaps_solitaria",] #species extinct
-D0 <- D0[!D0$species == "Pinguinus_impennis",] #species extinct
-D0 <- D0[!D0$species == "Porphyrio_albus",] #species extinct
+master <- write.csv(file =  "csv/master.csv", fileEncoding = "mac")
 
 
 spp.list <- data.frame(species = unique(D0$species))
@@ -208,6 +201,11 @@ comparePhyloCor <- function(x, data, phylomat, match.dat, tree){
   
   sub.tree <- drop.tip(tree, tip = tree$tip.label[!tree$tip.label %in% match.dat$synonyms[match(spp, match.dat$species)]])
   sub.phymat <-solve(vcv.phylo(sub.tree))
+  spp.m <- match.dat$species[match(sub.tree$tip.label, match.dat$synonyms)]
+  x <- x[match(spp.m, names(x))]
+  y <- y[match(spp.m, names(y))]
+  
+  dimnames(sub.phymat) <- list(spp.m, spp.m)
 
   phylocor1 <- getPhyloCor(x, y, phylomat = sub.phymat, nsps = nsps)
 
@@ -233,10 +231,10 @@ return(data.frame(var1 = var1, var2 = var2, cor = cor, phylocor1 = phylocor1,
 }
 
 res <- NULL
-for(i in c(1:dim(var.grid)[1])){
+for(i in 1:dim(res.grid)[1]){
   
-  res <- rbind(res, comparePhyloCor(var.grid[i,1:2], data = num.dat, 
-               phylomat = phylomat, match.dat = match.dat))
+  res <- rbind(res, comparePhyloCor(res.grid[i,1:2], data = num.dat, 
+               phylomat = phylomat, match.dat = match.dat, tree = tree))
 }
 
 
@@ -250,6 +248,12 @@ res2 <- apply(var.grid[1:5,], 2, FUN = comparePhyloCor, data = num.dat,
 
 res.i <- read.csv(paste(input.folder, "r data/phylocor comps.csv", sep = ""), stringsAsFactors = F)
 res.grid <- res.i[order(abs(res.i$phylocor1 - res.i$phylocor2), decreasing = T),][1:400,c(1,2,6)]
+
+
+dim(var.grid)[1]
+
+
+
 
 
 
