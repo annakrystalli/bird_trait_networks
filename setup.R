@@ -6,7 +6,7 @@ options(stringsAsFactors = F)
 
 output.folder <- "/Users/Anna/Google Drive/bird trait networks/outputs/"
 input.folder <- "/Users/Anna/Google Drive/bird trait networks/inputs/data/"
-script.folder <- "/Users/Anna/Documents/workflows/bird_trait_networks/"
+script.folder <- "~/Documents/workflows/rmacroRDM/R/"
 
 ### FUNCTIONS ##############################################################
 
@@ -26,7 +26,7 @@ makeTransparent<-function(someColor, alpha=100)
 codeVars <- function(dat, data.ID, metadata = metadata, vnames = vnames){
   # code new variables added to dataset using metadata table
   names(dat)[match(metadata$orig.vname[which(metadata$orig.vname %in% names(dat))], names(dat))] <- 
-    metadata$master.vname[which(metadata$orig.vname %in% names(dat))]
+    metadata$code[which(metadata$orig.vname %in% names(dat))]
   
   # code variable names which match directly to variables in master using vnames tables
   names(dat)[match(vnames[,data.ID][which(vnames[,data.ID] %in% names(dat))], names(dat))] <- 
