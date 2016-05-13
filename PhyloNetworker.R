@@ -91,8 +91,9 @@ dir.create(paste(output.folder, "data/phylocors/", sep = ""))
 dir.create(paste(output.folder, "data/networks/", sep = ""))
 
 an.ID <- "100spp"
+min.n <- 10
 log <- T
-if(log){log.vars <- metadata$master.vname[as.logical(metadata$log)]}else{log.vars <- ""}
+if(log){log.vars <- metadata$code[as.logical(metadata$log)]}else{log.vars <- ""}
 
 
 # FILES ##################################################################
@@ -119,7 +120,7 @@ match.dat <- m$data
 
 
 # separate numeric variables
-num.var <- metadata$master.vname[metadata$type %in% c("Int", "Con")]
+num.var <- metadata$code[metadata$type %in% c("Int", "Con")]
 num.dat <- wide[,c("species", names(wide)[names(wide) %in% num.var])]
 
 #Remove duplicate species matching to the same species on the tree
@@ -138,8 +139,10 @@ if(an.ID == "100spp"){
 # VARIABLES COMBINATION DATA AVAILABILITY >>>
 
 ## Create grid of unique variable combinations, calculate data availability for each and sort
+
+
 var.grid <- calcTraitPairN(num.dat)
-var.grid <- var.grid[var.grid$n > 3,]
+var.grid <- var.grid[var.grid$n > min.n,]
 var.grid <- var.grid[order(var.grid$n, decreasing = T),]
 
 
@@ -157,8 +160,10 @@ for(i in 1:dim(var.grid)[1]){
 
 res <- res[order(abs(res$phylocor), decreasing = T),]
 
-write.csv(res, paste(output.folder, "data/phylocors/", an.ID," phylocor", if(log){" log"},".csv", sep = ""),
+write.csv(res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                     min.n, if(log){"_log"},".csv", sep = ""),
           row.names = F)
+
 
 
 ## NETWORK ANALYSIS ####################################################################
@@ -169,15 +174,89 @@ net.list <- as.list(net.d)
 net <- netcarto(web = net.list, seed = 1)
 
 
-write.csv(cbind(net[[1]], modularity = net[[2]]), paste(output.folder, "data/networks/", an.ID," network", if(log){" log"},".csv", sep = ""),
+write.csv(cbind(net[[1]], modularity = net[[2]]), 
+          paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
+                if(log){"_log"},".csv", sep = ""),
           row.names = F)
 
+save(net, file = paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
+                       if(log){"_log"},".RData", sep = ""))
 
 
 
 
-# RCytoscape ###############################################################################
+# igraph ###############################################################################
 
+load(file = paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
+                       if(log){"_log"},".RData", sep = ""))
+
+
+edges <- res[abs(res$phylocor) > 0.35 & !is.na(res$phylocor),]
+
+g.n <- as.vector(apply(edges[,c("var1", "var2")],1,FUN = unlist))
+n.names <- unique(g.n)
+g.code <- match(g.n, n.names)  
+
+# node colours
+role.levels <- levels(unique(net[[1]]$role))
+role.codes <- 
+role.cols <- RColorBrewer::brewer.pal(7, "BrBG")
+n.cols <- role.cols[match(as.character(net[[1]]$role)[match(n.names, net[[1]]$name)], role.levels)]
+
+# edge colours
+edge.cols <- rep("black", length(edges$phylocor))
+edge.cols[edges$phylocor >= 0.1] <- "red"
+edge.cols[edges$phylocor < -0.1] <- "blue"
+
+
+require(igraph)
+
+G <- graph(g.code, directed = FALSE )
+
+# Assign attributes to the graph
+G$name    <- "correlation network of numeric bird traits"
+
+# Assign attributes to the graph's vertices
+V(G)$name  <- 1:length(n.cols)
+V(G)$color <- n.cols
+E(G)$edge.color <- edge.cols
+
+
+# Assign attributes to the edges
+E(G)$weight <- edges$phylocor
+
+
+
+# Plot the graph -- details in the "Drawing graphs" section of the igraph manual
+
+
+png(filename = paste(output.folder, "figures/net.png", sep = ""),
+    width =  1500, height = 1194, pointsize = 20)
+
+par(mai = c(0,0.5,0.5,0))
+
+plot(G, layout = layout.fruchterman.reingold, 
+     main = G$name,
+     vertex.label = V(G)$name,
+     vertex.size = 5.5,
+     vertex.color= V(G)$color,
+     vertex.frame.color= "white",
+     vertex.label.color = "black",
+     vertex.label.family = "sans",
+     edge.width=E(G)$weight,
+     vertex.label.cex=0.65,
+     edge.color= edge.cols)
+
+
+
+legend("bottomleft", legend = role.levels[which(role.levels %in% as.character(net[[1]]$role))], 
+       fill = role.cols[which(role.levels %in% as.character(net[[1]]$role))], 
+       bty = "n", cex = 1)
+
+dev.off()
+
+
+       
 #source('http://bioconductor.org/biocLite.R')
 #biocLite ('RCytoscape')
 
