@@ -1,0 +1,513 @@
+---
+title: "Hierarchical Networks"
+author: "Anna Krystalli"
+date: "29 March 2016"
+output: html_document
+---
+
+# NETWORK BASICS
+
+### Adjancency matrix
+
+In graph/network theory: adjacency matrix is a square matrix used to represent a finite graph. Elements indicate whether pairs of vertices/nodes are adjacent/connected. Boolean. Simple finite graph: 1/0 representing vertices that are connected/not connected with an edge
+
+### Distance matrix
+
+Same size but elements indicate the distance between vertices rather than just connectivity (*more relevant to our data? ie 0-1 correlations = distance/weight?*). Hierarchical clustering trees decomposes into distance matrix.
+
+***
+
+## NETWORK CLUSTERS/ MODULES
+
+One network feature that has been emphasized in recent work is community structure, the gathering of vertices into groups such that there is a higher density of edges within groups than between them
+
+### Modularity
+
+First mentioned in [Clauset et al 2004](http://link.aps.org/doi/10.1103/PhysRevE.70.066111) were they describe a new algorithm for inferring community structure from network topology which works by greedily optimizing the modularity.
+
+Modularity [21] is a property of a network and a specific proposed division of that network into communities. Girvan and Newman [20, 21] proposed a divisive algorithm that uses **edge betweenness** as a metric to identify the boundaries of such communities. ***Computationally expensive***. It measures when the division is a good one, in the sense that there are many edges within communities and only a few between them:
+
+  - will be large for good divisions of the network, in the sense of having many within-community edges
+  - on its own, not a good measure of community structure (it takes its largest value of 1 in the trivial case where all vertices belong to a single community). 
+  - However, if we subtract from it the expected value of the same quantity in the case of a randomized network, we do get a useful measure.
+  - Nonzero values represent deviations from randomness, and in practice it is found that a value above about **0.3 is a good indicator of significant community structure** in a network.
+  - While finding the **global maximum modularity over all possible divisions** seems hard in general, reasonably good solutions can be found with approximate optimization techniques. The algorithm proposed in [(Newman 2004, Fast algorithm for detecting community structure in networks)](http://link.aps.org/doi/10.1103/PhysRevE.69.066133) uses a **greedy optimization in which, starting with each vertex being the sole member of a community of one, we repeatedly join together the two communities whose amalgamation produces the largest increase in Q.**
+  - The entire process can be represented as a tree whose leaves are the vertices of the original network and whose internal nodes correspond to the joins. This dendrogram represents a hierarchical decomposition of the network into communities at all levels.
+  
+
+  
+    <img src="/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/net_modules.png" width="350">
+  
+***
+
+<br>
+
+
+
+### Identifying hierarchical structure in networks:
+
+[***Hierarchical structure and the prediction of missing links in networks*** *Aaron Clauset, Cristopher Moore & M. E. J. Newman*]()
+
+>  the existence of hierarchy can simultaneously explain and quantitatively reproduce many commonly observed topological properties of networks, such as right-skewed degree distributions, high clustering coefficients and short path lengths. 
+
+> Hierarchical structure goes beyond simple clustering, however, by explicitly including organiza- tion at all scales in a network simultaneously.
+
+
+[Sales-Pardo et al. 2007 *Extracting the hierarchical organization of complex systems*](http://www.pnas.org/cgi/doi/10.1073/pnas.0703740104)
+
+A central idea in biology is that life processes are hierarchically organized (2–4). Additionally, it seems plausible that this hierarchical structure plays an important role in the system’s dynamics.
+
+Complex networks are convenient representations of the interactions within complex systems. Here, we focus on the **identification of inclusion hierarchies in complex networks**, that is, to the **unraveling of the nested organization of the nodes in a network into modules, which in turn are composed of submodules and so on**.
+
+Method must **identify the different levels in the hierarchy** as well as **the number of modules and their composition at each level**. Methods whose output is subject to interpretation excluded i.e. if it ***organizes nodes into a tree structure***, but it is ***up to the researcher to find a ‘‘sensible’’ criterion to establish which are the different levels in that tree***. Also unacceptable for method to yield a tree even for networks with no internal structure.
+
+The idea of the paper extends the definition of community struture discussed above to internal structure within each higher level module if there are subgroups of nodes within the module (submodules) that are more interconnected than to other nodes in the same module.
+
+<br>
+
+## Procedure
+
+<br>
+
+### Extracting the Hierarchical Organization of Networks
+
+Our method comprises two major steps (Fig. 1): 
+
+##### - **i) estimating the ‘‘proximity’’ in the hierarchy between all pairs of nodes, which we call ‘‘node affinity’’;**
+
+##### - **ii) uncovering the overall hierarchical organization of node affinities.**
+
+<br>
+
+### new affinity measure based on the surveying of the modularity landscape (18)
+
+***Node Affinity:*** ***‘‘topological overlap’’*** (11, 16, 17), which is defined as the **ratio** between the **number of common neighbors** of the two nodes and the **minimum degree** of the two nodes. 
+In defining affinity between a pair of nodes, one wants nodes that are close in the hierarchy to have a large affinity and to be classified in the same module in partitions with large modularity. We formalize this requirement by defining the affinity of a pair of nodes as the probability that the two nodes are classified in the same module for partitions that are local maxima of the modularity landscape
+
+<br>
+
+
+#### calculate modularity
+
+For each possible partition of the network into modules $P$, modularity $M$ can be calculated.
+
+ $$M(P)=\sum_{i=1}^m\left[\frac{l_i}{L}-\left(\frac{d_i}{2L}\right)^2\right]$$
+
+
+where $L$ is the total number of links in the network, $l_i$ is the number of links within module $i$, $d_i$ is the sum of degrees of all of the nodes inside module $i$, and the sum is over all of the $m$ modules in partition $P$ (Fig. 1A). The modularity of a partition is high when the number of intramodule links is much larger than expected for a random partition.
+
+
+
+
+  
+  
+#### Better partition evaluation
+
+  + multiple partitions $P_{op}$ for which $M(P_{op})$ is a global maximum of the modularity.
+  + the formulation of $M(P)$ is such that, depending on the density of connections and groups size, it prevents some desired grouping and forces some undesired grouping. 
+  + $P_{op}$ may be in practice unreachable if its basin of attraction is too small.
+  
+propose that the affinity $A_{ij}$ of nodes $i$ and $j$ is determined by those partitions that are local maxima in the landscape and by their basins of attraction.
+
+<br>
+
+##### Consider all $P\in{P_{max}}$
+
+**$P_{max}$** = the set of partitions for which the **modularity $M$ is a local maxima**, that is, partitions for which neither the change of a single node from one module to another nor the merging of two modules will yield a higher modularity $A_{ij}$ = consider all partitions $P\in{P_{max}}$ and find the fraction in which $(i, j)$  are placed in the same module. 
+
+**However, such a procedure would not take into consid- eration the size of the basins of attraction of the different maxima**, see below
+
+
+<br>
+
+
+#### calculate $P_{max}$ basins of attraction
+
+We would start by grouping the nodes into a randomly chosen partition; let us say, partition 13.
+
+
+  
+  <img src="/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/sardo2.png" width="280">
+  
+  
+There are two single node changes that increase the modularity. Node $b$ can be placed in the same group as node $d$; this is partition 15, which is a local maxima. Instead, node $b$ can be placed in the same group as nodes $a$ and $c$; this is partition 14. Partition 14 is not a modularity maximum; thus one would continue our random ascent of the modularity landscape. From partition 14, one could move to partition 1 or to partition 15, both local maxima. 
+
+So **from partition 13**, one has a **25% chance** of ending in **partition 1** and a **75%** chance of ending in **partition 15**. If one repeats this calculation for every possible starting partition, one obtains the size of the basin of attraction of the two local modularity maxima.
+
+$$b(\tilde{P})=\sum_{P\in{\mathcal{P}}} \frac{b(P, \tilde{P})}{\Vert\mathcal{P}\Vert}$$
+
+where:
+
+- $b(P, \tilde{P})$ is the probability that starting from partition $P$ one ends at partition $\tilde{P}\in{P_{max}}$ 
+- $\Vert\mathcal{P}\Vert$ is the number of possible partitions (Fig. 1B).
+
+##### calculate affinity
+
+
+We propose that the affinity:
+$A_{ij}$ of a pair of nodes $(i, j)$ = the probability that when local maxima partition  $\tilde{P}\in{P_{max}}$ are sampled with probabilities $b(\tilde{P})$ nodes $(i, j)$ are classified in the same module.
+
+Note that, in contrast to other affinity measures proposed in refs. 9, 15, and 18, the measure we propose does not necessarily coincide with the ‘‘optimal’’ division of nodes into modules, that is, the partition that maximizes $M$. In fact, the modules at the top level of the hierarchy do not necessarily correspond to the best partition found for the global network, even for relatively simple networks (Fig. 2C).
+
+<br>
+
+***
+
+
+
+### uncovering the overall hierarchical organization of node affinities
+
+
+
+Hierarchical clustering methods have three major drawbacks: 
+
+i. They are only accurate at a local level —at every step a pair of units merge and some details of the affinity matrix are averaged with an inevitable loss of information.
+
+    - divisive methods such as k-means or principal component analysis (25), which group nodes into ‘‘clusters’’ given an affinity matrix. However, these methods have a significant limitation: The number of clusters is an external param- eter, and, again, there is no sound and general criterion to objectively determine the correct number of clusters.
+    
+ii. The output is always a hierarchical tree, regardless of whether the system is indeed hierarchically organized or not. 
+iii. There is no statistically sound general criterion to determine the relevant levels on the hierarchy.
+
+<br>
+
+#### propose a ‘‘box-clustering’’ method:
+
+**Iteratively identifies in an unsupervised manner the modules at each level in the hierarchy.**
+
+##### **1. to assess whether network under analysis has internal organization:**: compare it with the appropriate null model:
+
+- **ensemble of ‘‘equivalent’’ networks with no internal organization**. These equivalent networks must have the *same number of nodes* and an *identical degree sequence*. A standard method for generating such networks is the **Markov-chain switching algorithm** (27, 28). Despite their having no internal structure, these randomized networks have *numerous local modularity maxima* (19). 
+     
+- To quantify the level of organization of a network, one needs to **compare the modularities of the sampled maxima** for the **original network** and its **corresponding random ensemble** 
+- if the **network has a nonrandom internal structure**, then **local maxima** in the **original landscape** should have **significantly larger modularities** than local maxima in the landscapes of the **randomized networks**.
+
+
+**Specifically, for a given network:**
+
+1. **compute the average modularity** $M_{av}$ from $M(\tilde{P}) : \tilde{P}\in{P_{max}}$ 
+2. compute **same quantity** $M_{av}^i$ for each network in the **equivalent random ensemble**. In virtue of the central limit theorem, the set of average modularities for the whole ensemble ${M_{av}^i}$is normally distributed with mean $M_{rand}$ and variance $\sigma_{M_{rand}}^2$
+
+3. **compute the z-score of the average modularity $z$:** quantify the level of organization of a network: compute the z-score of the average modularity z
+
+$$z = (M_{av} - M_{rand})/\sigma_{M_{rand}}^2$$
+
+4. **If $z$ is larger than a threshold value $z_t$, then we conclude that the network has internal structure**, and we proceed to identify the different modules; otherwise, we conclude that the network has no structure (Fig. 1D).
+
+<br>
+
+##### **2. Building the Hierarchical Tree:** find tree ‘‘nested’’ block-diagonal structure 
+
+In networks organized in a hierarchical fashion, **nodes that belong to the same module at the bottom level of the hierarchy have greater affinity than nodes that are together at a higher level in the hierarchy.**
+
+Thus, if a network has a hierarchical organization, one will be able to order the nodes in such a way that **groups of nodes with large affinity are close to each other.** With such an ordering, the **affinity matrix will have a ‘‘nested’’ block-diagonal structure.**
+
+To find such an ordering, we use **simulated annealing** (29) to minimize a cost function that **weighs each matrix element with its distance to the diagonal** (30)
+
+$$C = \frac{1}{N} \sum_{i, j = 1}^N A_{ij}\vert i-j \vert$$
+
+- $N$ is the order of the affinity matrix
+
+This problem belongs to the general class of **quadratic assignment problems (31)**. Our algorithm is able to find the **proper ordering for the affinity matrix** and to **accurately reveal the structure of hierarchically nested random graphs** (Fig. 2).
+
+<br>
+
+
+##### **2. Unsupervised Extraction of the Structure:**
+
+If a module at level $l$ (or the whole network at level 0) has internal modular structure, the corresponding affinity matrix is block-diagonal:
+
+- At level $l$ the matrix displays boxes along the diagonal, such that **elements inside each box** $s$ have affinity $A_l^s$ whereas matrix **elements outside the boxes** have an affinity $B_l < A_l^s$.
+- the number of boxes for each affinity matrix is not fixed; we **determine the ‘‘best’’ set of boxes** by **least-squares fitting of the block-diagonal model to the affinity matrix**.
+- **we do not want to overfit the data**. Thus, we use the **Bayesian information criterion** to determine the best set of boxes (33).
+- To find the modular organization of the nodes at the **top level** (level 1), we **fit the block diagonal model to the global affinity matrix**. 
+- assume the information at different levels in hierarchy is decoupled: to detect submodules beyond the first level -> **break the network into the subnetworks** defined by each module and **apply the same procedure** from the start. 
+- The algorithm **iterates these steps** for each identified box **until no subnetworks are found to have internal structure.**
+
+
+  ![](/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/Sardo4.png) 
+  
+  ***
+  
+  <br>
+  
+  
+  
+  
+### [***Hierarchical structure and the prediction of missing links in networks*** *Aaron Clauset, Cristopher Moore & M. E. J. Newman*]()
+ 
+#### Convert network to hierarchical tree:
+
+> We expect the probability of a connection between two vertices to depend on their degree of relatedness. Structure of this type can be modelled mathematically by using a probabilistic approach in which we **endow each internal node** $r$ of the dendrogram with a **probability** $p_r$ and then **connect each pair of vertices** for which $r$ **is the lowest common ancestor** independently with **probability** $p_r$
+
+
+  <img src="/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/clauset1.png" width="400">
+
+<br>
+
+- The traditional picture of communities or **modules** in a network, for example, corresponds to **connections that are dense within groups of vertices** and **sparse between** them — a behaviour called ***‘assortativity’*** in the literature. The hierarchical random graph can capture behaviour of this kind using probabilities $p_r$ that **decrease as we move higher up the tree**.
+- Conversely, **probabilities that increase as we move up** the tree correspond to ***‘disassortative’*** structures in which **vertices are less likely to be connected on small scales than on large ones**. By ***letting the $p_r$ values vary arbitrarily throughout the dendrogram***, the hierarchical random graph can capture both assortative and disassortative structure, as well as arbitrary mixtures of the two, at all scales and in all parts of the network.
+
+<br>
+
+##### sampling networks
+
++ Given a dendrogram and a set of probabilities $p_r$, the hierarchical random graph model allows us to **generate artificial networks with a specified hierarchical structure.**
+
++ fitting the hierarchical model to observed network data by using the tools of statistical inference, combining a **maximum likelihood approach[15]()** with a **Monte Carlo sampling algorithm[16]()** on the space of all possible dendrograms. This technique ***allows us to sample hierarchical random graphs with probability proportional to the likelihood that they generate the observed network***. To obtain the results described below we combine information from a large number of such samples, each of which is a reasonably likely model of the data.
+
++ we **use the sampled dendrograms to generate new networks**, different in detail from the originals but, by definition, having similar hierarchical structure (see Supplementary Information for more details). We find that these ‘resampled’ networks match the statistical pro- perties of the originals closely, including their *degree distributions*, *clustering coefficients*, and *distributions of shortest path lengths* between pairs of vertices
+
++ from this set we can, by **using techniques from phylogeny reconstruction[21]()**, create a **single consensus dendrogram**, which captures the topological features that appear consistently across all or a large fraction of the dendrograms and ***typically is a better summary of the network’s structure than any individual dendrogram***
+
+  <img src="/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/clauset2.png" width="400">
+  
+  <br>
+
+##### predicting missing interactions
+
+Another application of the hierarchical decomposition is the pre- diction of missing interactions in networks. 
+
+- An alternative to checking exhaustively for a connection between every pair of vertices in a network is to try to predict, in advance and on the basis of the connections already observed, which vertices are most likely to be connected.
+- The **hierarchical decomposition** can be used as the basis for an effective method of predicting missing interactions as follows. Given an **observed but incomplete network**, we **generate**, as described above, a **set of hierarchical random graphs—dendrograms** and the **associated probabilities $p_r$ —that fit that network**. 
+- Then we look for **pairs of vertices** that have a **high average probability of connection within these hierarchical random graphs** but are **unconnected in the networks.**
+
+
+<br>
+
+***
+### **code**
+
+```{r, echo=FALSE}
+
+library(igraph)
+```
+
+***
+
+#### **`fit_hrg`: Creating igraph graphs from data frames or vice-versa**
+
+
+This function creates an igraph graph from one or two data frames containing the (symbolic) edge list and edge/vertex attributes.
+
+**Usage**
+```
+graph_from_data_frame(d, directed = TRUE, vertices = NULL)
+
+```
+
+**Arguments** 
+
+- **x:** An igraph object.
+- **what:**	Character constant, whether to return info about vertices, edges, or both. The default is ‘edges’.
+- **d:** A data frame containing a symbolic edge list in the first two columns. Additional columns are considered as edge attributes. 
+- **directed:** Logical scalar, whether or not to create a directed graph.
+- **vertices:** A data frame with vertex metadata, or NULL. See details below. 
+- **...** Passed to graph_from_data_frame.
+
+**Details**
+
+`graph_from_data_frame` creates igraph graphs from one or two data frames. It has two modes of operation, depending on whether the vertices argument is NULL or not.
+
+If vertices is NULL, then the first two columns of `d` are used as a symbolic edge list and additional columns as edge attributes. The names of the attributes are taken from the names of the columns.
+
+If vertices is not NULL, then it must be a data frame giving vertex metadata. The first column of vertices is assumed to contain symbolic vertex names, this will be added to the graphs as the ‘name’ vertex attribute. Other columns will be added as additional vertex attributes. If vertices is not NULL then the symbolic edge list given in d is checked to contain only vertex names listed in vertices.
+
+Typically, the data frames are exported from some speadsheat software like Excel and are imported into R via read.table, read.delim or read.csv.
+
+**Value**
+
+An igraph graph object 
+
+**Examples**
+
+```{r}
+## A simple example with a couple of actors
+## The typical case is that these tables are read in from files....
+actors <- data.frame(name=c("Alice", "Bob", "Cecil", "David",
+                            "Esmeralda"),
+                     age=c(48,33,45,34,21),
+                     gender=c("F","M","F","M","F"))
+relations <- data.frame(from=c("Bob", "Cecil", "Cecil", "David",
+                               "David", "Esmeralda"),
+                        to=c("Alice", "Bob", "Alice", "Alice", "Bob", "Alice"),
+                        same.dept=c(FALSE,FALSE,TRUE,FALSE,FALSE,TRUE),
+                        friendship=c(4,5,5,2,1,1), advice=c(4,5,5,4,2,3))
+
+actors
+relations
+
+g <- graph_from_data_frame(relations, directed=TRUE, vertices=actors)
+print(g, e=TRUE, v=TRUE)
+
+## The opposite operation
+as_data_frame(g, what="vertices")
+as_data_frame(g, what="edges")
+```
+
+
+#### **`fit_hrg`:** [Fit a hierarchical random graph model](http://igraph.org/r/doc/fit_hrg.html)
+
+**Description**
+
+fit_hrg fits a HRG to a given graph. It takes the specified steps number of MCMC steps to perform the fitting, or a convergence criteria if the specified number of steps is zero. fit_hrg can start from a given HRG, if this is given in the hrg argument and the start argument is TRUE.
+
+
+```
+fit_hrg(graph, hrg = NULL, start = FALSE, steps = 0)
+
+```
+
+Usage
+
+
+
+
+```{r}
+
+library(igraph)
+
+## Not run: 
+## A graph with two dense groups
+g <- sample_gnp(10, p=1/2) + sample_gnp(10, p=1/2)
+hrg <- fit_hrg(g)
+hrg
+
+## The consensus tree for it
+consensus_tree(g, hrg=hrg, start=TRUE)
+
+## Prediction of missing edges
+g2 <- make_full_graph(4) + (make_full_graph(4) - path(1,2))
+predict_edges(g2)
+
+## End(Not run)
+
+```
+
+
+
+***
+
+#### **`sample_hrg()`: Sample from a hierarchical random graph model**
+
+sample_hrg samples a graph from a given hierarchical random graph model.
+
+
+**Usage**
+
+```
+sample_hrg(hrg)
+```
+
+**Arguments**
+
+- **hrg**	A hierarchical random graph model.
+
+**Value**
+
+An igraph graph.
+
+***
+#### **`predict_edges()`: Predict edges based on a hierarchical random graph model**
+
+`predict_edges` uses a hierarchical random graph model to predict missing edges from a network. This is done by sampling hierarchical models around the optimum model, proportionally to their likelihood. The MCMC sampling is stated from hrg, if it is given and the start argument is set to TRUE. Otherwise a HRG is fitted to the graph first.
+
+**Usage**
+
+```
+predict_edges(graph, hrg = NULL, start = FALSE, num.samples = 10000,
+  num.bins = 25)
+```
+
+**Arguments**
+
+- **graph:**	The graph to fit the model to. Edge directions are ignored in directed graphs.
+- **hrg:**	A hierarchical random graph model, in the form of an `igraphHRG` object. `predict_edges` allow this to be `NULL` as well, then a `HRG` is fitted to the graph first, from a random starting point.
+- **start:** Logical, whether to start the fitting/sampling from the supplied igraphHRG object, or from a random starting point.
+- **num.samples:** Number of samples to use for consensus generation or missing edge prediction.
+- **num.bins:** Number of bins for the edge probabilities. Give a higher number for a more accurate prediction.
+
+**Value**
+A list with entries:
+
+- **edges:**	The predicted edges, in a two-column matrix of vertex ids.
+
+- **prob:** 	Probabilities of these edges, according to the fitted model.
+- **hrg:** The (supplied or fitted) hierarchical random graph model.
+
+**Examples**
+
+```{r, eval=T}
+## A graph with two dense groups
+g <- sample_gnp(10, p=1/2) + sample_gnp(10, p=1/2)
+g
+
+hrg <- fit_hrg(g)
+hrg
+
+## The consensus tree for it
+consensus_tree(g, hrg=hrg, start=TRUE)
+
+## Prediction of missing edges
+g2 <- make_full_graph(4) + (make_full_graph(4) - path(1,2))
+predict_edges(g2)
+
+```
+
+***
+
+#### **`hrg_tree()`: Create an igraph graph from a hierarchical random graph model**
+
+
+hrg_tree creates the corresponsing igraph tree of a hierarchical random graph model.
+
+**Usage**
+
+```
+hrg_tree(hrg)
+```
+
+**Arguments**
+
+- **hrg** A hierarchical random graph model.
+
+**Value**
+
+An igraph graph.
+
+
+
+***
+
+#### **`cluster_fast_greedy()`:** Community structure via greedy optimization of modularity
+Description
+This function tries to find dense subgraph, also called communities in graphs via directly optimizing a modularity score.
+
+Usage
+
+```
+cluster_fast_greedy(graph, merges = TRUE, modularity = TRUE,
+  membership = TRUE, weights = E(graph)$weight)
+```
+
+**Arguments**
+
+- **graph:** The input graph
+- **merges:* Logical scalar, whether to return the merge matrix.
+- **modularity:**	Logical scalar, whether to return a vector containing the modularity after each merge.
+- **membership:** Logical scalar, whether to calculate the membership vector corresponding to the maximum modularity score, considering all possible community structures along the merges.
+- **weights:** If not NULL, then a numeric vector of edge weights. The length must match the number of edges in the graph. By default the ‘weight’ edge attribute is used as weights. If it is not present, then all edges are considered to have the same weight.
+- **Details:** This function implements the fast greedy modularity optimization algorithm for finding community structure, see A Clauset, MEJ Newman, C Moore: Finding community structure in very large networks, http://www.arxiv.org/abs/cond-mat/0408187 for the details.
+
+<br>
+
+**Value:**
+
+cluster_fast_greedy returns a communities object, please see the communities manual page for details.
+
+```{r, eval=T}
+g <- make_full_graph(5) %du% make_full_graph(5) %du% make_full_graph(5)
+g <- add_edges(g, c(1,6, 1,11, 6, 11))
+fc <- cluster_fast_greedy(g)
+membership(fc)
+sizes(fc)
+```

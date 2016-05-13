@@ -1,0 +1,268 @@
+---
+title: "R03 - Pre merge last check"
+author: "Anna Krystalli"
+date: "22 January 2016"
+output: html_document
+---
+
+### Error in **`D0`** value entries.
+```{r, echo = F, warning=FALSE, message=FALSE}
+
+# PACKAGES & FUNCTIONS ########################################################################
+
+##...Packages...
+require(knitr)
+require(dplyr)
+require(prodlim)
+require(MASS)
+
+##...Settings...
+options(scipen=999)
+options(stringsAsFactors = F)
+
+output.folder <- "/Users/Anna/Google Drive/bird trait networks/outputs/"
+input.folder <- "/Users/Anna/Google Drive/bird trait networks/inputs/data/"
+script.folder <- "/Users/Anna/Documents/workflows/bird_trait_networks/"
+save <- T
+
+
+###...Functions...###
+
+
+numerise <- function(x){if(all(grepl('^[0-9.]+$', x))) as.numeric(x) else x}
+
+makeTransparent<-function(someColor, alpha=100){
+  newColor<-col2rgb(someColor)
+  apply(newColor, 2, function(curcoldata){rgb(red=curcoldata[1], green=curcoldata[2],
+                                              blue=curcoldata[3],alpha=alpha, maxColorValue=255)})
+}
+
+
+probScore <- function(p){
+   p <- if(p > 0.05){"-"}else{if(p > 0.01 && 0.05 >= p){"*"}else{
+        if(p > 0.001 && 0.01 >= p){"**"}else{
+          if(0.001 >= p){"***"}
+        }}}
+  
+  return(p)}
+
+outRowSelect <- function(x, species, var){x[x$species == species & x$var == var, c("species", "var", "value", "ref")]} 
+
+#I used this function to calculate a weighted r-squared from the robust linear model
+r2ww <- function(x){
+SSe <- sum((x$w*x$resid)^2); #the residual sum of squares is weighted
+observed <- x$resid+x$fitted;
+SSt <- sum((x$w*(observed-mean(observed)))^2); #the total sum of squares is weighted      
+value <- 1-SSe/SSt;
+return(value);
+}
+
+correspondence <- function(dat, x.name = "D1.value", y.name = "D0.value",  
+                           output = "coef"){
+
+  require(plotly)
+  
+  if(!output %in% c("coef", "outliers", "plot", "plotly")){stop("invalid output type")}
+  
+  y <- as.numeric(as.character(dat[,y.name]))
+  x <- as.numeric(as.character(dat[,x.name]))
+  var <- unique(dat$var)
+  
+  outlie.condition = abs(x - y) > abs(apply(cbind(x,y), 1, min))
+
+  
+  if(length(var) > 1){stop("more than one unique variable in dat")}
+  
+  lm <- lm(y ~ x + offset(x), data = dat)
+  rlm <- rlm(y ~ x + offset(x), data = dat, method = "M", psi = psi.bisquare)
+  
+  
+  outliers <- dat[outlie.condition,]
+  
+  if(output == "coef"){
+    
+    p <- summary(lm)$coefficients[2,4] %>% probScore()
+    
+    return(data.frame(var = var, a = coefficients(lm)[1], b = coefficients(lm)[2],
+                      p = p, r = summary(lm)$r.squared,
+                      n = dim(dat)[1], outliers = dim(outliers)[1]))
+  }
+  
+  if(output %in% c("plot", "plotly")){
+    
+    lmp <- lm(y ~ x, data = dat)
+    
+    ### predict
+    newX <- data.frame(x = seq(from = range(x)[1],
+                               to = range(x)[2], length.out = 100))
+    
+    pred <- data.frame(x = newX, predict(rlm, newdata = newX, interval = "confidence"))
+    
+    if(output == "plot"){
+    
+    ### plot
+      
+      col <- rep("black", times = length(x))
+      col[which(rlm$w < 0.000001)] <- "orange"
+      col <- makeTransparent(col, 60)  
+      
+      lims <- c(0, max(c(x,y)))
+        
+      plot(y ~ x, type = "p", pch = 21, bg = col,
+           col = col, ylab = y.name, xlab = x.name, 
+           main = unique(var), ylim = lims, xlim = lims)
+      
+      abline(a = 0, b = 1, lwd = 1, lty = 2)
+      
+      lines(fit ~ x, data = pred, lwd = 3, lty = 1)
+      lines(lwr ~ x, data = pred, lwd = 2, lty = 3)
+      lines(upr ~ x, data = pred, lwd = 2, lty = 3)
+      }
+    
+    
+    if(output == "plotly"){
+      
+    p <- plot_ly(x = x, y = y, hoverinfo = "x+y+text", 
+                text = dat$species, type = "scatter", mode = "markers", 
+                name= var,
+                colorscale = "Greens", reversescale = T, 
+                marker = list(
+                  color = toRGB("aquamarine2"), opacity = 0.5, size = 6,
+                            line = list(
+                              color = toRGB("aquamarine4"), 
+                              width = 0.5)
+                  )) %>% add_trace(y = fit, x = x, data = pred, name = "loess", mode = "fit") %>%
+        add_trace(y = lwr, x = x, data = pred, name = "lwr", mode = "lines", 
+                  line = list(color = toRGB("aquamarine4"), 
+                              width = 0.5,
+                              dash = "...")) %>% 
+        add_trace(y = upr, x = x, data = pred, name = "upr", mode = "lines", toRGB("aquamarine2"),
+                  opacity = 0.5, size = 6,
+                  line = list(color = toRGB("aquamarine4"), 
+                              width = 0.5,
+                              dash = "..."))
+    print(p)
+    }
+    
+  }
+  
+  if(output == "outliers"){
+    return(data.frame(outliers, resid = stdres(lm)[outlie.condition]))}
+  
+}
+
+
+
+##...Files...
+D0 <- read.csv(file = paste(script.folder, "reports/R03/","D0.csv", sep = "")
+               ,fileEncoding = "mac")
+
+D0 <- D0[!duplicated(D0[,c("species", "var")]),]
+D1 <- read.csv(file = paste(input.folder, "csv/","D1.long.csv", sep = ""),
+               fileEncoding = "mac") 
+
+ 
+### REPORT ################################################################################### 
+
+### D0 errors ###
+
+kable(D0[c(2203,24210),-length(names(D0))], row.names = F, digits = 2)
+
+D0 <- D0[-c(2203,24210),]
+
+
+
+```  
+
+### **`D0`** vs **`D1`** overlapping data and outliers
+
+I fitted `lm`s as `D0 ~ D1` on overlapping species x var observations between the two datasets. THe first tables give details of the lm parameters. I've included an offset so b expreses the difference from a 1:1 relationship. The second identifies outlier data points from the 1:1 relationship which I will deal with as previous. I experimented with a number of options. Cooks seemed to identify far too many datapoints and also not as expected ie, some datapoints really similar identified while the larger deviations not ided. Obviously the fact that it is looking at the data as a whole probably skews it. I fitted robust regression and tried to identify that way (from the weights) but was identifying similar data points. So instead I just did something really basic. If the difference between two datapoints was equal or greater to the smallest value in the pair I ided it as an outlier
+
+```{r, echo = F, warning=FALSE, message=FALSE}
+
+### D0 vs D1 ###
+
+D <- rbind(cbind(D0[,c("species", "var", "value")], dataset = "D0"),
+           cbind(D1[,c("species", "var", "value")], dataset = "D1"))
+
+dups <- D[duplicated(D[,c("species", "var")]),c("species", "var")]
+
+     
+        
+  dat <- D[row.match(dups, D[,c("species", "var")]),]
+  dat <- cbind(dups, D0.value = D0[row.match(dups, D0[,c("species", "var")]), "value"],
+      D1.value = D1[row.match(dups, D1[,c("species", "var")]), "value"])
+  dat <- apply(dat, 2, FUN = function(x){gsub(" ", "", x)}) %>% data.frame() 
+
+
+ 
+
+   
+  l <- split(dat, f = factor(dat$var)) %>% lapply(FUN = correspondence, 
+            x.name = "D1.value", y.name = "D0.value", output = "coef") 
+  coefs <- do.call(rbind, l) 
+  
+    l <- split(dat, f = factor(dat$var)) %>% lapply(FUN = correspondence, 
+            x.name = "D1.value", y.name = "D0.value", output = "outliers") 
+  outliers <- do.call(rbind, l)
+ 
+    
+  out.refs <- c()
+      for(i in 1:dim(outliers)[1]){
+      out.refs <- rbind(out.refs,
+        cbind(outRowSelect(D0, species = outliers[i,1], 
+                            var = outliers[i,2]), dataset = "D0"),
+        cbind(outRowSelect(D1, outliers[i,1], outliers[i,2]), dataset = "D1"))
+      }
+ 
+
+kable(coefs, row.names = F, digits = 2)
+kable(outliers, row.names = F, digits = 2)
+kable(out.refs, row.names = F, digits = 2)
+
+if(save){
+  dir.create(paste(input.folder, "r data/R03/", sep = ""))
+  
+  write.csv(outliers, file = paste(input.folder, "r data/R03/outliers.csv", sep = "")
+                 ,fileEncoding = "mac", row.names = F)
+  
+  write.csv(out.refs, file = paste(input.folder, "r data/R03/outlier_refs.csv", sep = "")
+                 ,fileEncoding = "mac", row.names = F)
+
+  write.csv(coefs, file = paste(input.folder, "r data/R03/coefs.csv", sep = "")
+               ,fileEncoding = "mac", row.names = F)  
+  }
+
+
+```
+
+<br>
+
+***
+
+### PLOTS
+
+```{r, echo = F, warning=FALSE, message=FALSE}
+for(pvar in unique(dat$var)){
+  pdat = dat[dat$var == pvar,]
+  correspondence(dat = pdat, x.name = "D1.value", y.name = "D0.value", 
+                 output = "plot")
+}
+
+
+
+
+```
+
+
+<br>
+
+***
+
+## PHYLOGENETICALLY CORRECTED BIVARIATE CORELLATIONS
+
+### Trees
+
+After consulting Gavins I am using the Mayar corrected trees, Stage 2 Hackett decisive trees I accessed [here](http://litoria.eeb.yale.edu/bird-tree/archives/Stage2_MayrAll_decisive/CombinedTrees/) and I randomly selected [set 10](http://litoria.eeb.yale.edu/bird-tree/archives/Stage2_MayrAll_decisive/CombinedTrees/Stage2_MayrAll_Hackett_set10_decisive.zip)
+
+### Matching
