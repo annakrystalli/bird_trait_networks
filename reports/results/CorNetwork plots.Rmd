@@ -23,20 +23,57 @@ load(file = paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n,
 res <- read.csv(paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
                      min.n, if(log){"_log"},".csv", sep = ""), stringsAsFactors = F)
 
+metadata <- read.csv(paste(input.folder, "metadata/","metadata.csv", sep = ""), 
+                     stringsAsFactors = F, fileEncoding = "mac") %>% 
+  apply(2, FUN = trimws) %>% data.frame(stringsAsFactors = F)
+
+### FUNCTION
+
+
+makeTransparent<-function(someColor, alpha=100)
+{
+  newColor <- col2rgb(someColor)
+  newColor <- rbind(newColor, alpha)
+  apply(newColor, 2, function(curcoldata){rgb(red=curcoldata[1], green=curcoldata[2],
+                                              blue=curcoldata[3], alpha=curcoldata[4],
+                                              maxColorValue=255)})
+}
+
+################################################################################################
 # PLOT
 
 
-edges <- res[abs(res$phylocor) > 0.35 & !is.na(res$phylocor),]
+edges <- res[abs(res$phylocor) > cutoff & !is.na(res$phylocor),]
 
 g.n <- as.vector(apply(edges[,c("var1", "var2")],1,FUN = unlist))
-n.names <- unique(g.n)
-g.code <- match(g.n, n.names)  
+g.names <- unique(g.n)
+
+vertices <- data.frame(code = 1:dim(net[[1]])[1], net[[1]][match(g.names, net[[1]]$name),]) 
+
+
+
+g.code <- match(g.n, g.names)
+v.code.n <- match(g.names, vertices$name)
+v.code.n <- match(vertices$name, g.names)
+
+
 
 # node colours
-role.levels <- levels(unique(net[[1]]$role))
-role.codes <- 
-role.cols <- RColorBrewer::brewer.pal(7, "BrBG")
-n.cols <- role.cols[match(as.character(net[[1]]$role)[match(n.names, net[[1]]$name)], role.levels)]
+all.role.levels <- levels(vertices$role)
+role.levels <- all.role.levels[which(all.role.levels %in% vertices$role)]
+
+mod.levels <- unique(vertices$module)
+
+# role.codes <- 
+role.cols <- RColorBrewer::brewer.pal(length(role.levels), "BrBG")
+mod.cols <- RColorBrewer::brewer.pal(length(mod.levels), "Set2")
+names(mod.cols) <- mod.levels
+role.size <- rev(1/1:length(all.role.levels))[all.role.levels %in% role.levels]
+names(role.size) <- role.levels
+
+
+vertex.cols <- mod.cols[as.character(vertices$module)]
+n.size <- role.size[as.character(vertices$role)]
 
 # edge colours
 edge.cols <- rep("black", length(edges$phylocor))
@@ -46,14 +83,14 @@ edge.cols[edges$phylocor < -0.1] <- "blue"
 
 require(igraph)
 
-G <- graph(g.code, directed = FALSE )
+G <- graph(g.code, directed = FALSE)
 
 # Assign attributes to the graph
 G$name    <- "correlation network of numeric bird traits"
 
 # Assign attributes to the graph's vertices
-V(G)$name  <- 1:length(n.cols)
-V(G)$color <- n.cols
+# V(G)$name  <- 1:length
+V(G)$color <- vertex.cols
 E(G)$edge.color <- edge.cols
 
 
@@ -69,27 +106,117 @@ par(mai = c(0,0.5,0.5,0))
 
 plot(G, layout = layout.fruchterman.reingold, 
      main = G$name,
-     vertex.label = V(G)$name,
-     vertex.size = 5.5,
-     vertex.color= V(G)$color,
-     vertex.frame.color= "white",
+     #vertex.label = V(G)$name,
+     vertex.size = 30*n.size,
+     vertex.color= vertex.cols,
+     vertex.frame.color= vertex.cols,
      vertex.label.color = "black",
      vertex.label.family = "sans",
      edge.width=E(G)$weight,
-     vertex.label.cex=0.65,
-     edge.color= edge.cols)
+     vertex.label.cex=2.2 * n.size,
+     edge.color= makeTransparent(edge.cols, 70))
 
 
+legend("bottomleft", legend = names(role.size), 
+       col = "black", pch = 21, pt.bg = "black", title = "roles",
+       bty = "n", pt.cex = 4 * role.size)
 
-legend("bottomleft", legend = role.levels[which(role.levels %in% as.character(net[[1]]$role))], 
-       fill = role.cols[which(role.levels %in% as.character(net[[1]]$role))], 
-       bty = "n", cex = 1)
+legend("bottomright", legend = names(mod.cols), 
+       col = mod.cols, pch = 21, pt.bg = mod.cols, title = "modules",
+       bty = "n", pt.cex = c(1))
 
 
 
 
        
 
-kable(data.frame(code = 1:length(n.names), trait = n.names))
+# kable(data.frame(code = 1:length(g.names), trait = g.names, 
+#                 descr = metadata$descr[match(gsub("log_", "", g.names), metadata$code)]))
+
+DT::datatable(data.frame(code = 1:length(g.names), trait = g.names, 
+                descr = metadata$descr[match(gsub("log_", "", g.names), metadata$code)],
+                vertices$module, vertices$role),
+              rownames = F, filter = list(position = 'top'))
 
 ```
+
+
+```{r, results="asis", echo=F, warning=F, message=F}
+
+data <- vertices#[v.code,]
+
+data <- data.frame(data, metadata[match(gsub("log_", "", data$name), metadata$code),
+                                  c("cat", "descr", "units")])
+
+
+par(mai = c(1.2,1,1,1), las = 2, mar = c(7,2,2,1))
+
+boxplot(connectivity ~ module, data = data, col = "grey", xlab = "modules",
+        main = "distribution of vertex connectivity between modules", cex.main = 0.85)
+
+boxplot(log(participation) ~ module, data = data, col = "grey", xlab = "modules",
+        main = "distribution of vertex partition between modules", cex.main = 0.85)
+
+  
+
+
+for(mod in mod.levels){
+  
+ 
+par(mai = c(0,0.5,0.5,0))
+
+col.mask <- rep(255, length(data$module))
+col.mask[data$module != mod] <- 50
+
+edge.mod <- tapply(g.n, rep(1:(length(g.n)/2), each = 2), 
+                    FUN = function(x, mod.v){all(x %in% mod.v)}, 
+                    mod.v = data$name[data$module == mod])
+
+edge.mask <- rep(10, length(edge.mod))
+edge.mask[edge.mod] <- 100
+
+
+vertex.cols.t<- makeTransparent(vertex.cols, col.mask)
+edge.cols.t <- makeTransparent(edge.cols, edge.mask)
+  
+  
+plot(G, layout = layout.fruchterman.reingold, 
+     main = G$name,
+     vertex.label = V(G)$name,
+     vertex.size = 30*n.size,
+     vertex.color= vertex.cols.t,
+     vertex.frame.color= vertex.cols.t,
+     vertex.label.color = "black",
+     vertex.label.family = "sans",
+     edge.width=E(G)$weight,
+     vertex.label.cex= 2.2 * n.size,
+     edge.color= edge.cols.t)
+
+
+
+legend("bottomleft", legend = names(role.size), 
+       col = "black", pch = 21, pt.bg = "black", title = "roles",
+       bty = "n", pt.cex = 4 * role.size)
+
+legend("bottomright", legend = names(mod.cols), 
+       col = mod.cols, pch = 21, pt.bg = mod.cols, title = "modules",
+       bty = "n", pt.cex = c(1))
+
+require(DT)
+
+tab <- data[data$module == mod,]
+DT::renderDataTable(DT::dataTableOutput(tab))
+
+par(mai = c(1.2,1,1,1), las = 2, mar = c(7,2,2,1))
+  
+  for(var in c("role", "cat")){
+  
+  barplot(table(data[data$module == mod,var]))
+  }
+  
+
+
+
+
+  
+}
