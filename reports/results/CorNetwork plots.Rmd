@@ -2,11 +2,14 @@
 output: html_document
 ---
 
+
+
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=9, fig.height=9}
 
 # SETTINGS
 require(knitr)
 require(igraph)
+library(DT)
 
 output.folder <- "/Users/Anna/Google Drive/bird trait networks/outputs/"
 input.folder <- "/Users/Anna/Google Drive/bird trait networks/inputs/data/"
@@ -39,8 +42,23 @@ makeTransparent<-function(someColor, alpha=100)
                                               maxColorValue=255)})
 }
 
+```
+
+# **Correlation network report**
+
+##### **Analysis ID:   ** `r an.ID` 
+##### **log:   ** `r log`
+##### **min.n:   ** `r min.n`
+##### **cutoff:   ** `r cutoff`
+
+The report visualises the results of network analysis of phylogenetically corrected correlations $(r_p)$ between numeric traits. $(r_p)$ values where extracted from `pgls` models which corrected for phylogenetic bias. Models were attempted only for trait combinations for which data availability exceeded **`r min.n`** data points. Traits where connected if the absolute $r_p$ values between them exceeded a cut-off point of: **`r cutoff`**.
+
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=9, fig.height=9}
+
 ################################################################################################
-# PLOT
+# PREPARE REPORT DATA
 
 
 edges <- res[abs(res$phylocor) > cutoff & !is.na(res$phylocor),]
@@ -62,7 +80,7 @@ v.code.n <- match(vertices$name, g.names)
 all.role.levels <- levels(vertices$role)
 role.levels <- all.role.levels[which(all.role.levels %in% vertices$role)]
 
-mod.levels <- unique(vertices$module)
+mod.levels <- sort(unique(vertices$module))
 
 # role.codes <- 
 role.cols <- RColorBrewer::brewer.pal(length(role.levels), "BrBG")
@@ -99,11 +117,84 @@ E(G)$weight <- edges$phylocor
 
 
 
-# Plot the graph -- details in the "Drawing graphs" section of the igraph manual
+# re-order vertices into data
+meta.id <- match(gsub("log_", "", g.names), metadata$code)
+data <- data.frame(code = 1:length(g.names), name = g.names,
+                   descr = metadata$descr[meta.id], module = vertices$module, 
+                   role = vertices$role, connectivity = vertices$connectivity,
+                   participation = vertices$participation,
+                metadata[meta.id,][,c("cat", "units")])
+
+# phylocors
+
+g.n.mod <- data$module[match(g.n, data$name)]
+names(g.n.mod) <- g.n
+
+intra.id <- tapply(g.n, rep(1:(length(g.n)/2), each = 2), 
+                   FUN = function(x, g.n.mod){
+                     g.n.mod[unlist(x)][1] == g.n.mod[unlist(x)][2]}, 
+                   g.n.mod = g.n.mod)
+
+intra.e <-edges[intra.id,]
+intra.e$module <- g.n.mod[rep(intra.id, each = 2)][seq(2, 2*sum(intra.id), by = 2)]
 
 
+```
+
+<br>
+
+### **network characteristics**
+
+##### **no. modules:** `r length(mod.levels)`
+##### **no. vertices:** `r nrow(vertices)`
+##### **no. edges:** `r nrow(edges)`
+##### **mean participation:** `r format(mean(vertices$participation), digits = 2)`
+##### **mean connectivity:** `r format(mean(vertices$connectivity), digits = 3, nsmall = 2)`
+
+
+## **modules**
+
+#### vertex characteristics
+```{r, results="asis", echo=F, warning=F, message=F, fig.width=4, fig.height=3.5}
+
+
+par(mai = c(4,2,2,4), las = 1, mar = c(4,4,2,1), mgp = c(2.2, 1, 0))
+
+boxplot(connectivity ~ module, data = data, xlab = "modules",
+        main = "a) distribution of vertex connectivity between modules", cex.main = 0.75,
+        varwidth = T, col = mod.cols[as.character(sort(unique(data$module)))], notch = T,
+        ylab = "connectivity",
+        cex.lab = 0.7, cex.axis = 0.7, bty = "n")
+
+boxplot(participation ~ module, data = data,  xlab = "modules", outline = F,
+        main = "b) distribution of vertex participation between modules", cex.main = 0.75,
+        varwidth = T, col = mod.cols[as.character(sort(unique(data$module)))], notch = T,
+        ylab = "participation",
+        cex.lab = 0.7, cex.axis = 0.7)
+```
+
+#### edge characteristics
+
+```{r, results="asis", echo=F, warning=F, message=F, fig.width=4, fig.height=3.5}
+
+boxplot(abs(phylocor) ~ module, data = intra.e, xlab = "modules", outline = T,
+        main = "c) distribution of abs(intra-modular) phylocor between modules", cex.main = 0.75,
+        varwidth = T, col = mod.cols[as.character(sort(unique(data$module)))], notch = T,
+        ylab = "abs(phylocorrected correlation)",
+        cex.lab = 0.7, cex.axis = 0.7, ylim = c(0, 1))
+
+boxplot(phylocor ~ module, data = intra.e, xlab = "modules", outline = T,
+        main = "d) distribution of intra-modular phylocor between modules", cex.main = 0.75,
+        varwidth = T, col = mod.cols[as.character(sort(unique(data$module)))], notch = T,
+        ylab = "phylocorrected correlation",
+        cex.lab = 0.7, cex.axis = 0.7, ylim = c(-1, 1))
+
+```
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=9, fig.height=9}
 par(mai = c(0,0.5,0.5,0))
 
+set.seed(1)
 plot(G, layout = layout.fruchterman.reingold, 
      main = G$name,
      #vertex.label = V(G)$name,
@@ -127,96 +218,30 @@ legend("bottomright", legend = names(mod.cols),
 
 
 
+dt.tab <- data
+dt.tab$connectivity <- format(dt.tab$connectivity, digits = 4)
+dt.tab$participation <- format(dt.tab$participation, digits = 3, n.small = 2,
+                                          scientific = 9999, trim = F)
 
-       
-
-# kable(data.frame(code = 1:length(g.names), trait = g.names, 
-#                 descr = metadata$descr[match(gsub("log_", "", g.names), metadata$code)]))
-
-DT::datatable(data.frame(code = 1:length(g.names), trait = g.names, 
-                descr = metadata$descr[match(gsub("log_", "", g.names), metadata$code)],
-                vertices$module, vertices$role),
-              rownames = F, filter = list(position = 'top'))
+DT::datatable(dt.tab, rownames = F, filter = list(position = 'top'))
 
 ```
 
-
-```{r, results="asis", echo=F, warning=F, message=F}
-
-data <- vertices#[v.code,]
-
-data <- data.frame(data, metadata[match(gsub("log_", "", data$name), metadata$code),
-                                  c("cat", "descr", "units")])
-
-
-par(mai = c(1.2,1,1,1), las = 2, mar = c(7,2,2,1))
-
-boxplot(connectivity ~ module, data = data, col = "grey", xlab = "modules",
-        main = "distribution of vertex connectivity between modules", cex.main = 0.85)
-
-boxplot(log(participation) ~ module, data = data, col = "grey", xlab = "modules",
-        main = "distribution of vertex partition between modules", cex.main = 0.85)
-
-  
-
-
-for(mod in mod.levels){
-  
+<br>
  
-par(mai = c(0,0.5,0.5,0))
+```{r, message=FALSE, warning=FALSE, echo=FALSE, include = F}
 
-col.mask <- rep(255, length(data$module))
-col.mask[data$module != mod] <- 50
-
-edge.mod <- tapply(g.n, rep(1:(length(g.n)/2), each = 2), 
-                    FUN = function(x, mod.v){all(x %in% mod.v)}, 
-                    mod.v = data$name[data$module == mod])
-
-edge.mask <- rep(10, length(edge.mod))
-edge.mask[edge.mod] <- 100
-
-
-vertex.cols.t<- makeTransparent(vertex.cols, col.mask)
-edge.cols.t <- makeTransparent(edge.cols, edge.mask)
+out <- NULL
+for(mod in sort(mod.levels)){
   
-  
-plot(G, layout = layout.fruchterman.reingold, 
-     main = G$name,
-     vertex.label = V(G)$name,
-     vertex.size = 30*n.size,
-     vertex.color= vertex.cols.t,
-     vertex.frame.color= vertex.cols.t,
-     vertex.label.color = "black",
-     vertex.label.family = "sans",
-     edge.width=E(G)$weight,
-     vertex.label.cex= 2.2 * n.size,
-     edge.color= edge.cols.t)
-
-
-
-legend("bottomleft", legend = names(role.size), 
-       col = "black", pch = 21, pt.bg = "black", title = "roles",
-       bty = "n", pt.cex = 4 * role.size)
-
-legend("bottomright", legend = names(mod.cols), 
-       col = mod.cols, pch = 21, pt.bg = mod.cols, title = "modules",
-       bty = "n", pt.cex = c(1))
-
-require(DT)
-
-tab <- data[data$module == mod,]
-DT::renderDataTable(DT::dataTableOutput(tab))
-
-par(mai = c(1.2,1,1,1), las = 2, mar = c(7,2,2,1))
-  
-  for(var in c("role", "cat")){
-  
-  barplot(table(data[data$module == mod,var]))
+  out <- c(out, 
+           knit_child("~/Documents/workflows/bird_trait_networks/reports/results/module_plots_child.Rmd", 
+                      envir = parent.frame()))
   }
-  
+```
+```{r echo=FALSE, results="asis"}
 
+cat(paste(out, collapse = "/n"))
 
+```
 
-
-  
-}

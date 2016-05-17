@@ -1,0 +1,131 @@
+
+<br>
+
+***
+
+## Module `r mod`
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=9, fig.height=9}
+
+mod.v = data$name[data$module == mod]
+mod.e <- tapply(g.n, rep(1:(length(g.n)/2), each = 2), 
+                   FUN = function(x, mod.v){all(x %in% mod.v)}, 
+                   mod.v = data$name[data$module == mod])
+
+
+
+
+par(mai = c(0,0.5,0.5,0))
+
+col.mask <- rep(255, length(data$module))
+col.mask[data$module != mod] <- 50
+
+edge.mask <- rep(10, length(mod.e))
+edge.mask[mod.e] <- 100
+
+
+vertex.cols.t<- makeTransparent(vertex.cols, col.mask)
+edge.cols.t <- makeTransparent(edge.cols, edge.mask)
+
+```
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+edge.xtr.mod <- tapply(g.n, rep(1:(length(g.n)/2), each = 2), 
+                   FUN = function(x, mod.v){any(x %in% mod.v) & !all(x %in% mod.v)}, 
+                   mod.v = mod.v)
+
+xtr.dat <- edges[edge.xtr.mod,]
+
+xtr.v <- unlist(apply(xtr.dat[,c("var1", "var2")], 1, 
+                      FUN = function(x, mod.v){x[!x %in% mod.v]}, mod.v))
+
+xtr.mods <- data$module[match(xtr.v, data$name)]
+names(xtr.mods) <- xtr.v
+
+xtr.dat <- data.frame(xtr.dat, module = xtr.mods[xtr.v])
+
+```
+
+### **module characteristics**
+
+###### **no. vertices:** `r length(mod.v)`
+###### **no. intramodular edges:** `r sum(mod.e)`
+###### **median participation:** `r format(median(data[data$module == mod,]$participation), digits = 3)`
+###### **mean connectivity:** `r format(mean(data[data$module == mod,]$connectivity), digits = 3)`
+###### **mean abs connectivity:** `r format(mean(abs(data[data$module == mod,]$connectivity)), digits = 3)`
+###### **mean phylocor, strength of intra-modular edges:** `r format(mean(abs(edges$phylocor[mod.e])), digits = 3)`
+
+###### **no. extramodular edges:** `r sum(edge.xtr.mod)`
+###### **mean phylocor, strength of extra-modular edges:** `r format(mean(abs(xtr.dat$phylocor)), digits = 3)`
+###### **ratio of intra/extra-modular edges:** `r format(sum(mod.e)/sum(edge.xtr.mod), digits = 3)`
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=3, fig.height=2.5}
+
+
+par(mai = c(1.2,1,1,1), las = 2, mar = c(7,2,2,1))
+
+for(var in c("role", "cat")){
+  
+  barplot(table(data[data$module == mod,var]), col = mod.cols[as.character(mod)], cex.names = 0.7,
+          cex.axis = 0.7, cex.main = 0.6, 
+          main = paste("module", var, "distribution"))
+}
+
+
+par(mai = c(1.2,2,1,1), las = 1, mar = c(3,3,3,1))
+
+boxplot(abs(phylocor) ~ module, data = xtr.dat, varwidth = T, 
+        col = mod.cols[as.character(sort(unique(xtr.dat$module)))], notch = T,
+        main = "extra-modular abs phylocor distribution", cex.names = 0.9,
+          cex.axis = 0.7, cex.main = 0.6)
+
+#  table(data$module[data$name %in% extra.v]), main = paste("mod:", mod, "distribution of extra-modular connections"))
+
+```
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.width=9, fig.height=9}
+set.seed(1)
+plot(G, layout = layout.fruchterman.reingold, 
+     main = G$name,
+     vertex.label = V(G)$name,
+     vertex.size = 30*n.size,
+     vertex.color= vertex.cols.t,
+     vertex.frame.color= vertex.cols.t,
+     vertex.label.color = "black",
+     vertex.label.family = "sans",
+     edge.width=E(G)$weight,
+     vertex.label.cex= 2.2 * n.size,
+     edge.color= edge.cols.t)
+
+
+
+legend("bottomleft", legend = names(role.size), 
+       col = "black", pch = 21, pt.bg = "black", title = "roles",
+       bty = "n", pt.cex = 4 * role.size)
+
+legend("bottomright", legend = names(mod.cols), 
+       col = mod.cols, pch = 21, pt.bg = mod.cols, title = "modules",
+       bty = "n", pt.cex = c(1))
+
+```
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results="asis"}
+require(DT)
+dt.dat <- data[data$module == mod,]
+dt.dat <- dt.dat[order(dt.dat$participation, decreasing = T),]
+dt.dat$connectivity <- format(dt.dat$connectivity, digits = 4)
+dt.dat$participation <- format(dt.dat$participation, digits = 3, n.small = 2,
+                                          scientific = 9999, trim = F)
+
+DT::datatable(dt.dat, rownames = F)
+
+```
+
+
+
+<br>
+
+
