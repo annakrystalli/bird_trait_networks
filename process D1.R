@@ -17,14 +17,14 @@ setwd(input.folder)
 # FILES ###############################################################
 
 
-D1 <- read.csv("Amniote_Database_Aug_2015.csv", stringsAsFactors = F, 
+D1 <- read.csv(paste("csv/", "Amniote_Database_Aug_2015.csv", sep = ""), stringsAsFactors = F, 
                fileEncoding = "mac") %>% 
   apply(2, FUN = trimws) %>% data.frame(stringsAsFactors = F)
                 
  
 # WORKFLOW ###############################################################
 
-D1.names <- names(D1)
+
 
 ##### Initial D1 processing ###########
 
@@ -45,7 +45,7 @@ write.csv(taxo, file = "r data/taxo.csv", row.names = F)
 # write proceesed D1 file, explored in R01
 write.csv(D1, file = "csv/D1.csv", row.names = F, fileEncoding = "mac")
 
-
+D1.names <- names(D1)
 
 # Post R01 D1 data ###########################################################################
 
@@ -60,7 +60,7 @@ D1 <- D1[, !names(D1) %in% var.omit]
 D1 <- codeVars(dat = D1, data.ID = "D1", metadata = metadata, vnames = vnames)
 
 ### SAVE ###
-write.csv(D1, paste("/csv/D1.tidy.csv", sep = ""), row.names = F)
+write.csv(D1, paste(getwd(),"/csv/D1.tidy.csv", sep = ""), row.names = F)
 #_______________________________________________________________
 
 
@@ -79,13 +79,13 @@ D1.ref <- codeVars(dat = D1.ref, data.ID = "D1", metadata = metadata, vnames = v
 
 
 ### SAVE ###
-write.csv(D1.ref, paste("/ref/D1.tidy.csv", sep = ""), row.names = F)
+write.csv(D1.ref, paste(getwd(), "/ref/D1.tidy.csv", sep = ""), row.names = F)
 #_________________________________________________________________
 
 
 
 ##### Process D1 n #####
-D1.n <- read.csv(file = paste("n/","D1.csv", sep = ""),
+D1.n <- read.csv(file = paste(getwd(),"/n/","D1.csv", sep = ""),
                  fileEncoding = "mac")
 D1.n <- D1.n[D1.n$species %in% D1$species,]
 
@@ -93,13 +93,15 @@ D1.n <- D1.n[D1.n$species %in% D1$species,]
 D1.n <- D1.n[,-c(grep("min", names(D1.n)), grep("max", names(D1.n)))]
 # correct var names
 names(D1.n) <- gsub("count_", "", names(D1.n))
-names(D1.n) <- unlist(lapply(names(D1.n), FUN = function(x, pattern){m <- grep(x, pattern, value = T)
-if(length(m) == 0){m <- x}
-if(length(m) == 2){m <- m[2]}
-m}, pattern = D1.names))
+names(D1.n) <- unlist(lapply(names(D1.n), FUN = function(x, pattern){
+  m <- grep(pattern = x, x = pattern, value = T)
+  if(length(m) == 0){m <- x}
+  if(length(m) == 2){m <- m[2]}
+  m}, 
+pattern = D1.names))
 
 # combine references for derived repro.age.diff
-D1.n$repro.age.diff <- D1.n$female_maturity_d + D1.n$male_maturity_d
+D1.n$repro.age.diff <- D1.n$female_maturity + D1.n$male_maturity
 D1.n[D1.n == 0] <- NA
 D1.n <- D1.n[, !names(D1.n) %in% var.omit]
 
@@ -107,6 +109,6 @@ D1.n <- D1.n[, !names(D1.n) %in% var.omit]
 D1.n <- codeVars(dat = D1.n, data.ID = "D1", metadata = metadata, vnames = vnames)
 
 ### SAVE ###
-write.csv(D1.n, paste("/n/D1.tidy.csv", sep = ""), row.names = F)
+write.csv(D1.n, paste(getwd(),"/n/D1.tidy.csv", sep = ""), row.names = F)
 #_________________________________________________________________
 

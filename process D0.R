@@ -56,5 +56,5 @@ D0$value[D0$var == "repro.age"] <- as.numeric(D0$value[D0$var == "repro.age"]) *
 # write processed data
 write.csv(D0, file = "csv/D0.csv", row.names = F, fileEncoding = "mac")                    
 write.csv(sort(unique(D0$var)), file = "r data/var.vnames.csv", row.names = F, fileEncoding = "mac")
-write.csv(metadata, file = "metadata/metadata.csv",row.names = F, fileEncoding = "mac")
+#write.csv(metadata, file = "metadata/metadata.csv",row.names = F, fileEncoding = "mac")
                  
