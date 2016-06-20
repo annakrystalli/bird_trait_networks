@@ -104,6 +104,18 @@ m1DataPrep <- function(data, datType, phylo.match, ...) {
   
 }
 
+## Create grid of unique variable combinations, calculate data availability for
+## each and sort. min.n needs to be set in working environment.
+varGridGen <- function(dat, ...) {
+  
+  var.grid <- calcTraitPairN(dat)
+  var.grid <- var.grid[var.grid$n > min.n,]
+  var.grid <- var.grid[order(var.grid$n, decreasing = T),] 
+  
+  return(var.grid)
+  
+}
+
 # SETTINGS ###############################################################
 dir.create(paste(output.folder, "data/phylocors/", sep = ""))
 dir.create(paste(output.folder, "data/networks/", sep = ""))
@@ -159,13 +171,7 @@ if(an.ID == "100spp"){
 
 # VARIABLES COMBINATION DATA AVAILABILITY >>>
 
-## Create grid of unique variable combinations, calculate data availability for each and sort
-
-
-
-var.grid <- calcTraitPairN(num.dat)
-var.grid <- var.grid[var.grid$n > min.n,]
-var.grid <- var.grid[order(var.grid$n, decreasing = T),]
+num.vg <- varGridGen(num.dat)
 
 ## make sure variables to be logged are > 0
 log.vars <- log.vars[sapply(log.vars, FUN = function(x, dat){all(na.omit(dat[,x]) > 0)},
