@@ -59,7 +59,7 @@ spp.list <- createSpp.list(species = taxo.dat$species,
                            taxo.vars)
 
 # extract and order D0 into master format
-D0 <- longMasterFormat(data, master.vars, data.ID = "D0")
+D0 <- longMasterFormat(data = D0, master.vars, data.ID = "D0")
   
 # create master shell
 master <- list(data = newMasterData(master.vars), spp.list = spp.list, metadata = metadata)
@@ -112,7 +112,8 @@ master <- updateMaster(master, data = D0, spp.list = NULL)
   outliers$data.ID[outliers$select == "D0"] <- "D1"
 
   # remove outliers
-  master$data <- removeData(data = master$data, remove = outliers)
+  master$data <- removeData(data = master$data, outliers = outliers)
+  
   
   # remove duplicates 
   # 
