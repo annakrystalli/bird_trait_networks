@@ -14,6 +14,7 @@ library(geiger)
 library(PHYLOGR)
 library(rnetcarto)
 library(igraph)
+library(phytools)
 
 calcTraitPairN <- function(data){
   
@@ -31,7 +32,7 @@ calcTraitPairN <- function(data){
   
 }
 
-pglsPhyloCor <- function(x, data, match.dat, tree, log.vars){
+pglsPhyloCor <- function(x, data, phylo.match, tree, log.vars){
   
   var1 <- unlist(x[1])
   var2 <- unlist(x[2])
@@ -58,6 +59,7 @@ pglsPhyloCor <- function(x, data, match.dat, tree, log.vars){
   cor <- cor(data[,var1], data[,var2])
   
   
+  
   #METHOD 2 extracting from a PGLS
   #----------------------------------------------------
   
@@ -67,6 +69,7 @@ pglsPhyloCor <- function(x, data, match.dat, tree, log.vars){
   
   
   if(class(result.pgls) == "try-error"){
+    
     phylocor2 <- NA
     lambda <- NA
     error <- gsub(pattern = ".*\n  ", "", geterrmessage())
@@ -84,6 +87,21 @@ pglsPhyloCor <- function(x, data, match.dat, tree, log.vars){
   
   return(data.frame(var1 = var1, var2 = var2, cor = cor, phylocor = phylocor2, n = nsps,
                     lambda = lambda, error = error))
+}
+
+m1DataPrep <- function(data, datType, phylo.match, ...) {
+  
+  var <- metadata$code[metadata$type %in% datType]
+  dat <- data[,c("species", names(data)[names(data) %in% var])]
+  
+  #Remove duplicate species matching to the same species on the tree
+  dat <- dat[dat$species %in% phylo.match$species[phylo.match$data.status != "duplicate"],]
+  
+  # add synonym column to data 
+  dat$synonyms <- phylo.match$species[match(dat$species, phylo.match$species)]
+  
+  return(dat)
+  
 }
 
 # SETTINGS ###############################################################
@@ -115,22 +133,22 @@ load(file = "tree/tree.RData")
 
 #load match data
 load(file = "r data/match data/tree m.RData")
-match.dat <- m$data
+phylo.match <- m$data
 
 # WORKFLOW ###############################################################
 
-## NUMERIC VARIABLES >>>>
 
+## Extracting interaction weights
+
+### Extracting correlations >>>>
+
+#### numeric variables 
+
+num.dat <- m1DataPrep(data = wide, datType = c("Int", "Con"), 
+                      phylo.match = phylo.match)
 
 # separate numeric variables
-num.var <- metadata$code[metadata$type %in% c("Int", "Con")]
-num.dat <- wide[,c("species", names(wide)[names(wide) %in% num.var])]
 
-#Remove duplicate species matching to the same species on the tree
-num.dat <- num.dat[num.dat$species %in% match.dat$species[match.dat$data.status != "duplicate"],]
-
-# add synonym column to data 
-num.dat$synonyms <- match.dat$species[match(num.dat$species, match.dat$species)]
 
 
 ## SUBSET TO 100 SPECIES >>>
@@ -144,12 +162,13 @@ if(an.ID == "100spp"){
 ## Create grid of unique variable combinations, calculate data availability for each and sort
 
 
+
 var.grid <- calcTraitPairN(num.dat)
 var.grid <- var.grid[var.grid$n > min.n,]
 var.grid <- var.grid[order(var.grid$n, decreasing = T),]
 
 ## make sure variables to be logged are > 0
-log.vars <- log.vars[!sapply(log.vars, FUN = function(x, dat){all(na.omit(dat[,x]) > 0)},
+log.vars <- log.vars[sapply(log.vars, FUN = function(x, dat){all(na.omit(dat[,x]) > 0)},
                              dat = num.dat)]
 
 # PHYLOGENTICALLY CORRECTED CORRELATIONS ####################################################
@@ -159,7 +178,7 @@ res <- NULL
 for(i in 1:dim(var.grid)[1]){
   
   res <- rbind(res, pglsPhyloCor(var.grid[i, 1:2], data = num.dat, 
-                                 match.dat = match.dat, tree = tree, log.vars = log.vars))
+                                 phylo.match = phylo.match, tree = tree, log.vars = log.vars))
   print(i)
 }
 
@@ -171,9 +190,29 @@ write.csv(res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn",
           row.names = F)
 
 
-## NETWORK ANALYSIS ####################################################################
+#### binary variables
 
-res <- res[res$phylocor > 0.35]
+# separate numeric variables
+bin.var <- metadata$code[metadata$type == "Bin"]
+bin.dat <- wide[,c("species", names(wide)[names(wide) %in% bin.var])]
+
+var.grid <- calcTraitPairN(bin.dat)
+var.grid <- var.grid[var.grid$n > min.n,]
+var.grid <- var.grid[order(var.grid$n, decreasing = T),]
+
+fitPagel(tree, x, y, method="fitMk", ...)
+
+
+### mixed models
+
+
+
+
+
+#################################################################################
+## NETWORK ANALYSIS ####################################################################
+##################################################################################
+res <- res[abs(res$phylocor) > cutoff & !is.na(res$phylocor),]
 
 library(rnetcarto)
 net.d <- res[!is.na(res$phylocor), c("var1", "var2", "phylocor")]
