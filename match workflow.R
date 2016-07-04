@@ -41,9 +41,10 @@ D0 <- read.csv(file = "csv/D0.csv" ,fileEncoding = "mac")
 
 
 # Load match data.....................................................................
-synonyms  <- read.csv("r data/synonyms.csv", stringsAsFactors=FALSE)
 
-syn.links <- synonyms[!duplicated(t(apply(synonyms[,1:2], 1, sort))),1:2]
+
+syn.links <- read.csv("taxo/syn.links.csv", stringsAsFactors = F)
+
 
 # WORKFLOW ###############################################################
 
@@ -83,8 +84,7 @@ master <- updateMaster(master, data = D0, spp.list = NULL)
     checkVarMeta(master$metadata) %>%
     dataMatchPrep()
 
-  m <- dataSppMatch(m, ignore.unmatched = T, 
-                    syn.links = syn.links, addSpp = T)
+  m <- dataSppMatch(m, syn.links = syn.links, addSpp = T)
   
   # Match data set to spp.list and process
   output <- masterDataFormat(m, meta.vars, match.vars, var.vars)
@@ -125,6 +125,9 @@ master <- updateMaster(master, data = D0, spp.list = NULL)
   master$data <- master$data[!duplicated(master$data[,c("species", "var")]),]
   
   write.csv(master$data, file =  "csv/master.csv", row.names = F, fileEncoding = "mac")
+  
+  save(master, file = paste(output.folder, "data/master.RData", sep = ""))
+  
   
   # Create wide dataset ################################################################################### 
   wide <- widenMaster(vars = unique(master$data$var), species = unique(master$data$species), 
