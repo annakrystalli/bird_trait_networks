@@ -1,6 +1,6 @@
 # SETUP ###############################################################
-rms <- ls()[ls() != "trees"]
-rm(list=rms)
+rm(list=ls())
+
 source("~/Documents/workflows/bird_trait_networks/setup.R")
 setwd(input.folder) #googledrive/bird trait networks/inputs/data
 
@@ -10,9 +10,9 @@ library(caper)
 library(geiger)
 library(PHYLOGR)
 
+# source rmacroRDM functions
 source(paste(script.folder, "functions.R", sep = ""))
-source('~/Documents/workflows/Sex Roles in Birds/birds/bird app/app_output_functions.R', 
-       chdir = TRUE)
+source(paste(script.folder, "wideData_function.R", sep = ""))
 
 # produce named vector of variable data to use for phyloCor analysis
 getNamedVector <- function(var, data){
@@ -88,22 +88,29 @@ calcTraitPairN <- function(data){
 
 # SETTINGS ###############################################################
 
-qcmnames = c("qc", "observer", "ref", "n", "notes")
+meta.vars = c("qc", "observer", "ref", "n", "notes")
 taxo.var <- c("species", "order","family", "subspp", "parent.spp")
 var.var <- c("var", "value", "data")
 var.omit <- c("no_sex_maturity_d", "adult_svl_cm", "male_maturity_d")
 
 
 # FILES ##################################################################
+# 
 
-D0 <- read.csv(file = "csv/D0.csv", fileEncoding = "mac")
-master <- write.csv(file =  "csv/master.csv", fileEncoding = "mac")
+load(file = paste(output.folder, "data/master.RData", sep = ""))
 
 
-spp.list <- data.frame(species = unique(D0$species))
+# Load match data.....................................................................
+spp.list <- master$spp.list
 synonyms  <- read.csv("r data/synonyms.csv", stringsAsFactors=FALSE)
+syn.links <- synonyms[!duplicated(t(apply(synonyms[,1:2], 1, sort))),1:2]
+
 r.synonyms <- read.csv("r data/bird_species_names.csv", stringsAsFactors=FALSE)
 m.synonyms <- read.csv("r data/match data/tree mmatched.csv", stringsAsFactors=FALSE)
+
+syn.links <- rbind(syn.links, m.synonyms)
+syn.links <- syn.links[!duplicated(t(apply(syn.links, 1, FUN = sort))),]
+
 
 # trees <- read.tree(file = "tree/Stage2_MayrAll_Hackett_set10_decisive.tre")
 # tree <- trees[[1]]
@@ -115,30 +122,52 @@ load(file = "tree/tree.RData")
 ## Match tree species names to master species list
 treespp <- data.frame(species = tree$tip.label)
 
-dl <- processDat(file = NULL, dat = treespp, label = F, taxo.dat, var.omit, input.folder,
-           observer = NULL, qc = NULL, ref = "Hackett", n = NULL, notes = NULL,
-           master.vname = "master.vname")
 
-m <- matchObj(data.ID = "tree", spp.list = spp.list, data = dl$data, 
-              status = "unmatched", 
-                          sub = "spp.list",
-                          qcref = dl$qcref)
-
-unmatched <- m$spp.list$species[!m$spp.list$species %in% m$data$species]
-
-m <- dataSppMatch(m, unmatched, ignore.unmatched = T, synonyms = r.synonyms, trim.dat = F, 
-                  retain.dup = F)
-
-unmatched <- m$spp.list$species[!m$spp.list$species %in% m$data$species]
-
-m <- dataSppMatch(m, unmatched, ignore.unmatched = T, synonyms = synonyms, 
-                  trim.dat = F, retain.dup = F)
+# CREATE MASTER
 
 
-unmatched <- m$spp.list$species[!m$spp.list$species %in% m$data$species]
+m <- matchObj(data.ID = "tree", spp.list = spp.list, status = "unmatched",
+              data = treespp,
+              sub = "spp.list", filename = NULL, 
+              meta = createMeta(meta.vars)) # use addMeta function to manually add metadata.
 
-m <- dataSppMatch(m, unmatched, ignore.unmatched = F, synonyms = m.synonyms, 
-                  trim.dat = F, retain.dup = F)
+m <- processDat(m, input.folder, var.omit)
+m$meta$ref <- "hackett"
+m <-  checkVarMeta(m, master$metadata) %>%  dataMatchPrep()
+m <- dataSppMatch(m, syn.links = syn.links, addSpp = F, ignore.unmatched = F)
+
+
+m <- testSynonym("Buphagus erythrorhynchus", m)
+syn.links <- updateSynlinks(syn.links, m)
+
+write.csv(syn.links, "taxo/syn.links.csv", row.names = F)
+
+
+
+
+updateSynlinks <- function(syn.links, m) {
+  
+  add.syns <- m$unmatched[!is.na(m$unmatched$synonyms), , drop = F]
+
+  valid <- dim(add.syns)[1] - 
+  sum(duplicated(t(apply(rbind(syn.links, add.syns), 1, FUN = sort)))) - 
+    sum(duplicated(t(apply(syn.links, 1, FUN = sort))))
+  print(paste(valid, "valid syn.links added"))
+  
+  syn.links <- rbind(syn.links, add.syns)
+  syn.links <- syn.links[!duplicated(t(apply(syn.links, 1, FUN = sort))),]
+  
+  return(syn.links)
+  
+}
+
+# Match data set to spp.list and process
+output <- masterDataFormat(m, meta.vars, match.vars, var.vars)
+
+write.csv(output$data, file =  "csv/D1.long.csv", row.names = F, fileEncoding = "mac")
+
+spp.list <- output$spp.list
+
 
 save(m, file = "r data/match data/tree m.RData")
 
