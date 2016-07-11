@@ -1,2 +1,3 @@
 install.packages(c("dplyr", "taxize","caper", "geiger","PHYLOGR", 
-                   "rnetcarto", "igraph", "phytools"))
+                   "rnetcarto", "igraph", "phytools", "DT", "vegan",
+                   "MCMCglmm"))
