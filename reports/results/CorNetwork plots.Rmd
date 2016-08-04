@@ -51,7 +51,7 @@ makeTransparent<-function(someColor, alpha=100)
 ##### **min.n:   ** `r min.n`
 ##### **cutoff:   ** `r cutoff`
 
-The report visualises the results of network analysis of phylogenetically corrected correlations $(r_p)$ between numeric traits. $(r_p)$ values where extracted from `pgls` models which corrected for phylogenetic bias. Models were attempted only for trait combinations for which data availability exceeded **`r min.n`** data points. Traits where connected if the absolute $r_p$ values between them exceeded a cut-off point of: **`r cutoff`**.
+The report visualises the results of network analysis of phylogenetically corrected correlations $(r_p)$ between numeric traits. $(r_p)$ values where extracted from `pgls` models which corrected for phylogenetic bias. Models were attempted only for trait combinations for which data availability exceeded **`r min.n`** data points. Traits where connected if the absolute $r_p$ values between them exceeded a cut-off point of: **`r cutoff`**. The associated script can be found [here](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker.R).
 
 
 
@@ -219,11 +219,18 @@ legend("bottomright", legend = names(mod.cols),
 
 
 dt.tab <- data
+dt.tab <- dt.tab[order(dt.tab$participation, decreasing = T),]
 dt.tab$connectivity <- format(dt.tab$connectivity, digits = 4)
 dt.tab$participation <- format(dt.tab$participation, digits = 3, n.small = 2,
                                           scientific = 9999, trim = F)
 
+
+
 DT::datatable(dt.tab, rownames = F, filter = list(position = 'top'))
+
+rm(dt.tab)
+
+dev.off()
 
 ```
 
@@ -232,7 +239,7 @@ DT::datatable(dt.tab, rownames = F, filter = list(position = 'top'))
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, include = F}
 
 out <- NULL
-for(mod in sort(mod.levels)){
+for(mod in as.character(sort(mod.levels))){
   
   out <- c(out, 
            knit_child("~/Documents/workflows/bird_trait_networks/reports/results/module_plots_child.Rmd", 
