@@ -120,7 +120,7 @@ dt.dat$connectivity <- format(dt.dat$connectivity, digits = 4)
 dt.dat$participation <- format(dt.dat$participation, digits = 3, n.small = 2,
                                           scientific = 9999, trim = F)
 
-DT::datatable(dt.dat, rownames = F)
+DT::datatable(dt.dat, rownames = F, filter = "none")
 
 ```
 
