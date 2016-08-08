@@ -4,3 +4,4 @@ an.ID <- "100spp"
 min.n <- 10
 log <- T
 cutoff <- 0.35
+min.cat <- 5
