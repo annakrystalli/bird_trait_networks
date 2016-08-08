@@ -9,7 +9,7 @@ cats <- unique(unlist(cat.vg[,1:2]))
 
 
 num.id <- 1:15
-int.id <- 1:5
+int.id <- 1:2
 bin.id <- 1:10
 cat.id <- 6:10
 
@@ -22,12 +22,9 @@ type <- c(rep("g", length(num.id)),
 data <- m1DataPrep(data = data, datType = unique(metadata$type), phylo.match, log, log.vars)
 
 # aggregate or remove categories with < min.cat frequency
-#________________________________________________________________________
-
 # tabulate each categorical variable
 tabs <- apply(cat.dat[,!names(cat.dat) %in% c("species", "synonyms")],
               2, FUN = table) 
-
 # identify catecorical variables that need aggregating
 agg.var <- sapply(tabs, FUN = function(x){any(x < min.cat)})
 # identify levels below minimum n
@@ -39,58 +36,21 @@ agg <- mapply(FUN = function(tabs, levs){sum(tabs[levs])} > min.cat, tabs, levs)
 # create indicator vector to apply transformations
 other <- levs[agg & agg.var]
 nas <- levs[(!agg) & agg.var]
-
 g <- list(data = data, meta = metadata)
-
-# function to aggregate levels below min.n into others
-aggregateCats <- function(g, var, agg.cats){
-  
-  scores  <- g$meta[g$meta$code == var, "scores"]
-  levels  <- g$meta[g$meta$code == var, "levels"]
-  
-  add <- max(as.numeric(strsplit(g$meta[g$meta$code == var, "scores"],
-                                 ";")[[1]])) + 1
-  
-  g$meta[g$meta$code == var, "scores"] <- paste(scores, ";", add, sep = "")
-  g$meta[g$meta$code == var, "levels"] <- paste(levels, ";other", sep = "")
-  
-  g$data[,var][g$data[,var] %in% agg.cats] <- add
-  
-  return(g)
-  
-}
-
-# function to convert levels to NA
-naCats <- function(g, var, agg.cats){
-  
-  g$data[,var][g$data[,var] %in% agg.cats] <- NA
-  
-  return(g)
-  
-}
-
 for(var in names(other)){
   
   g <- aggregateCats(g, var, agg.cats = other[[var]])
 }
-
 for(var in names(nas)){
   
   g <- naCats(g, var, agg.cats = nas[[var]])
 }
 
-
 # Select data and fit model ##########################################
-
-
 dat <- g$data[,c(vars)]
-
 
 lev.mod <- apply(dat, 2 , FUN= function(x){length(unique(na.omit(x)))})
 lev.mod[type %in% c("g", "p")] <- 1 
-
-
-
 
 test <- mgmfit(dat, type, lev.mod, lambda.sel = "EBIC", rule.reg = "OR", method = "glm",
                missings = "casewise.zw")
