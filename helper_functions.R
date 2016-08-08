@@ -27,3 +27,31 @@ codeVars <- function(dat, data.ID, metadata = metadata, vnames = vnames){
   if(any(is.na(names(dat)))){stop("error in coding variable. No matching code found")}
   
   return(dat)}
+
+
+# function to aggregate levels below min.n into others
+aggregateCats <- function(g, var, agg.cats){
+  
+  scores  <- g$meta[g$meta$code == var, "scores"]
+  levels  <- g$meta[g$meta$code == var, "levels"]
+  
+  add <- max(as.numeric(strsplit(g$meta[g$meta$code == var, "scores"],
+                                 ";")[[1]])) + 1
+  
+  g$meta[g$meta$code == var, "scores"] <- paste(scores, ";", add, sep = "")
+  g$meta[g$meta$code == var, "levels"] <- paste(levels, ";other", sep = "")
+  
+  g$data[,var][g$data[,var] %in% agg.cats] <- add
+  
+  return(g)
+  
+}
+
+# function to convert levels to NA
+naCats <- function(g, var, agg.cats){
+  
+  g$data[,var][g$data[,var] %in% agg.cats] <- NA
+  
+  return(g)
+  
+}
