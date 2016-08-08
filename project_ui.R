@@ -64,7 +64,7 @@ read_chunk(paste(script.folder, "load_environment.R", sep = ""))
 #' ## **initialise project environment**
 #' #### - require package installation?
 #+ install-pgks?
-install.pkgs <- T
+install.pkgs <- F
 #'
 #'
 #' ### - source **`load_global.R`**
