@@ -1,15 +1,14 @@
-# ---- phylonetworker_functions ----
-
-# packages might need installing
-library(caper)
-library(geiger)
-library(PHYLOGR)
-library(rnetcarto)
-library(igraph)
-library(phytools)
-library(vegan)
-library(MCMCglmm)
-
+#' calculate number of variable pairwise data-point availability 
+#'
+#' @param data a wide data_frame containing variables in columns and species in rows. Function ignores columns named "species" and "synonyms". 
+#' @details 
+#' 
+#' @return a data.frame of the unique variable pairwise combinations and counts $(n) of data availability. The dataframe is sorted according to $n highest to lowest
+#' @export
+#'
+#' @examples
+#' 
+# ---- calcTraitPairN-f ----
 calcTraitPairN <- function(data){
   
   vars <- names(data)[!names(data) %in% c("species", "synonyms")]
@@ -26,36 +25,38 @@ calcTraitPairN <- function(data){
   
 }
 
-pglsPhyloCor <- function(x, data, tree, log.vars = NULL, datTypes, result = "row"){
+pglsPhyloCor <- function(x, data, tree, log.vars = NULL, datTypes, 
+                         result = "row"){
+  # ---- log-log.vars ----  
+  if(datTypes == "nn") {
+    for(var in x){
+      if(validateLog(var = var, log.vars, data)){
+        data[, var] <- log(data[, var])
+        setNames(data[, var], paste("log", var, sep = "_"))
+        x[x == var] <- paste("log", var, sep = "_")
+      }}}
   
+  # ---- set-up-vars ----
   var1 <- unlist(x[1])
   var2 <- unlist(x[2])
   data <- data[, c("species", "synonyms", var1, var2)]
+  
+  # ---- get-TD ----  
   TD <- getTD(data, tree)
+  
+  # ---- sub-complete-cases ----
   data <- data[complete.cases(data),]
   
-  
+  # ---- fit-cor ---- 
   if(datTypes == "nn") {
-    
-    if(validateLog(var = "var1", log.vars, data, var1 = var1)){
-      data <- logData(data, "var1", var1, var2)
-      var1 <- paste("log", var1, sep = "_")
-    }
-    if(validateLog(var = "var2", log.vars, data, var2 = var2)){
-      data <- logData(data, "var2", var1, var2)
-      var2 <- paste("log", var2, sep = "_")
-    }
     row <- fitNumDat(data, tree, var1, var2, TD, result)
   }
-  
   if(datTypes == "bb") {
     row <-  fitBinDat(data, tree, var1, var2, TD, result) 
   }
-  
   if(datTypes == "cc") {
-    
     meta <- list(getLevels(metadata, var1), getLevels(metadata, var2))
-    
+    # factorise data
     data[,c(var1, var2)] <- mapply(FUN = function(x, meta){factor(as.character(x),
                                                                   levels = meta$levels,
                                                                   labels = meta$labels)},
@@ -64,44 +65,44 @@ pglsPhyloCor <- function(x, data, tree, log.vars = NULL, datTypes, result = "row
     
     row <-  fitCatDat(data, tree, var1, var2, TD, result) }
   
+  # ---- return ----
   return(row)
   
 }
 
 fitNumDat <- function(data, tree, var1, var2, TD, result = "row") {
   
-  
+  # ---- configure-tree ----
   tree <- drop.tip(tree, setdiff(tree$tip.label, data$synonyms))
   tree$tip.label <- data$species[match(tree$tip.label, data$synonyms)] 
   
+  # ---- get-phylosig ----
   physig.var1 <- phylosig(tree, setNames(data[,var1], data$species))
   physig.var2 <- phylosig(tree, setNames(data[,var2], data$species))
   
   
-  # Std. correlation
+  # ---- get-cor ----
   cor <- cor(data[,var1], data[,var2])
-  
-  #METHOD extracting from a PGLS
-  #----------------------------------------------------
+
+  ## ---- get-model ----
   cd <- comparative.data(phy = tree, data = data, names.col = "synonyms", vcv=F)
   
   result.pgls <- try(pgls(as.formula(paste(var1, "~", var2, sep = "")),
                           data = cd, lambda="ML"))
+  
+  # ---- return-model ----
   if(result == "model"){
     return(results.pgls)
   }
   
-  
+  # ---- return-row ---- 
   if(class(result.pgls) == "try-error"){
-    
     phylocor2 <- NA
     lambda <- NA
     p <- NA
     ci <- NA
     error <- gsub(pattern = ".*\n  ", "", geterrmessage())
-    
-  }else{
-    
+    }else{
     t <- summary(result.pgls)$coefficients[var2,3]
     df <- as.vector(summary(result.pgls)$fstatistic["dendf"])
     phylocor2 <- sqrt((t*t)/((t*t)+df))*sign(summary(result.pgls)$coefficients[var2,1])
@@ -109,10 +110,7 @@ fitNumDat <- function(data, tree, var1, var2, TD, result = "row") {
     p <- coef(summary(result.pgls))[2,4]
     ci <- result.pgls$param.CI$lambda$ci
     error <- NA
-    
   }
-  
-  
   return(data.frame(var1 = var1, var2 = var2, n = length(data$species),
                     Dplus = TD$Dplus, sd.Dplus = TD$sd.Dplus, EDplus = TD$EDplus,
                     physig.var1, physig.var2,
@@ -122,18 +120,20 @@ fitNumDat <- function(data, tree, var1, var2, TD, result = "row") {
 }
 
 fitBinDat <- function(data, tree, var1, var2, TD, result = "row") {
-  
+
+  # ---- configure-tree ----
   tree <- drop.tip(tree, setdiff(tree$tip.label, data$synonyms))
   tree$tip.label <- data$species[match(tree$tip.label, data$synonyms)]  
   
-  # Std. correlation
+  # ---- get-cor ----
   cor <- NA
   
+  # ---- get-cor ----
   data <- data[match(tree$tip.label, data$species),]
-  
   x <- setNames(factor(data[,var1]), data$species)
   y <- setNames(factor(data[,var2]), data$species)
   
+  # ---- abor-single-levels ----
   if(any(length(levels(x)) == 1, 
          length(levels(y)) == 1)){
     return(data.frame(var1 = var1, var2 = var2, n = length(data$species), 
@@ -146,7 +146,7 @@ fitBinDat <- function(data, tree, var1, var2, TD, result = "row") {
                                     if(length(levels(y)) == 1){var2})))
   }
   
-  
+  # ---- get-phylosig ----
   physig.var1 <- eval(parse(
     text = paste(
       "phylo.d(data = data, phy = tree, names.col = species, binvar =", var1,")")))$DEstimate
@@ -154,31 +154,28 @@ fitBinDat <- function(data, tree, var1, var2, TD, result = "row") {
     text = paste(
       "phylo.d(data = data, phy = tree, names.col = species, binvar =", var2,")")))$DEstimate
   
-  
+  # ---- get-model ----
   result.pgl <- try(fitPagel(tree = tree, x = x, y = y, method="fitMk"), silent = T)
   
+  # ---- return-model ----
   if(result == "model"){
     return(results.pgl)
   }
   
+  # ---- return-row ----
   if(class(result.pgl) == "try-error"){
-    
     phylocor2 <- NA
     lambda <- NA
     p <- NA
     ci <- NA
     error <- gsub(pattern = ".*\n  ", "", geterrmessage())
-    
   }else{
-    
     phylocor2 <- result.pgl$lik.ratio
     lambda <- NA
     p <- result.pgl$P
     ci <- NA
     error <- NA
-    
   }
-  
   return(data.frame(var1 = var1, var2 = var2, n = length(data$species),
                     Dplus = TD$Dplus, sd.Dplus = TD$sd.Dplus, EDplus = TD$EDplus,
                     physig.var1, physig.var2,
@@ -247,9 +244,17 @@ getTD <- function(data, tree) {
 
 m1DataPrep <- function(data, datType, phylo.match, ...) {
   
-  var <- metadata$code[metadata$type %in% datType]
-  dat <- data[,c("species", names(data)[names(data) %in% var])]
+  vars <- metadata$code[metadata$type %in% datType]
+  dat <- data[,c("species", names(data)[names(data) %in% vars])]
   
+  if(log & "Con" %in% datType){
+    for(var in vars[vars %in% metadata$code[metadata$type %in% "Con"] &
+                    vars %in% log.vars]){
+      if(validateLog(var = var, log.vars, data)){
+        data <- logData(data, var)}
+    }
+  }
+    
   #Remove duplicate species matching to the same species on the tree
   dat <- dat[dat$species %in% phylo.match$species[phylo.match$data.status != "duplicate"],]
   
@@ -272,12 +277,12 @@ varGridGen <- function(dat, ...) {
   
 }
 
-validateLog <- function(var, log.vars, data, var1 = NULL, var2 = NULL) {
-  get(var) %in% log.vars & all(data[,get(var)] > 0)
+validateLog <- function(var, log.vars, data) {
+  var %in% log.vars & all(na.omit(data[,var]) > 0)
 }
 
-logData <- function(data, var, var1, var2) {
-  data[,get(var)] <- log(data[,get(var)])
-  names(data)[names(data) == get(var)] <- paste("log", get(var), sep = "_")
+logData <- function(data, var) {
+  data[,var] <- log(data[,var])
+  names(data)[names(data) == var] <- paste("log", var, sep = "_")
   return(data)
 }
