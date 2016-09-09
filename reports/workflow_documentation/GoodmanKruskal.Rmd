@@ -1,0 +1,129 @@
+---
+title: "wkf: GoodmanKrustal"
+author: 
+date: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning=F, cache=F)
+```
+```{r}
+rm(list = ls())
+wkf = "goodmankruskal"
+param = "goodmankruskal.R"
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+source(file_setup_path)
+source("~/Documents/workflows/bird_trait_networks/project_ui.R")
+
+
+
+```
+
+
+
+```{r}
+
+
+vars <- ms_vars[1:(as.integer(length(ms_vars)*v.p))]
+spps <- spp.ranks$spp[1:(as.integer(nrow(spp.ranks)*s.p))]
+spp <- data$species %in% spps
+
+rownames(data) <- data$species
+
+```
+
+
+
+
+```{r}
+
+g <- list(data = data[spp, vars], 
+          meta = metadata, 
+          mgm_types = mgm_types, meta_types = meta_types, 
+          log.vars = log.vars, 
+          spp.list = data.frame(species = data[spp, c("species")]),
+          v.p = v.p, s.p = s.p, phylo.match = phylo.match[spp,],
+          tree = drop.tip(tree, setdiff(tree$tip.label, data$species[spp])))
+
+source(paste(script.folder, "mgm_dataprep.R", sep = ""))
+
+```
+
+
+```{r}
+
+gdk_data <- g$data[,names(mgm_types[mgm_types %in% c("c","b")])]
+
+gtau <- GKtauDataframe(gdk_data)
+
+
+```
+
+#### $n_{species}$: `r length(spp)`
+
+#### $n_{var}$: `r ncol(gdk_data)`
+
+`r names(gdk_data)`
+
+#### ${min}_{{pair}_n}$: `r min.n`
+
+```{r}
+diag(gtau) <- NA
+
+m.lab <- 120
+m = list(
+  l = m.lab,
+  r = 50,
+  b = m.lab,
+  t = 50,
+  pad = 4
+)
+
+plot_ly(z= gtau, x = colnames(gtau), y = rownames(gtau), type = plot.type) %>%
+  layout(title="GKtau among categorical variables", margins = m, 
+         yaxis = list(title = "", showgrid = F), 
+         xaxis = list(title = "", showgrid = F))
+
+
+```
+
+
+### network
+
+```{r fit-net}
+diag(gtau) <- 0
+gtau[gtau < cutoff] <- 0
+
+g <- graph.adjacency(gtau, mode = c("directed"), weighted = T)
+e <- get.edgelist(g) %>% data.frame() %>% as.list()
+e$w <- E(g)$weight
+
+net <- rnetcarto::netcarto(e)
+
+```
+
+```{r}
+v <- data.frame(var = factor(rownames(gtau), 
+                             levels = rownames(gtau)),
+                net[[1]][match(rownames(gtau), net[[1]]$name),])
+
+e <- graph.adjacency(gtau, mode = c("directed"), weighted = T)  %>% get.edgelist(names = T) %>% 
+  as.data.frame() %>% setNames(c("source", "target"))
+e$source.index = match(e$source, v$name)-1
+e$target.index = match(e$target, v$name)-1
+
+
+w <- melt(as.data.frame(as.matrix(get.adjacency(g, attr="weight"))))
+w <- w[w$value > 0,]
+e <- data.frame(e, value = w$value)
+
+
+
+n <- forceNetwork(Links = e, Nodes = v, Source = "source.index",
+             Target = "target.index", Value = "value", NodeID = "var",
+             Group = "module", opacity = 0.75, fontSize = 18, zoom = T)
+
+n
+```
+
