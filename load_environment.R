@@ -35,4 +35,9 @@ if(wkf == "mgm"){
   source(paste(script.folder, "PhyloNetworker_setup.R", sep = ""))
 }
 
+## ---- load_mgm ----
+if(wkf == "goodmankruskal"){
+  source(paste(script.folder, "PhyloNetworker_functions.R", sep = ""))
+  source(paste(script.folder, "PhyloNetworker_setup.R", sep = ""))
+}
 

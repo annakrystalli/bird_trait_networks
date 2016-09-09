@@ -42,16 +42,66 @@ aggregateCats <- function(g, var, agg.cats){
   g$meta[g$meta$code == var, "levels"] <- paste(levels, ";other", sep = "")
   
   g$data[,var][g$data[,var] %in% agg.cats] <- add
-  
+  if(length(unique(g$data[,var])) == 1){
+    print(paste("var", var, "collapsed to single category - removed"))
+    g$data <- g$data[, names(g$data) != var]
+  }
   return(g)
   
 }
 
 # function to convert levels to NA
-naCats <- function(g, var, agg.cats){
+naCats <- function(g, var, na.cats){
   
-  g$data[,var][g$data[,var] %in% agg.cats] <- NA
+  g$data[,var][g$data[,var] %in% na.cats] <- NA
+
+  if(all(is.na(g$data[,var]))){
+    print(paste("vars", var, "all NA - removed"))
+  g$data <- g$data[, names(g$data) != var]
+  g$all.na <- c(g$all.na, var)}
   
   return(g)
   
+}
+
+
+# aggregate or remove categories with < min.cat frequency
+# tabulate each categorical variable
+aggDat <- function(g, min.cat = 8) {
+  tabs <- apply(g$data[,g$mgm_types[names(g$data)] %in% "c"],
+                2, FUN = table) 
+  # identify catecorical variables that need aggregating
+  agg.var <- sapply(tabs, FUN = function(x){any(x < min.cat)})
+  # identify levels below minimum n
+  levs <- tabs %>% lapply(FUN = function(x){names(which(x < min.cat))})
+  # identify variables in which aggregating small n categories would yield enough
+  #  data for 'other' category above minimum n
+  agg <- mapply(FUN = function(tabs, levs){sum(tabs[levs])} > min.cat, tabs, levs)
+  
+  # create indicator vector to apply transformations
+  other <- levs[agg & agg.var]
+  nas <- levs[(!agg) & agg.var]
+ 
+  for(var in names(other)){
+    g <- aggregateCats(g, var, agg.cats = other[[var]])
+  }
+  for(var in names(nas)){
+    g <- naCats(g, var, na.cats = nas[[var]])
+  }
+  return(g)
+}
+
+
+rm_sing <- function(g) {
+  cats <- intersect(names(g$mgm_types)[g$mgm_types == "c"], 
+                    names(g$data))
+  
+  rm <- cats[lapply(cats, function(x, data){table(data[,x])}, 
+                       data = g$data) %>%
+                  sapply(function(x)length(x) == 1)]
+  
+  if(length(rm) == 0){return(g)}else{
+    g$data <- g$data[, !names(g$data) %in% rm]
+    return(g)
+  }
 }

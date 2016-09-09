@@ -1,79 +1,111 @@
+#' ---
+#' output: 
+#' html_document:
+#' theme: paper
+#' self_contained: false
+#' ---
+#' 
+#' # mixed graphical model analysis of bird trait data.
+#' ***
+#' <br>
+#'
+#' ## initialise project
 # ---- init-an ----
-source(paste(script.folder, "project_ui.R", sep = ""))
+rm(list = ls())
+wkf = "mgm"
+param = "mgm.R"
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+source(file_setup_path)
+source("~/Documents/workflows/bird_trait_networks/project_ui.R")
+
+vars <- ms_vars[1:(as.integer(length(ms_vars)*v.p))]
+spps <- spp.ranks$spp[1:(as.integer(nrow(spp.ranks)*s.p))]
+spp <- data$species %in% spps
+
+rownames(data) <- data$species
 
 
-num <- unique(unlist(num.vg[,1:2]))
-bin <- unique(unlist(bin.vg[,1:2]))
-int <- unique(unlist(int.vg[,1:2]))
-cats <- unique(unlist(cat.vg[,1:2]))
+g <- list(data = data[spp, vars], 
+          meta = metadata, 
+          mgm_types = mgm_types, meta_types = meta_types, 
+          log.vars = log.vars, 
+          spp.list = data.frame(species = data[spp, c("species")]),
+          v.p = v.p, s.p = s.p, phylo.match = phylo.match[spp,],
+          tree = drop.tip(tree, setdiff(tree$tip.label, data$species[spp])))
+
+source(paste(script.folder, "mgm_dataprep.R", sep = ""))
+
+#' impute-mgm
+source(paste(script.folder, "impute_mgm.R", sep = ""))
 
 
-num.id <- 1:15
-int.id <- 1:2
-bin.id <- 1:10
-cat.id <- 6:10
+#' proportion of data imputed: `r `
+sum(is.na(g$data))/prod(dim(g$data))
 
-vars <- c(num[num.id], int[int.id], bin[bin.id], cats[cat.id])
+#' ### fit mgm
+#+ fit-mgm, cache = T
+mgm_mod <- mgmfit(g$imp_data, type = g$mgm_types[names(g$data)], 
+               lev = g$lev[names(g$data)], lambda.sel = "EBIC", 
+               rule.reg = "OR", method = "glm", missings = "casewise.zw")
 
-type <- c(rep("g", length(num.id)),
-          rep("p", length(int.id)),
-          rep("c", length(c(bin.id, cat.id))))
-
-data <- m1DataPrep(data = data, datType = unique(metadata$type), phylo.match, log, log.vars)
-
-# aggregate or remove categories with < min.cat frequency
-# tabulate each categorical variable
-tabs <- apply(cat.dat[,!names(cat.dat) %in% c("species", "synonyms")],
-              2, FUN = table) 
-# identify catecorical variables that need aggregating
-agg.var <- sapply(tabs, FUN = function(x){any(x < min.cat)})
-# identify levels below minimum n
-levs <- tabs %>% lapply(FUN = function(x){names(which(x < min.cat))})
-# identify variables in which aggregating small n categories would yield enough
-#  data for 'other' category above minimum n
-agg <- mapply(FUN = function(tabs, levs){sum(tabs[levs])} > min.cat, tabs, levs)
-
-# create indicator vector to apply transformations
-other <- levs[agg & agg.var]
-nas <- levs[(!agg) & agg.var]
-g <- list(data = data, meta = metadata)
-for(var in names(other)){
-  
-  g <- aggregateCats(g, var, agg.cats = other[[var]])
-}
-for(var in names(nas)){
-  
-  g <- naCats(g, var, agg.cats = nas[[var]])
-}
-
-# Select data and fit model ##########################################
-dat <- g$data[,c(vars)]
-
-lev.mod <- apply(dat, 2 , FUN= function(x){length(unique(na.omit(x)))})
-lev.mod[type %in% c("g", "p")] <- 1 
-
-test <- mgmfit(dat, type, lev.mod, lambda.sel = "EBIC", rule.reg = "OR", method = "glm",
-               missings = "casewise.zw")
-
-# define variable types
-groups_typeV <- list("Gaussian"=which(type=='g'), 
-                     "Categorical"=which(type=='c'))
-
-# pick some nice colors
-group_col <- c("#72CF53", "#ED3939")
+#' ### fit netcarto
+#+ fit-netcarto, cache = T
+library(rnetcarto)
+net <- rnetcarto::netcarto(mgm_mod$wadj)
 
 
-qgraph(test$wadj, 
-       vsize=3.5, 
-       esize=5, 
-       edge.color = test$edgecolor, 
+save(g, mgm_mod, net, file = paste(output.folder, "data/mgm/", an.ID, 
+                                   "-", v.p, "-", s.p, "-", min.n, 
+                                   "-", min.cat, ".Rdata", sep = ""))
+
+#' ## plot
+#' define variable types
+#+ group-type
+groups_typeV <- split(as.numeric(net[[1]]$name), f = factor(net[[1]]$module))
+
+#' pick some nice colors
+#+ group-col
+group_col <- rainbow(length(groups_typeV))
+
+#' ### plot
+#+ plot, fig.width = 12, fig.height = 12
+qgraph(mgm_mod$wadj, 
+       vsize=2,
+       layout="spring",
+       esize=5,
+       edge.color = mgm_mod$edgecolor, 
        color=group_col,
        border.width=1.5,
        border.color="black",
        groups=groups_typeV,
-       nodeNames=names(dat),
+       nodeNames=names(g$imp_data),
+       overlay = T,
        legend=TRUE, 
        legend.mode="style2",
-       legend.cex=0.3)
+       legend.cex=0.1,
+       details = T)
+
+
+qgraph(test$wadj, 
+       vsize=2,
+       layout="spring",
+       esize=5,
+       edge.color = test$edgecolor, 
+       color=group_col,
+       border.width=1.5,
+       border.color="black",
+       minimum = "sig",
+       bonf = T,
+       sampleSize = prod(dim(imp.dat)),
+       groups=groups_typeV,
+       nodeNames=names(dat),
+       overlay = T,
+       legend=TRUE, 
+       legend.mode="style2",
+       legend.cex=0.112,
+       details = T)
+
+
+
 
 

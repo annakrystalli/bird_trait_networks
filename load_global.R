@@ -22,4 +22,7 @@ source(paste(script.folder, "load_dependencies.R", sep = ""))
 # load files
 source(paste(script.folder, "load_files.R", sep = ""))
 
+# load helper functions
+source(paste(script.folder, "helper_functions.R", sep = ""))
+
 

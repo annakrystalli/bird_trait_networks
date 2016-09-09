@@ -11,7 +11,7 @@
 # ---- calcTraitPairN-f ----
 calcTraitPairN <- function(data){
   
-  vars <- names(data)[!names(data) %in% c("species", "synonyms")]
+  vars <- names(data)
   
   var.grid <- expand.grid(vars, vars, stringsAsFactors = F)
   var.grid <- var.grid[var.grid[,1] != var.grid[,2],]
@@ -229,42 +229,80 @@ getLevels <- function(metadata, var) {
   return(meta)
 }
 
-getTD <- function(data, tree) {
+getTD <- function(data, tree, all.vars = T) {
   
   ptree <- drop.tip(tree, setdiff(tree$tip.label, data$synonyms))
   ptree$tip.label <- data$species[match(ptree$tip.label, data$synonyms)] 
   dist <- cophenetic(ptree)
   dspp <- rownames(dist)
-  comm.spp <- data$species[complete.cases(data)]
-  comm <- setNames(data.frame(t(dspp %in% comm.spp)), dspp)
+  if(all.vars == T){
+    comm.spp <- data$species[complete.cases(data)]
+    comm <- setNames(data.frame(t(dspp %in% comm.spp)), dspp)}else{
+      comm <- NULL
+      vars <- names(data)[!names(data) %in% c("species", "synonyms")]
+      for(var in vars){
+        print(paste("calculating TD: ",which(vars == var),
+                    "/", length(vars), "___", var,sep =""))
+        comm.spp <- data$species[complete.cases(data[, var])]
+        comm.r <- setNames(data.frame(t(dspp %in% comm.spp)), dspp)
+        comm <- rbind(comm, comm.r)
+      }}
   TD <-  taxondive(comm, dist)
   return(TD)
 }
 
 
-m1DataPrep <- function(data, datType, phylo.match, ...) {
-  
-  vars <- metadata$code[metadata$type %in% datType]
-  dat <- data[,c("species", names(data)[names(data) %in% vars])]
-  
-  if(log & "Con" %in% datType){
-    for(var in vars[vars %in% metadata$code[metadata$type %in% "Con"] &
-                    vars %in% log.vars]){
-      if(validateLog(var = var, log.vars, data)){
-        data <- logData(data, var)}
-    }
+extractTD <- function(TD, vars) {
+  sum.sts <- c("sd(Delta+)", "z(Delta+)",  "Pr(>|z|)")
+  nvar <- length(vars)
+  if(nvar == 1){
+    sum.td <- data.frame(t(summary(td)[1,sum.sts]))
+    TD <- TD %>% unlist() %>% t() %>% data.frame()
+    TDdf <- cbind(var = vars, TD, sum.td)  
+  }else{
+    sum.td <- data.frame(summary(td)[1:nvar,sum.sts])
+    TD <- do.call(cbind, TD)
+    tdf <- cbind(var = vars, TD, sum.td)
   }
-    
-  #Remove duplicate species matching to the same species on the tree
-  dat <- dat[dat$species %in% phylo.match$species[phylo.match$data.status != "duplicate"],]
-  
-  # add synonym column to data 
-  dat$synonyms <- phylo.match$synonyms[match(dat$species, phylo.match$species)]
-  
-  return(dat)
-  
+  return(tdf)
 }
 
+
+m1DataPrep <- function(g, phylo.match) {
+  
+  dat <- g$data
+  datType <- unique(na.omit(g$meta_types[names(dat)]))
+  char.err <-  sapply(dat, FUN = is.numeric)    
+  
+  if(!all(char.err)){
+    print(paste("variables:", paste(names(dat)[!char.err], collapse = ", "),
+                "contain non numeric values"))
+    stop()}
+  
+  if("Int" %in% datType){
+    int.vars <- intersect(names(dat), 
+                          names(g$meta_types)[g$meta_types == "Int"]) 
+    int.dat <- sapply(dat[,names(dat) %in% int.vars], FUN = is.integer)
+    if(all(int.dat)){}else{
+      for(int.var in int.vars){
+        dat[,int.var] <-  as.integer(dat[,int.var])
+      }
+      print(paste("integer variables:", paste(int.vars, collapse = ", "),
+                  "contain non integers. Rounded"))
+    }
+  }
+  
+  #Remove duplicate species matching to the same species on the tree
+  dat <- dat[g$spp.list$species %in% phylo.match$species[
+    phylo.match$data.status != "duplicate"],]
+  # add synonym column to data 
+  g$spp.list$synonyms <- phylo.match$synonyms[match(g$spp.list$species, 
+                                                    phylo.match$species)]
+  
+  return(g)
+  
+  
+}
 ## Create grid of unique variable combinations, calculate data availability for
 ## each and sort. min.n needs to be set in working environment.
 varGridGen <- function(dat, ...) {
@@ -281,8 +319,100 @@ validateLog <- function(var, log.vars, data) {
   var %in% log.vars & all(na.omit(data[,var]) > 0)
 }
 
+validateInt <- function(var, data) {
+  var %in% log.vars & is.integer(all(na.omit(data[,var])))
+}
+
 logData <- function(data, var) {
   data[,var] <- log(data[,var])
   names(data)[names(data) == var] <- paste("log", var, sep = "_")
   return(data)
 }
+
+
+getSppRanks <- function(ms_vars, data, load = T, input.folder, an.ID) {
+  
+  if(load & file.exists(paste(input.folder, "r data/", 
+                              an.ID, "species_ranks.Rdata",
+                              sep = ""))){
+    load(paste(input.folder, "r data/", an.ID, "species_ranks.Rdata",
+               sep = ""))
+  }else{
+    spp.vg <- expand.grid(ms_vars, ms_vars, stringsAsFactors = F)
+    spp.vg <- spp.vg[apply(spp.vg, 1, FUN = function(x){length(unique(x)) > 1}),]
+    
+    spp.cs <- data.frame(species = data$species)
+    
+    for(i in 1:nrow(spp.vg)){
+      dat.cs <- data[, unlist(spp.vg[i,])]
+      spp.cs <- cbind(spp.cs, data.frame(complete.cases(dat.cs))) 
+    }
+    spp.rank <- data.frame(spp.cs$species, row.sums = rowSums(spp.cs[,-1]))
+    spp.rank <- spp.rank[order(spp.rank$row.sums, decreasing = T),]
+    save(spp.rank, spp.cs, spp.vg, 
+         file = paste(input.folder, "r data/", an.ID, "species_ranks.Rdata",
+                      sep = ""))
+  }
+  return(spp.rank)
+}
+
+
+logG <- function(g) {
+  for(var in names(g$data)[names(g$data) %in% g$log.vars]){
+    if(validateLog(var, g$log.vars, data = g$data)){
+      g$data <- logData(g$data, var)
+    for(elem in c("mgm_types", "meta_types", "lev")){
+    names(g[[elem]])[names(g[[elem]]) == var] <- paste("log_", var, sep = "")}
+    g$meta$code[g$meta$code == var] <- paste("log_", var, sep = "")
+    }
+  }
+  return(g)
+}
+
+
+
+testImpute <- function(data, test.params, ms_vars, metadata, ...) {
+  
+  error <- NULL
+  
+  for(i in 1:nrow(test.params)){
+    v.p <- test.params$vars[i]
+    s.p <- test.params$spp[i]
+    
+    t0 <- Sys.time()
+    print(paste(i, "/", nrow(test.params),"|_____", 
+                paste(test.params[i,], collapse = "-"), sep = ""))
+    
+    vars <- ms_vars[1:(as.integer(length(ms_vars)*v.p))]
+    spps <- spp.ranks$spp[1:(as.integer(nrow(spp.ranks)*s.p))]
+    spp <- data$species %in% spps
+    
+    g <- list(data = data[spp, vars], 
+              meta = metadata, 
+              mgm_types = mgm_types, meta_types = meta_types, 
+              log.vars = log.vars, 
+              spp.list = data.frame(species = data[spp, c("species")]),
+              v.p = v.p, s.p = s.p)
+    
+    source(paste(script.folder, "mgm_dataprep.R", sep = ""))
+    
+    #' impute-mgm
+    source(paste(script.folder, "impute_mgm.R", sep = ""))
+    impt <- g[c("imp_data","OOBerror")]
+    impt.out <- c(impt, list(vars = vars, spps = spps, v.p = v.p, s.p = s.p))
+    save(impt.out, file = paste(output.folder, "data/imputed_data/", an.ID, 
+                                "-v", test.params$vars[i], 
+                                "-s", test.params$spp[i],
+                                ".Rdata", sep = ""))
+    error <- rbind(error, c(g$OOBerror, v.p = v.p, s.p = s.p))
+    print(Sys.time() - t0)
+  }
+  error <- data.frame(error)
+  error.s <- error[order(error$NRMSE),]
+  write.csv(error.s, paste(input.data, "r data/imp_err_", an.ID, ".Rdata",
+                           sep = ""))
+  return(error.s)
+}
+
+
+

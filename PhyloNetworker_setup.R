@@ -5,43 +5,59 @@ if(log){log.vars <- metadata$code[as.logical(metadata$log)]
 # ---- load-files
 wide <- read.csv(file = paste(input.folder,"csv/master wide.csv", sep = ""), fileEncoding = "mac")
 spp100 <- unlist(read.csv(file = paste(input.folder,"csv/100spp.csv", sep = "")))
-spp.list <- data.frame(species = unique(wide$species))
 # load selected tree (see select_tree.R)
 load(file = paste(input.folder, "tree/tree.RData", sep = ""))
 # load match data
 load(file = paste(input.folder,"r data/match data/tree m.RData", sep = ""))
 phylo.match <- m$data
 
+
+# ---- remove-dup-dftips ----
+if(remove_dtips){
+  phylo.match <- phylo.match[match(wide$species, phylo.match$species),]
+  dup.syns <- duplicated(phylo.match$synonyms)
+  phylo.match <- phylo.match[!dup.syns,]
+  wide <- wide[!dup.syns,]
+  
+  tree <- drop.tip(tree, setdiff(tree$tip.label, phylo.match$synonyms))
+  tree$tip.label <- phylo.match$species[match(tree$tip.label, phylo.match$synonyms)]
+}
+
+# ---- create-spp.list ----
+spp.list <- data.frame(species = unique(wide$species))
+
 # ---- subset-data ----
 if(an.ID == "100spp"){
   data <- wide[wide$species %in% spp100,]}else{data <- wide}
-
-# ---- num-prep ---- 
-num.dat <- m1DataPrep(data = data, datType = c("Int", "Con"), 
-                      phylo.match = phylo.match)
-
-
-num.vg <- varGridGen(num.dat)
-## make sure variables to be logged are > 0
-log.vars <- log.vars[sapply(log.vars, FUN = function(x, dat){all(na.omit(dat[,x]) > 0)},
-                            dat = num.dat)]
-# ---- bin-prep ---- 
-bin.dat <- m1DataPrep(data = data, datType = "Bin", 
-                      phylo.match = phylo.match)
-bin.vg <- varGridGen(bin.dat)
+data <- data[!names(data) %in% c("family", "genus", "order")]
+vg <- varGridGen(data[,!names(data) %in% "species"])
+ms_vars <- vg[,1:2] %>% as.matrix() %>% t() %>% as.vector() %>% unique()
 
 
-# ---- cat-prep ----
-cat.dat <- m1DataPrep(data = data, datType = c("Cat", "Nom"), 
-                      phylo.match = phylo.match)
-cat.vg <- varGridGen(cat.dat)
+vtypes <- data.frame(mgm = c("c", "c", "g", "p", "c"),
+                     meta = names(table(
+                       metadata$type[match(ms_vars, metadata$code)])))
+
+meta_types <- metadata$type[match(ms_vars, metadata$code)] %>%
+  setNames(ms_vars)
+mgm_types <- vtypes$mgm[match(meta_types, vtypes$meta)] %>%
+  setNames(ms_vars)
+
+
+if(!file.exists(paste(input.folder, "r data/TD_", an.ID, 
+                      ".Rdata", sep = ""))){
+  td <- getTD(data, tree, all.vars = F)
+  TDdf <- extractTD(td, vars = ms_vars)
+  save(td, TDdf, file = paste(input.folder, "r data/TD_", an.ID, 
+                              ".Rdata", sep = ""))}else{
+                                load(file = paste(input.folder, "r data/TD_", 
+                                                  an.ID, ".Rdata", sep = ""))}
 
 
 
+ms_spp <- data$species
+row.names(data) <- ms_spp
 
-# ---- full.vg ----
-vg <- rbind(data.frame(num.vg, varTypes = "nn"),
-            data.frame(bin.vg, varTypes = "bb"),
-            data.frame(cat.vg, varTypes = "cc"))
+spp.ranks <- getSppRanks(ms_vars, data = data, load = T, input.folder, an.ID)
 
 
