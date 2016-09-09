@@ -1,0 +1,199 @@
+---
+title: "Untitled"
+author: "Anna Krystalli"
+date: "8 September 2016"
+output: 
+  html_document:
+    theme: paper
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F, cache=T, fig.width = 9)
+
+require(plotly)
+require(RColorBrewer)
+
+```
+
+
+```{r, echo=FALSE, cache = F}
+rm(list = ls())
+wkf = "goodmankruskal"
+param = "min.n_test.R"
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+source(file_setup_path)
+source("~/Documents/workflows/bird_trait_networks/project_ui.R")
+set.seed(1)
+
+if(exists(".Random.seed")){print("seed set")}
+
+```
+
+
+```{r}
+t.vars <- length(ms_vars)
+t.pair_n <- ncol(combn(ms_vars, 2, simplify = T))
+TDdf$neg.res <- (TDdf$Dplus - (TDdf$EDplus - 2 * TDdf$sd.Dplus))/(2 * TDdf$sd.Dplus) 
+```
+
+**total number of variables:** `r t.vars`
+
+**total number of possible pairwise combinations:** `r t.pair_n`
+
+```{r }
+# create df
+min.n_df <- NULL
+
+# sample from avaible n. weight with distribution
+spl.n <- c(range(vg$n), sample(x = sort(unique(vg$n)), size = n.spl_size, replace = FALSE, 
+                         prob = table(vg$n)/sum(table(vg$n)))) %>% unique %>% sort()
+
+# extract data
+for(i in spl.n){
+  vg.i <- vg[vg$n >= i,]
+  min.n_df <- rbind(min.n_df,
+                    data.frame(min.n = i, pair.n = nrow(vg.i),
+                               var.n = length(unique(unlist(vg.i[,1:2]))),
+                               m_pairs_var = nrow(vg.i)/length(unique(unlist(vg.i[,1:2])))))
+}
+
+```
+
+
+## Effect of minimum $n$ restriction on pairwise and variable wise data availability
+
+Here, I sampled `r n.spl_size` possible ${min}_{n_{{pair}_i}}$ values from the *sample of the unique pairwise $n_{pair}$ values* found in the data, weighted by their frequency distribution. For each sampled ${min}_{n_{{pair}_i}}$, I subsample the set of pairs $P_i$ to exclude any pair $p$ below ${min}_{n_{{pair}_i}}$. I then calculated the $n_{{pair}_i}$ for $P_i$. I also calculate $n_{{trait}_i}$, the size of the set of traits included in $P_i$. I also calculate $μ_{n_{{pair}_i}}$, the mean number of datapoints available per $p$ in $P_i$. 
+
+```{r, echo=FALSE, cache=FALSE, fig.height= 5}
+ay <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right"
+)
+
+
+
+plot_ly(min.n_df, x = min.n, y = var.n, name = "trait n", fill = "tozeroy") %>%
+  add_trace(x = min.n, y = pair.n, name = "pairwise n", yaxis = "y2", fill = "tozeroy") %>%
+  add_trace(x = min.n, y = m_pairs_var, name = "mean pairwise n/trait", yaxis = "y", fill = "tozeroy") %>%
+  layout(title = "Effect of min.n on datapoint availability", yaxis2 = ay)
+
+```
+
+```{r, cache=FALSE, fig.height= 5}
+plot_ly(min.n_df, x = min.n, y = var.n/t.vars*100, name = "% traits included", fill = "tozeroy") %>%
+  add_trace(x = min.n, y = pair.n/t.pair_n*100, name = "% trait pairs included", yaxis = "y", fill = "tozeroy") %>%
+  add_trace(x = min.n, y = (m_pairs_var/(t.pair_n/t.vars))*100, name = "mean %max trait pairs/trait", yaxis = "y", fill = "tozeroy") %>%
+  layout(title = "Effect of min.n on percentage of datapoint availability")
+
+
+```
+
+
+<br>
+<br>
+
+***
+
+## Effect of data availability on the taxonomic diversity of variable data subsamples.
+
+### Taxonomic indices
+
+If two variable subsamples have identical numbers of species and *equivalent patterns of species abundance*, but **differ in the diversity of taxa** to which the species belong, it seems intuitively appropriate that **the most taxonomically varied data-set is the more diverse**. As long as the phylogeny of the data-set of interest is reasonably well resolved, measures of taxonomic diversity are possible.
+
+[Clarke and Warwick’s](http://www.fc.up.pt/pessoas/amsantos/bea/clarwarw1999.pdf) **taxonomic distinctness index** which describes the *average taxonomic distance* – simply the “path length” between two randomly chosen organisms through the phylogeny of all the species in a data-set – has different forms: taxonomic diversity and taxonomic distinctness.
+
+- **Taxonomic diversity ($Δ$)** reflects the *average taxonomic distance between any two organisms, chosen at random from a sample*. The distance can be seen as the length of the path connecting these two organisms through a phylogenetic tree or a Linnean classification. This index includes aspects of taxonomic relatedness and evenness.
+
+
+- **Taxonomic distinctness ($Δ^*$)** is the *average path length between two randomly chosen but taxonomically different organisms*. This measure is measure of pure taxonomic relatedness.
+
+<br>
+
+#### pairwise average taxonomic distinctness $Δ+$
+
+- When **only presence/absence data** (our case) is considered both $Δ$ and $Δ^*$ converge to the same statistic: **pairwise average taxonomic distinctness $Δ+$**, which can be seen as the average taxonomic path length between any two randomly chosen species.
+
+This can be compared to the [average taxonomic distinctness](http://icesjms.oxfordjournals.org/content/65/8/1462.full) and
+
+
+<br>
+
+#### comparing observed $Δ+$ to expected
+
+Using simulations based on the null expectation that the species in each variable subsample represent a random selection from the species pool (data missing CAR),
+
+> ie. every species in the pool has an equal probability to exist in a variable subsample),
+
+they devised a randomization test to compare the observed value of $Δ+$ against an ***“expected” value*** derived from a **“master list” of species (the species pool)**.
+
+- **Random subsamples** (n is typically 1000) of a **set number of species**, drawn from the **species pool**, are used to ***calculate the null distribution of $Δ+$ values for that number of species***. 
+-If the procedure is **repeated for different numbers of species**, the **expected values can be used to plot a 95% probability funnel**. 
+- The question of *whether a sample has a*  ***“smaller than expected”*** or ***“greater than expected”*** taxonomic spread for the number of species present is addressed by examining whether the observed value lies below or above the 95% funnel (Clarke and Warwick, 1998). 
+- this would mean that a common reference condition could be established for a particular subsample of organisms from the range of subsamples in which they occur, and the impacts of data gaps could be assessed against this standard. Values of taxonomic distinctness fall within the confidence limits of this distribution and impacted locations fall outside of it, 
+
+We could also consider measures like *functional diversity*
+
+#### plot: Plot of $Δ+$ against species number
+
+
+Points are coloured with the deviation from the $Δ+$ - $2σΔ+$ interval, in units of $2σΔ+$. All points whose deviation is positive is appointed as 0
+
+```{r, echo=FALSE, cache=FALSE}
+i <- order(TDdf$Species)
+dev <- TDdf$Dplus < TDdf$EDplus - 2 * TDdf$sd.Dplus
+cols <- rep(0, length(dev))
+cols[dev] <- TDdf$neg.res[dev]
+
+plot_ly(TDdf, x = Species, y = Dplus, name = "var TD", 
+        mode = "markers", text = var, color = cols) %>%
+  add_trace(y = c(EDplus, EDplus), x= c(min(Species), max(Species)), mode = "lines",
+            name = "mean TD") %>%
+  add_trace(x = Species[i], y = EDplus[i] - 2 * sd.Dplus[i], name = "- 2sd", 
+            mode = "lines", color = 1) %>%
+  add_trace(x = Species[i], y = EDplus[i] + 2 * sd.Dplus[i], name = "+ 2sd", 
+            mode = "lines", color = 1, fill="tonexty") %>%
+  layout(title = "Taxonomic diversity of variable subsamples according to data availability ")
+
+```
+
+
+
+#### table: Data on variables below the $Δ+$ - $2σΔ+$ interval. 
+
+```{r}
+require(DT)
+TDdf[dev,c("var", "Species", "Dplus", "sd.Dplus", "neg.res")] %>% DT::datatable()
+```
+
+
+```{r}
+o.dat <- data.frame(apply(wide[,-(1:4)], 2, FUN = function(x,o){
+  table(o[!is.na(x)])[order(table(o), 
+                            decreasing = T)]},
+         o = wide$order)[,order(apply(wide[,-(1:4)], 2, FUN = function(x){sum(!is.na(x))}),
+                                decreasing = T)])
+
+op.dat <- o.dat / sort(table(wide$order), decreasing = T)
+op.dat <- op.dat[order(apply(op.dat, 1, FUN = function(x){sum(x > 0)})), order(apply(op.dat, 2, FUN = mean), decreasing = T)]
+
+cols <- brewer.pal(5, "YlGnBu")
+
+plot_ly(z = as.matrix(op.dat), x = names(op.dat), y = rownames(op.dat), type = "heatmap", 
+        #color = col, 
+        name = "Variable proportional datapoint availability across orders",
+        colors = colorRamp(cols, bias = 2),
+        hoverinfo = "z+x+y", text = text) %>%
+  
+  layout(margin = list(l = 150,
+                       r = 80,
+                       b = 120,
+                       t = 60),
+         title = "Matrix of proportionate bivariate datapoint availability",
+         xaxis = list(title = "var"),
+         yaxis = list(title = "order")) 
+
+
+```
+
