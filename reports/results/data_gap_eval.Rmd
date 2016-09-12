@@ -9,7 +9,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F, message = F, warning = F, cache=T, fig.width = 9)
+knitr::opts_chunk$set(echo = F, message = F, warning = F, cache=F, fig.width = 9)
 
 require(plotly)
 require(RColorBrewer)

@@ -2,7 +2,10 @@
 title: "wkf: GoodmanKrustal"
 author: 
 date: 
-output: html_document
+output: 
+  html_document:
+    theme: paper
+
 ---
 
 ```{r setup, include=FALSE}
@@ -16,15 +19,13 @@ file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
 source(file_setup_path)
 source("~/Documents/workflows/bird_trait_networks/project_ui.R")
 
-
-
 ```
 
+### Select species and variables, 
 
+Here we select all, as `v.p` (proportion of variables) in set to `r v.p`and `s.p` is set to `r s.p`.
 
 ```{r}
-
-
 vars <- ms_vars[1:(as.integer(length(ms_vars)*v.p))]
 spps <- spp.ranks$spp[1:(as.integer(nrow(spp.ranks)*s.p))]
 spp <- data$species %in% spps
@@ -34,9 +35,11 @@ rownames(data) <- data$species
 ```
 
 
+###create g object 
 
+collect all information required to process and fit data (for consistency and processing with other workflows) and prepare data.
 
-```{r}
+```{r, echo = T}
 
 g <- list(data = data[spp, vars], 
           meta = metadata, 
@@ -50,16 +53,14 @@ source(paste(script.folder, "mgm_dataprep.R", sep = ""))
 
 ```
 
+<br>
 
-```{r}
+### subset to only categorical variables. 
+
+```{r, echo = T}
 
 gdk_data <- g$data[,names(mgm_types[mgm_types %in% c("c","b")])]
-
-gtau <- GKtauDataframe(gdk_data)
-
-
 ```
-
 #### $n_{species}$: `r length(spp)`
 
 #### $n_{var}$: `r ncol(gdk_data)`
@@ -67,6 +68,20 @@ gtau <- GKtauDataframe(gdk_data)
 `r names(gdk_data)`
 
 #### ${min}_{{pair}_n}$: `r min.n`
+
+<br>
+
+### Calculate goodmankruskal $τ$ matrix.
+
+```{r, echo=T}
+gtau <- GKtauDataframe(gdk_data)
+```
+
+
+
+<br>
+
+### **plot goodmankruskal $τ$ matrix**
 
 ```{r}
 diag(gtau) <- NA
@@ -88,8 +103,11 @@ plot_ly(z= gtau, x = colnames(gtau), y = rownames(gtau), type = plot.type) %>%
 
 ```
 
+<br>
 
-### network
+***
+
+### fit netcarto
 
 ```{r fit-net}
 diag(gtau) <- 0
@@ -102,6 +120,8 @@ e$w <- E(g)$weight
 net <- rnetcarto::netcarto(e)
 
 ```
+
+### plot network based on goodmankruskal $τ$ matrix
 
 ```{r}
 v <- data.frame(var = factor(rownames(gtau), 
@@ -125,5 +145,12 @@ n <- forceNetwork(Links = e, Nodes = v, Source = "source.index",
              Group = "module", opacity = 0.75, fontSize = 18, zoom = T)
 
 n
+```
+
+
+#### plot flat bi-directional network
+
+```{r}
+plot(g, edge.arrow.size=.2, edge.curved=.1, vertex.size = 3, vertex.label=NA)
 ```
 
