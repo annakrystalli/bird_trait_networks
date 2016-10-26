@@ -9,7 +9,9 @@ source(paste(script.folder, "params/", param, sep = ""))
 
 ## ---- load_rmacro ----
 if(wkf == "rmacro"){
-  source(paste(rmacro.folder, "functions.R", sep = ""))
+  require(RCurl)
+  eval(parse(text = getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/functions.R", ssl.verifypeer = FALSE)))
+  eval(parse(text = getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/wideData_function.R", ssl.verifypeer = FALSE)))
 }
 
 ## ---- load_phylocor ----
