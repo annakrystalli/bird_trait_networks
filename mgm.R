@@ -18,7 +18,13 @@ file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
 source(file_setup_path)
 source("~/Documents/workflows/bird_trait_networks/project_ui.R")
 
-vars <- ms_vars[1:(as.integer(length(ms_vars)*v.p))]
+if(data.types == "all"){
+  vars <- ms_vars
+  }else{
+  vars <- ms_vars[mgm_types %in% dist.types]
+  }
+
+vars <- vars[1:(as.integer(length(vars)*v.p))]
 spps <- spp.ranks$spp[1:(as.integer(nrow(spp.ranks)*s.p))]
 spp <- data$species %in% spps
 
