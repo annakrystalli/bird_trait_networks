@@ -25,74 +25,93 @@ calcTraitPairN <- function(data){
   
 }
 
-pglsPhyloCor <- function(x, data, tree, log.vars = NULL, datTypes, 
+pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes, 
                          result = "row"){
-  # ---- log-log.vars ----  
-  if(datTypes == "nn") {
-    for(var in x){
-      if(validateLog(var = var, log.vars, data)){
-        data[, var] <- log(data[, var])
-        setNames(data[, var], paste("log", var, sep = "_"))
-        x[x == var] <- paste("log", var, sep = "_")
-      }}}
+  pair <- as.character(pair)
   
   # ---- set-up-vars ----
-  var1 <- unlist(x[1])
-  var2 <- unlist(x[2])
-  data <- data[, c("species", "synonyms", var1, var2)]
+  data <- data[, c("species", pair)]
   
   # ---- get-TD ----  
   TD <- getTD(data, tree)
   
+  
   # ---- sub-complete-cases ----
   data <- data[complete.cases(data),]
   
+  # ---- log-log.vars ----  
+  for(var in pair){
+    if(mgm_types[var] == "c"){
+      
+      data[,var] <- aggVar(data[,var], min.cat)
+      data[,var] <- as.factor(data[,var])
+    }
+    if(mgm_types[var] == "g"){
+      if(validateLog(var = var, log.vars, data)){
+        data[, var] <- log(data[, var])
+        colnames(data)[colnames(data) == var] <- paste("log", var, sep = "_")
+        pair[pair == var] <- paste("log", var, sep = "_")
+      }
+    }
+  }
+  
   # ---- fit-cor ---- 
-  if(datTypes == "nn") {
-    row <- fitNumDat(data, tree, var1, var2, TD, result)
+  if(datTypes %in% c("nc", "nn")) {
+    row <- fitNumDat(data, tree, pair, TD, result)
   }
   if(datTypes == "bb") {
-    row <-  fitBinDat(data, tree, var1, var2, TD, result) 
+    row <-  fitBinDat(data, tree, pair, TD, result) 
   }
-  if(datTypes == "cc") {
-    meta <- list(getLevels(metadata, var1), getLevels(metadata, var2))
+  if(datTypes == "ccMCMC") {
+    meta <- list(getLevels(metadata, pair[1]), getLevels(metadata, pair[2]))
     # factorise data
-    data[,c(var1, var2)] <- mapply(FUN = function(x, meta){factor(as.character(x),
+    data[,c(pair)] <- mapply(FUN = function(x, meta){factor(as.character(x),
                                                                   levels = meta$levels,
                                                                   labels = meta$labels)},
-                                   x = data[,c(var1, var2)], meta = meta) %>%
+                                   x = data[,pair], meta = meta) %>%
       as.data.frame(stringsAsFactors = T)
     
-    row <-  fitCatDat(data, tree, var1, var2, TD, result) }
+    row <-  fitCatDat(data, tree, pair, TD, result) }
+  
+  if(datTypes == "cc"){
+    row <-  fitGKtau(data, tree, pair, TD, result = "row")
+  }
   
   # ---- return ----
   return(row)
   
 }
 
-fitNumDat <- function(data, tree, var1, var2, TD, result = "row") {
+fitNumDat <- function(data, tree, pair, TD, result = "row") {
   
   # ---- configure-tree ----
-  tree <- drop.tip(tree, setdiff(tree$tip.label, data$synonyms))
-  tree$tip.label <- data$species[match(tree$tip.label, data$synonyms)] 
-  
+  tree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
+
   # ---- get-phylosig ----
-  physig.var1 <- phylosig(tree, setNames(data[,var1], data$species))
-  physig.var2 <- phylosig(tree, setNames(data[,var2], data$species))
+  physig.var1 <- phylosig(tree, setNames(data[,pair[1]], data$species))
+  if(mgm_types[pair[2]] == "g"){
+    physig.var2 <- phylosig(tree, setNames(data[,pair[2]], data$species))
+  }else{
+    physig.var2 <- NA  
+  }
   
   
   # ---- get-cor ----
-  cor <- cor(data[,var1], data[,var2])
-
-  ## ---- get-model ----
-  cd <- comparative.data(phy = tree, data = data, names.col = "synonyms", vcv=F)
+  if(mgm_types[pair[2]] == "g"){
+    cor <- cor(data[,pair[1]], data[,pair[2]])
+  }else{
+    cor <- NA 
+  }
   
-  result.pgls <- try(pgls(as.formula(paste(var1, "~", var2, sep = "")),
+  ## ---- get-model ----
+  cd <- comparative.data(phy = tree, data = data, names.col = "species", vcv=F)
+  
+  result.pgls <- try(pgls(as.formula(paste(pair[1], "~", pair[2], sep = "")),
                           data = cd, lambda="ML"))
   
   # ---- return-model ----
   if(result == "model"){
-    return(results.pgls)
+    return(result.pgls)
   }
   
   # ---- return-row ---- 
@@ -100,59 +119,66 @@ fitNumDat <- function(data, tree, var1, var2, TD, result = "row") {
     phylocor2 <- NA
     lambda <- NA
     p <- NA
-    ci <- NA
+    ci.l <- NA
+    ci.u <- NA
     error <- gsub(pattern = ".*\n  ", "", geterrmessage())
+  }else{
+    if(mgm_types[pair[2]] == "g"){
+      t <- summary(result.pgls)$coefficients[pair[2],"t value"]
+      df <- as.vector(summary(result.pgls)$fstatistic["dendf"])
+      phylocor2 <- sqrt((t*t)/((t*t)+df))*sign(summary(result.pgls)$coefficients[pair[2],"Estimate"])
+      p <- coef(summary(result.pgls))[2,4]
     }else{
-    t <- summary(result.pgls)$coefficients[var2,3]
-    df <- as.vector(summary(result.pgls)$fstatistic["dendf"])
-    phylocor2 <- sqrt((t*t)/((t*t)+df))*sign(summary(result.pgls)$coefficients[var2,1])
+      phylocor2 <- sqrt(summary(result.pgls)$r.squared)
+      p <- p_value(result.pgls)
+    }
     lambda <- result.pgls$param["lambda"]
-    p <- coef(summary(result.pgls))[2,4]
-    ci <- result.pgls$param.CI$lambda$ci
+    ci.l <- result.pgls$param.CI$lambda$ci.val[1]
+    ci.u <- result.pgls$param.CI$lambda$ci.val[2]
     error <- NA
   }
-  return(data.frame(var1 = var1, var2 = var2, n = length(data$species),
+  return(data.frame(var1 = pair[1], var2 = pair[2], n = length(data$species),
                     Dplus = TD$Dplus, sd.Dplus = TD$sd.Dplus, EDplus = TD$EDplus,
                     physig.var1, physig.var2,
                     cor = cor, phylocor = phylocor2, 
-                    lambda = lambda, p = p, ci = ci, 
+                    lambda = lambda, p = p, l.ci.l = ci.l, l.ci.u = ci.u,
                     error = error))
 }
 
-fitBinDat <- function(data, tree, var1, var2, TD, result = "row") {
+fitBinDat <- function(data, tree, pair, TD, result = "row") {
 
   # ---- configure-tree ----
-  tree <- drop.tip(tree, setdiff(tree$tip.label, data$synonyms))
-  tree$tip.label <- data$species[match(tree$tip.label, data$synonyms)]  
+  tree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
+  tree$tip.label <- data$species[match(tree$tip.label, data$species)]  
   
   # ---- get-cor ----
   cor <- NA
   
   # ---- get-cor ----
   data <- data[match(tree$tip.label, data$species),]
-  x <- setNames(factor(data[,var1]), data$species)
-  y <- setNames(factor(data[,var2]), data$species)
+  x <- setNames(factor(data[,pair[1]]), data$species)
+  y <- setNames(factor(data[,pair[2]]), data$species)
   
   # ---- abor-single-levels ----
   if(any(length(levels(x)) == 1, 
          length(levels(y)) == 1)){
-    return(data.frame(var1 = var1, var2 = var2, n = length(data$species), 
+    return(data.frame(var1 = pair[1], var2 = pair[2], n = length(data$species), 
                       Dplus = TD$Dplus, sd.Dplus = TD$sd.Dplus, EDplus = TD$EDplus,
                       physig.var1 = NA, physig.var2 = NA,
                       cor = NA, phylocor = NA, 
-                      lambda = NA, p = NA, ci = NA, 
+                      lambda = NA, p = NA, l.ci.l = NA, l.ci.u = NA,
                       error = paste("single state in", 
-                                    if(length(levels(x)) == 1){var1},
-                                    if(length(levels(y)) == 1){var2})))
+                                    if(length(levels(x)) == 1){pair[1]},
+                                    if(length(levels(y)) == 1){pair[2]})))
   }
   
   # ---- get-phylosig ----
   physig.var1 <- eval(parse(
     text = paste(
-      "phylo.d(data = data, phy = tree, names.col = species, binvar =", var1,")")))$DEstimate
+      "phylo.d(data = data, phy = tree, names.col = species, binvar =", pair[1],")")))$DEstimate
   physig.var2 <- eval(parse(
     text = paste(
-      "phylo.d(data = data, phy = tree, names.col = species, binvar =", var2,")")))$DEstimate
+      "phylo.d(data = data, phy = tree, names.col = species, binvar =", pair[2],")")))$DEstimate
   
   # ---- get-model ----
   result.pgl <- try(fitPagel(tree = tree, x = x, y = y, method="fitMk"), silent = T)
@@ -176,7 +202,7 @@ fitBinDat <- function(data, tree, var1, var2, TD, result = "row") {
     ci <- NA
     error <- NA
   }
-  return(data.frame(var1 = var1, var2 = var2, n = length(data$species),
+  return(data.frame(var1 = pair[1], var2 = pair[2], n = length(data$species),
                     Dplus = TD$Dplus, sd.Dplus = TD$sd.Dplus, EDplus = TD$EDplus,
                     physig.var1, physig.var2,
                     cor = cor, phylocor = phylocor2, 
@@ -184,16 +210,16 @@ fitBinDat <- function(data, tree, var1, var2, TD, result = "row") {
                     error = error))
 }
 
-fitCatDat <- function(data, tree, var1, var2, TD, result = "row") {
+fitCatDat <- function(data, tree, pair, TD, result = "row") {
   
-  tree <- drop.tip(tree, setdiff(tree$tip.label, data$synonyms))
-  tree$tip.label <- data$species[match(tree$tip.label, data$synonyms)]  
+  tree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
+  tree$tip.label <- data$species[match(tree$tip.label, data$species)]  
   
   # Std. correlation
   cor <- NA
   
   
-  k <- length(levels(data[,var1]))
+  k <- length(levels(data[,pair[1]]))
   I <- diag( k-1 )
   J <- matrix( rep(1, (k-1)^2), c(k-1, k-1))
   IJ <- (1/3) * (diag(k-1) + J)
@@ -203,7 +229,7 @@ fitCatDat <- function(data, tree, var1, var2, TD, result = "row") {
                                                                   n = k-1 ) ) )
   Ainv<-inverseA(tree)$Ainv
   
-  results.mcmc <- try(MCMCglmm(as.formula(paste(var1, "~ trait + trait:", var2, "-1")), 
+  results.mcmc <- try(MCMCglmm(as.formula(paste(pair[1], "~ trait + trait:", pair[2], "-1")), 
                                random = ~us(trait):species,
                                rcov = ~us(trait):units,
                                data = data,
@@ -220,6 +246,48 @@ fitCatDat <- function(data, tree, var1, var2, TD, result = "row") {
   
 }
 
+fitGKtau <- function(data, tree, pair, TD, result = "row") {
+ 
+  tree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
+  tau <- get_simGKtau(pair, data, tree, nsim = 500)
+  tau <- list(pair = pair, phy.GKtau = tau, GKtau = GKtau(data[, pair[1]], data[, pair[2]]),
+              TD = TD)
+   return(tau)
+} 
+
+
+get_traitQ <- function(trait, tree) {
+  trait.er<-rerootingMethod(tree, trait, model="ER")
+  trait.sym<-rerootingMethod(tree, trait, model="SYM")
+  if(pchisq(-2*(trait.er$loglik-trait.sym$loglik), df=3-1, lower.tail=FALSE) > 0.05){
+    Q <- trait.er$Q
+    attr(Q, which = "model") <- "ER"
+  }else{
+    Q <- trait.sym$Q
+    attr(Q, which = "model") <- "SYM"
+  }
+  return(Q)
+}
+
+get_traitSim <- function(Q, tree, nsim = 500) {
+  sims <- as.data.frame(sim.char(tree, par = Q, nsim = nsim, model="discrete"))
+  return(sims)
+}
+
+get_simGKtau <- function(pair, data, tree, nsim = 500) {
+  
+  sims1 <- get_traitSim(Q = get_traitQ(setNames(data[,pair[1]], data$species), tree), 
+                        tree, nsim = nsim)
+  sims2 <- get_traitSim(Q = get_traitQ(setNames(data[,pair[2]], data$species), tree), 
+                        tree, nsim = nsim)
+  
+  tau <- mapply(FUN = function(x, y){
+    tau <- GKtau(x,y)
+    tau[, c("tauxy", "tauyx")]}, x = sims1, y = sims2, SIMPLIFY = F) %>% do.call(what = rbind)
+  
+  return(tau)
+}
+
 getLevels <- function(metadata, var) {
   meta <- list(levels = metadata[metadata$code == var, "scores"], 
                labels = metadata[metadata$code == var, "levels"]) %>%
@@ -231,8 +299,8 @@ getLevels <- function(metadata, var) {
 
 getTD <- function(data, tree, all.vars = T) {
   
-  ptree <- drop.tip(tree, setdiff(tree$tip.label, data$synonyms))
-  ptree$tip.label <- data$species[match(ptree$tip.label, data$synonyms)] 
+  ptree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
+  ptree$tip.label <- data$species[match(ptree$tip.label, data$species)] 
   dist <- cophenetic(ptree)
   dspp <- rownames(dist)
   if(all.vars == T){
@@ -370,49 +438,37 @@ logG <- function(g) {
 }
 
 
-
-testImpute <- function(data, test.params, ms_vars, metadata, ...) {
-  
-  error <- NULL
-  
-  for(i in 1:nrow(test.params)){
-    v.p <- test.params$vars[i]
-    s.p <- test.params$spp[i]
-    
-    t0 <- Sys.time()
-    print(paste(i, "/", nrow(test.params),"|_____", 
-                paste(test.params[i,], collapse = "-"), sep = ""))
-    
-    vars <- ms_vars[1:(as.integer(length(ms_vars)*v.p))]
-    spps <- spp.ranks$spp[1:(as.integer(nrow(spp.ranks)*s.p))]
-    spp <- data$species %in% spps
-    
-    g <- list(data = data[spp, vars], 
-              meta = metadata, 
-              mgm_types = mgm_types, meta_types = meta_types, 
-              log.vars = log.vars, 
-              spp.list = data.frame(species = data[spp, c("species")]),
-              v.p = v.p, s.p = s.p)
-    
-    source(paste(script.folder, "mgm_dataprep.R", sep = ""))
-    
-    #' impute-mgm
-    source(paste(script.folder, "impute_mgm.R", sep = ""))
-    impt <- g[c("imp_data","OOBerror")]
-    impt.out <- c(impt, list(vars = vars, spps = spps, v.p = v.p, s.p = s.p))
-    save(impt.out, file = paste(output.folder, "data/imputed_data/", an.ID, 
-                                "-v", test.params$vars[i], 
-                                "-s", test.params$spp[i],
-                                ".Rdata", sep = ""))
-    error <- rbind(error, c(g$OOBerror, v.p = v.p, s.p = s.p))
-    print(Sys.time() - t0)
-  }
-  error <- data.frame(error)
-  error.s <- error[order(error$NRMSE),]
-  write.csv(error.s, paste(input.data, "r data/imp_err_", an.ID, ".Rdata",
-                           sep = ""))
-  return(error.s)
+#' Title
+#'
+#' @param vg 
+#' @param mgm_types 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_vg_dt <- function(vg, mgm_types) {
+  vg_dt <- data.frame(Var1 = mgm_types[vg$Var1], Var2 = mgm_types[vg$Var2])
+  return(vg_dt)
 }
 
 
-
+#' Title
+#'
+#' @param vg 
+#' @param mgm_types 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+orderby_vg_dt <- function(vg, mgm_types){
+  
+  vg_dt <- get_vg_dt(vg, mgm_types)
+  cv <- as.data.frame(t(apply(vg_dt, 1, function(x){order(x, decreasing = T)})))
+  t.vg <- vg
+  t.vg$Var1 <- vg[cbind(1:nrow(vg),cv$V1)]
+  t.vg$Var2 <- vg[cbind(1:nrow(vg),cv$V2)]
+  vg <- t.vg
+  return(vg)
+}
