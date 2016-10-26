@@ -6,18 +6,15 @@
 
 #' global settings
 
-# ---- load_global ----
+## ---- load_global ----
 options(stringsAsFactors = F)
 
 # dependencies
 source(paste(script.folder, "pkgs.R", sep = ""))
 
-# install dependencies
-if(install.pkgs){
-  source(paste(script.folder, "install_dependencies.R", sep = ""))}
-
-# load dependencies
-source(paste(script.folder, "load_dependencies.R", sep = ""))
+# install and load dependencies through pkg "pacman"
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(pkgs, character.only = T)
 
 # load files
 source(paste(script.folder, "load_files.R", sep = ""))
