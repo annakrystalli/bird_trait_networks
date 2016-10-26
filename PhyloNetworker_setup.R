@@ -18,10 +18,11 @@ if(remove_dtips){
   dup.syns <- duplicated(phylo.match$synonyms)
   phylo.match <- phylo.match[!dup.syns,]
   wide <- wide[!dup.syns,]
-  
   tree <- drop.tip(tree, setdiff(tree$tip.label, phylo.match$synonyms))
-  tree$tip.label <- phylo.match$species[match(tree$tip.label, phylo.match$synonyms)]
 }
+
+# ---- rename-tip.labels ----
+tree$tip.label <- phylo.match$species[match(tree$tip.label, phylo.match$synonyms)]
 
 # ---- create-spp.list ----
 spp.list <- data.frame(species = unique(wide$species))
@@ -59,5 +60,3 @@ ms_spp <- data$species
 row.names(data) <- ms_spp
 
 spp.ranks <- getSppRanks(ms_vars, data = data, load = T, input.folder, an.ID)
-
-
