@@ -92,6 +92,22 @@ aggDat <- function(g, min.cat = 8) {
 }
 
 
+aggVar <- function(x, min.cat) {
+  tab <- table(x)
+  agg.cats <- sapply(tab, FUN = function(x){any(x < min.cat)})
+  if(any(agg.cats)){
+    if(sum(tab[agg.cats]) > min.cat){
+      x[x %in% names(tab[agg.cats])] <- "other" 
+    }else{
+      x[x %in% names(tab[agg.cats])] <- NA
+    }   
+  }
+  return(x)
+}
+
+
+
+
 rm_sing <- function(g) {
   cats <- intersect(names(g$mgm_types)[g$mgm_types == "c"], 
                     names(g$data))
@@ -104,4 +120,11 @@ rm_sing <- function(g) {
     g$data <- g$data[, !names(g$data) %in% rm]
     return(g)
   }
+}
+
+p_value <- function(model) {
+  f <- summary(model)$fstatistic
+  p <- pf(f[1],f[2],f[3],lower.tail=F)
+  names(p) <- NULL
+  return(p)
 }
