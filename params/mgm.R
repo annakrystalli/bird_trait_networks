@@ -8,4 +8,5 @@ min.cat <- 5
 v.p <- 0.2
 s.p <- 0.05
 remove_dtips <- T
+dist.types <- c("g", "c")
   
