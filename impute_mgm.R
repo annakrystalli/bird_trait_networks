@@ -15,9 +15,3 @@ for(var in names(g$imp_data)[g$mgm_types[names(g$imp_data)] == "c"]){
   g$data[,var] <- as.numeric(g$data[,var])
 }
 
-
-PPE <- phylopars(trait_data = data.frame(species = rownames(g$data), g$data), tree = g$tree)
-PPE_ou <- phylopars(trait_data = data.frame(species = rownames(g$data), g$data), 
-                 tree = g$tree, model = "mvOU")
-
-BIC(PPE_OU)
