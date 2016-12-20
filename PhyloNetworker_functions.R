@@ -26,8 +26,9 @@ calcTraitPairN <- function(data){
 }
 
 pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes, 
-                         result = "row"){
+                         result = "row", mgm_types = mgm_types){
   pair <- as.character(pair)
+  error <- NULL
   
   # ---- set-up-vars ----
   data <- data[, c("species", pair)]
@@ -44,23 +45,30 @@ pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes,
     if(mgm_types[var] == "c"){
       
       data[,var] <- aggVar(data[,var], min.cat)
+      data <- data[complete.cases(data),]
       data[,var] <- as.factor(data[,var])
+      if(1 >= length(levels(data[,var]))){
+        error <- list(pair = pair,
+                    error = paste0("ERROR: singular category: '",  levels(data[,var]),
+                                   "' in variable ", var))}
     }
     if(mgm_types[var] == "g"){
       if(validateLog(var = var, log.vars, data)){
         data[, var] <- log(data[, var])
         colnames(data)[colnames(data) == var] <- paste("log", var, sep = "_")
         pair[pair == var] <- paste("log", var, sep = "_")
+        names(mgm_types)[names(mgm_types) == var] <- paste("log", var, sep = "_")
       }
     }
   }
   
   # ---- fit-cor ---- 
   if(datTypes %in% c("nc", "nn")) {
-    row <- fitNumDat(data, tree, pair, TD, result)
+    row <- fitNumDat(data, tree, pair, TD, result, mgm_types = mgm_types, 
+                     error, datTypes)
   }
   if(datTypes == "bb") {
-    row <-  fitBinDat(data, tree, pair, TD, result) 
+    row <-  fitBinDat(data, tree, pair, TD, result, error) 
   }
   if(datTypes == "ccMCMC") {
     meta <- list(getLevels(metadata, pair[1]), getLevels(metadata, pair[2]))
@@ -74,7 +82,7 @@ pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes,
     row <-  fitCatDat(data, tree, pair, TD, result) }
   
   if(datTypes == "cc"){
-    row <-  fitGKtau(data, tree, pair, TD, result = "row")
+    row <-  fitGKtau(data, tree, pair, TD, result = "row", error)
   }
   
   # ---- return ----
@@ -82,7 +90,8 @@ pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes,
   
 }
 
-fitNumDat <- function(data, tree, pair, TD, result = "row") {
+fitNumDat <- function(data, tree, pair, TD, result = "row", mgm_types = mgm_types, 
+                      error, datTypes) {
   
   # ---- configure-tree ----
   tree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
@@ -93,6 +102,15 @@ fitNumDat <- function(data, tree, pair, TD, result = "row") {
     physig.var2 <- phylosig(tree, setNames(data[,pair[2]], data$species))
   }else{
     physig.var2 <- NA  
+  }
+  
+  if(!is.null(error)){
+    return(data.frame(var1 = pair[1], var2 = pair[2], n = length(data$species),
+                      Dplus = TD$Dplus, sd.Dplus = TD$sd.Dplus, EDplus = TD$EDplus,
+                      physig.var1, physig.var2,
+                      cor = NA, phylocor = NA, 
+                      lambda = NA, p = NA, l.ci.l = NA, l.ci.u = NA,
+                      error = error$error, pair.type = datTypes))
   }
   
   
@@ -142,7 +160,7 @@ fitNumDat <- function(data, tree, pair, TD, result = "row") {
                     physig.var1, physig.var2,
                     cor = cor, phylocor = phylocor2, 
                     lambda = lambda, p = p, l.ci.l = ci.l, l.ci.u = ci.u,
-                    error = error))
+                    error = error, pair.type = datTypes))
 }
 
 fitBinDat <- function(data, tree, pair, TD, result = "row") {
@@ -169,7 +187,8 @@ fitBinDat <- function(data, tree, pair, TD, result = "row") {
                       lambda = NA, p = NA, l.ci.l = NA, l.ci.u = NA,
                       error = paste("single state in", 
                                     if(length(levels(x)) == 1){pair[1]},
-                                    if(length(levels(y)) == 1){pair[2]})))
+                                    if(length(levels(y)) == 1){pair[2]})),
+           pair.type = "bin")
   }
   
   # ---- get-phylosig ----
@@ -207,7 +226,7 @@ fitBinDat <- function(data, tree, pair, TD, result = "row") {
                     physig.var1, physig.var2,
                     cor = cor, phylocor = phylocor2, 
                     lambda = lambda, p = p, ci = ci, 
-                    error = error))
+                    error = error, ))
 }
 
 fitCatDat <- function(data, tree, pair, TD, result = "row") {
@@ -246,14 +265,73 @@ fitCatDat <- function(data, tree, pair, TD, result = "row") {
   
 }
 
-fitGKtau <- function(data, tree, pair, TD, result = "row") {
+fitGKtau <- function(data, tree, pair, TD, result = "row", error) {
+  
+  if(!is.null(error)){
+    error$TD <- TD
+    return(error)}
  
   tree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
   tau <- get_simGKtau(pair, data, tree, nsim = 500)
   tau <- list(pair = pair, phy.GKtau = tau, GKtau = GKtau(data[, pair[1]], data[, pair[2]]),
-              TD = TD)
+              TD = TD, error = NA)
    return(tau)
 } 
+
+get_cc.row <- function(x, cc_vg){
+  
+  if(length(x) == 2){
+    row <- data.frame(var1 = x$pair[1], var2 = x$pair[2], 
+                      n = cc_vg$n[apply(cc_vg[,1:2], 1, 
+                                        FUN = function(y){identical(unname(y), x$pair)})], 
+                      Dplus = NA, sd.Dplus = NA, EDplus = NA,
+                      physig.var1 = NA, physig.var2 = NA, cor = NA,  
+                      phylocor = NA, lambda = NA, p = NA, l.ci.l = NA, 
+                      l.ci.u = NA, 
+                      error = x$error,
+                      pair.type = "cc")
+    return(row)
+  }
+  
+  if(length(x) == 3 & !is.null(x$TD)){
+    row <- data.frame(var1 = x$pair[1], var2 = x$pair[2], 
+                      n = cc_vg$n[apply(cc_vg[,1:2], 1, 
+                                        FUN = function(y){identical(unname(y), x$pair)})], 
+                      Dplus = x$TD$Dplus, sd.Dplus = x$TD$sd.Dplus, EDplus = x$TD$EDplus,
+                      physig.var1 = NA, physig.var2 = NA, cor = NA,  
+                      phylocor = NA, lambda = NA, p = NA, l.ci.l = NA, 
+                      l.ci.u = NA, 
+                      error = x$error,
+                      pair.type = "cc")
+    return(row)
+  }
+  
+  require(boot)
+  
+  max.id <- which(x$GKtau[,5:6] == max(x$GKtau[,5:6]))[1]
+  min.id <-setdiff(1:2, max.id)
+  obs <-  unlist(x$GKtau[,5:6][max.id], use.names = F)
+  sim.base <- na.omit(replace(x$phy.GKtau[,max.id],
+                              is.infinite(x$phy.GKtau[,max.id]),
+                              NA))
+  
+  ci <- boot.ci(boot(sim.base,function(x,i) median(x[i]), R=1000), type = "basic")
+  base <- ci$t0
+  l.ci.l <- ci$basic[4]
+  l.ci.u <- ci$basic[5]
+  
+  if(base > obs){phylocor <- 0}else{
+    phylocor <- (1-base/1) * obs}
+  
+  row <- data.frame(var1 = x$pair[max.id], var2 = x$pair[min.id], 
+                    n = cc_vg$n[apply(cc_vg[,1:2], 1, 
+                                      FUN = function(y){identical(unname(y), x$pair)})], 
+                    Dplus = x$TD$Dplus, sd.Dplus = x$TD$sd.Dplus, EDplus = x$TD$EDplus,
+                    physig.var1 = NA, physig.var2 = NA, cor = max(x$GKtau[,5:6]),  
+                    phylocor = phylocor, lambda = base, p = NA, l.ci.l, l.ci.u, error = NA,
+                    pair.type = "cc")
+  return(row)
+}
 
 
 get_traitQ <- function(trait, tree) {
@@ -276,14 +354,15 @@ get_traitSim <- function(Q, tree, nsim = 500) {
 
 get_simGKtau <- function(pair, data, tree, nsim = 500) {
   
-  sims1 <- get_traitSim(Q = get_traitQ(setNames(data[,pair[1]], data$species), tree), 
-                        tree, nsim = nsim)
-  sims2 <- get_traitSim(Q = get_traitQ(setNames(data[,pair[2]], data$species), tree), 
-                        tree, nsim = nsim)
+  Q1 <- get_traitQ(setNames(data[,pair[1]], data$species), tree)
+  sims1 <- get_traitSim(Q = Q1, tree, nsim = nsim)
+  Q2 <- get_traitQ(setNames(data[,pair[2]], data$species), tree)
+  sims2 <- get_traitSim(Q = Q2, tree, nsim = nsim)
   
   tau <- mapply(FUN = function(x, y){
     tau <- GKtau(x,y)
     tau[, c("tauxy", "tauyx")]}, x = sims1, y = sims2, SIMPLIFY = F) %>% do.call(what = rbind)
+  attr(tau, "model") <- c(attr(Q1, "model"), attr(Q2, "model"))
   
   return(tau)
 }
