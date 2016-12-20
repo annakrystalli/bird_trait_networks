@@ -8,7 +8,7 @@ output:
 
 ---
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = F, message = F, warning=F, cache=F)
 ```
 ```{r}
@@ -109,7 +109,7 @@ plot_ly(z= gtau, x = colnames(gtau), y = rownames(gtau), type = plot.type) %>%
 
 ### fit netcarto
 
-```{r fit-net}
+```{r}
 diag(gtau) <- 0
 gtau[gtau < cutoff] <- 0
 

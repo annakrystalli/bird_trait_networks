@@ -1,125 +1,117 @@
 rm(list = ls())
+
+# ---- pn-setup ----
+if(exists(file_setup_path)){}else{
+  file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+  source(file_setup_path)}
 wkf = "phylonetworker"
 param = "phylonetworker.R"
-file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
-source(file_setup_path)
-source("~/Documents/workflows/bird_trait_networks/project_ui.R")
-vg_dt <- get_vg_dt(vg, mgm_types)
-
-# ---- nn ----
-gg_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(x %in% c("g", "p"))}),]
-gg_dat <- data[,c("species", unique(unlist(gg_vg[,1:2])))]  
-
-num.res <- NULL
-for(i in 1:dim(num.vg)[1]){
-  
-  num.res <- rbind(num.res, pglsPhyloCor(x = gg.vg[i, 1:2], data = gg.dat, 
-                                         tree = tree, log.vars = log.vars, 
-                                         datTypes = "nn"))
-  print(i)
-}
-
-
-num.res <- num.res[order(abs(num.res$phylocor), decreasing = T),]
-
-write.csv(num.res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
-                         min.n, if(log){"_log"},"_num.csv", sep = ""),
-          row.names = F)
-
-
-bin.res <- NULL
-for(i in 1:dim(bin.vg)[1]){
-  
-  bin.res <- rbind(bin.res, pglsPhyloCor(x = bin.vg[i, 1:2], data = bin.dat, 
-                                         tree = tree, log.vars = log.vars, 
-                                         datTypes = "bb"))
-  print(i)
-}
-
-
-bin.res <- bin.res[order(abs(bin.res$phylocor), decreasing = T),]
-
-write.csv(bin.res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
-                         min.n, if(log){"_log"},"_bin.csv", sep = ""),
-          row.names = F)
-
-
-
-# ---- cc ----
-
-cc_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(x == "c")}),]
-cc_dat <- data[,c("species", unique(unlist(cc_vg[,1:2])))]  
-
-
-cc.res <- pglsPhyloCor(pair = cc_vg[nrow(cc_vg)-20, 1:2], data = cc_dat, 
-                       tree = tree, log.vars = NULL, datTypes = "cc", result = "row")
-
-
-
-
-# ---- cat vs numeric (nc)----
-
-
+source(paste0(script.folder,"project_ui.R"))
 vg <- orderby_vg_dt(vg, mgm_types)
 vg_dt <- get_vg_dt(vg, mgm_types)
-cg_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(c("c", "g") %in% x)}),]
-cg_dat <- data[,c("species", unique(unlist(cg_vg[,1:2])))]
 
-cg.res <- NULL
-
-for(i in 7:dim(cg_vg)[1]){
-  cg.res <- rbind(cg.res, pglsPhyloCor(pair = cg_vg[i, 1:2], data = cg_dat, 
-                                         tree = tree, log.vars = log.vars, 
-                                         datTypes = "nc", result = "row"))
+# numeric - numeric edges
+# ---- pn-nn ----
+nn_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(x %in% c("g", "p"))}),]
+nn_dat <- data[,c("species", unique(unlist(nn_vg[,1:2])))]  
+nn_res <- NULL
+for(i in 1:dim(nn_vg)[1]){
   print(i)
+  nn_res <- rbind(nn_res, pglsPhyloCor(pair = nn_vg[i, 1:2], data = nn_dat, 
+                                       tree = tree, log.vars = log.vars, 
+                                       datTypes = "nn", mgm_types = mgm_types))
+}
+nn_res <- nn_res[order(abs(nn_res$phylocor), decreasing = T),]
+if(save){
+  write.csv(nn_res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                          min.n, if(log){"_log"},"_nn.csv", sep = ""),
+            row.names = F)
+}
+
+# categorical - categorical edges
+# ---- pn-cc.list ----
+cc_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(x == "c")}),]
+cc_dat <- data[,c("species", unique(unlist(cc_vg[,1:2])))]  
+cc_res.list <- vector("list", nrow(cc_vg))
+for(i in 1:nrow(cc_vg)){
+  print(i)
+  cc_res.list[[i]] <- pglsPhyloCor(pair = cc_vg[i, 1:2], data = cc_dat, 
+                                   tree = tree, log.vars = NULL, datTypes = "cc", result = "row",
+                                   mgm_types = mgm_types)
+}
+if(save){
+  save(cc_res.list, file = paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                                 min.n, if(log){"_log"},"_cc.Rdata", sep = ""))
+}
+
+# ---- pn-cc-load.list ----
+load(file = paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn",
+                  min.n, if(log){"_log"},"_cc.Rdata", sep = ""))
+
+# ---- pn-cc ----
+cc_res <- NULL
+for(i in 1:length(cc_res.list)){
+  cc_res <- rbind(cc_res, get_cc.row(cc_res.list[[i]], cc_vg))
+  print(i)
+}
+if(save){
+  write.csv(cc_res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                          min.n, if(log){"_log"},"_cc.csv", sep = ""),
+            row.names = F)}
+
+
+
+# numeric - categorical edges
+# ---- pn-nc ----
+nc_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(c("c", "g") %in% x)}),]
+nc_dat <- data[,c("species", unique(unlist(nc_vg[,1:2])))]
+nc_res <- NULL
+for(i in c(11:dim(nc_vg)[1])){
+  nc_res <- rbind(nc_res, 
+                  pglsPhyloCor(pair = nc_vg[i, 1:2], data = nc_dat, 
+                               tree = tree, log.vars = log.vars, 
+                               datTypes = "nc", result = "row", 
+                               mgm_types = mgm_types))
+  print(i)
+}
+if(save){write.csv(nc_res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                                 min.n, if(log){"_log"},"_nc.csv", sep = ""),
+                   row.names = F)}
+
+
+# ---- pn-read.type-res ----
+nn_res <- read.csv(paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                         min.n, if(log){"_log"},"_nn.csv", sep = ""))
+nc_res <- read.csv(paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                         min.n, if(log){"_log"},"_nc.csv", sep = ""))
+cc_res <- read.csv(paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                         min.n, if(log){"_log"},"_cc.csv", sep = ""))
+# ---- pn-comp.res ----
+res <- rbind(nn_res, nc_res, cc_res)
+if(save){
+  write.csv(res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                       min.n, if(log){"_log"},"_allDT.csv", sep = ""),
+            row.names = F)
 }
 
 
-
-write.csv(cg.res, paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
-                         min.n, if(log){"_log"},"_cg.csv", sep = ""),
-          row.names = F)
-
-
-dat <- cg.res[is.na(cg.res$error), ]
-
-plot(cg.res$Dplus,  cg.res$lambda)
-lm(lambda ~ Dplus, data = dat)
-lm(phylocor ~ Dplus, data = dat)
-
-
-
-### mixed models
-
-
-
-
-
-#################################################################################
-## NETWORK ANALYSIS ####################################################################
-##################################################################################
+# ---- pn-read.type-res ----
+res <- read.csv(paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                      min.n, if(log){"_log"},"_allDT.csv", sep = ""))
+# ---- pn-sub-res ----
 res <- res[abs(res$phylocor) > cutoff & !is.na(res$phylocor),]
 
+# ---- pn-network ----
 library(rnetcarto)
 net.d <- res[!is.na(res$phylocor), c("var1", "var2", "phylocor")]
 net.list <- as.list(net.d)
 net <- netcarto(web = net.list, seed = 1)
-
-
-write.csv(cbind(net[[1]], modularity = net[[2]]), 
-          paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
-                if(log){"_log"},".csv", sep = ""),
-          row.names = F)
-
-save(net, file = paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
-                       if(log){"_log"},".RData", sep = ""))
-
-
-
-
-
-
-
-#source('http://bioconductor.org/biocLite.R')
-#biocLite ('RCytoscape')
+if(save){
+  write.csv(cbind(net[[1]], modularity = net[[2]]), 
+            paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
+                  if(log){"_log"},".csv", sep = ""),
+            row.names = F)
+  save(net, file = paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
+                         if(log){"_log"},".RData", sep = ""))
+}
 
