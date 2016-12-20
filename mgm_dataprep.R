@@ -1,8 +1,7 @@
 
 # ---- full.vg ----
 g <- m1DataPrep(g, phylo.match)
-g$data <- g$data[, intersect(names(g$data),
-                             names(g$mgm_type)[g$mgm_type != "p"])]
+
 g <-  aggDat(g, min.cat)
 g <- rm_sing(g)
 
