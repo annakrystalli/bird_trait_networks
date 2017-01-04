@@ -1,20 +1,79 @@
-# SETUP ###############################################################
 
-
+## ----global-setup, echo = F----------------------------------------------
 rm(list=ls())
+options(stringsAsFactors = F)
 
-source("~/Documents/workflows/bird_trait_networks/Setup.R")
+wkf = "rmacro"
+param = "rmacro.R"
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+source(file_setup_path)
+source("~/Documents/workflows/bird_trait_networks/project_ui.R")
+
 setwd(input.folder)
 
-# PACKAGES & FUNCTIONS ###############################################################
 
-source(paste(script.folder, "functions.R", sep = ""))
-
-
-# install.packages("prodlim")
-require(prodlim)
 
 # SETTINGS ###############################################################
+
+## ----master-configuration, eval=T----------------------------------------
+init_db(spp.list_src = "D0")
+
+## ----setup-input.folder--------------------------------------------------
+setupInputFolder(input.folder)
+
+fcodes <- ensure_fcodes(meta.vars)
+
+file.names <- create_file.names(c("Table.csv", "Amniote_Database_Aug_2015.csv"))
+
+
+load_sys.ref(view = T)
+
+
+## ----load-syn.links------------------------------------------------------
+syn.links <- read.csv(text=getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/data/input/taxo/syn.links.csv", 
+                                  ssl.verifypeer = FALSE), header=T)
+
+## ----process-csvs, warning=FALSE-----------------------------------------
+
+process_file.system(file.names, fcodes)
+
+
+## ----create-spp.list-----------------------------------------------------
+spp.list <- createSpp.list(species = NULL, 
+                           taxo.dat = NULL, 
+                           spp.list_src = spp.list_src)
+
+
+## ----create-master-------------------------------------------------------
+master <- create_master(spp.list)
+
+## ----create-m------------------------------------------------------------
+
+filename <- file.names[file.names == "Amniote_Database_Aug_2015.csv"]
+
+m <- matchObj(file.name = filename,
+              spp.list = master$spp.list,
+              sub = "spp.list") # use addMeta function to manually add metadata.
+
+
+## ----process-m-----------------------------------------------------------
+m <- m %>% 
+  separateDatMeta() %>% 
+  compileMeta(input.folder = input.folder) %>%
+  checkVarMeta(master$metadata) %>%
+  dataMatchPrep()
+
+## ----data-spp-match------------------------------------------------------
+m <- dataSppMatch(m, syn.links = syn.links, addSpp = T)
+
+## ----output--------------------------------------------------------------
+output <- masterDataFormat(m, meta.vars, match.vars, var.vars)
+
+## ----merge-to-master-----------------------------------------------------
+master <- updateMaster(master, output = output)
+
+
+
 
 
 
