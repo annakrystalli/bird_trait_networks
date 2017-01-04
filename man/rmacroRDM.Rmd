@@ -1,0 +1,219 @@
+---
+title: rmacroRDM workflow
+output: html_notebook
+---
+
+The **`rmacroRDM`** package contains functions to help with the compilation of
+macroecological datasets. It compiles datasets into a **master long
+database of individual observations**, matched to a specified **master
+species list**. It also *checks, separates and stores taxonomic and
+metadata information* on the *observations*, *variables* and *datasets*
+contained in the data. It therefore aims to ensure full traceability of
+datapoints and as robust quality control, all the way through to the
+extracted analytical datasets.
+
+**For more details and context, see the rmacroRDM github [repo](https://github.com/annakrystalli/rmacroRDM)**
+
+R code for this workflow available [here](https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/utils/temp_vignette.R)
+
+***
+<br>
+
+# setup
+
+```{r global-setup, echo = F}
+rm(list=ls())
+options(stringsAsFactors = F)
+```
+
+```{r rmd-setup, echo=FALSE, purl=FALSE, warning=FALSE, message=FALSE}
+require(RCurl)
+require(knitr)
+require(listviewer)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## source rmacroRDM functions
+
+First source the rmacroRDM functions. Currently the best way is to just source from github using `RCulr:getURL()`.
+
+```{r source-rmacroRDM, message=FALSE, warning=FALSE, eval=FALSE}
+require(RCurl)
+eval(parse(text = getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/functions.R", ssl.verifypeer = FALSE)))
+eval(parse(text = getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/wideData_function.R", ssl.verifypeer = FALSE)))
+
+```
+
+```{r source-local, echo=FALSE}
+source("/Users/Anna/Documents/workflows/rmacroRDM/R/functions.R")
+```
+
+***
+
+## initialise database and workspace configurations and attach to search pathway
+
+In this step, we initialise the environment with some required parameters to build the database and process files to it. Here are the arguments, representing the default rmacroRDM workflow settings intialised if you just called `inti_db()`. 
+
+```{r formals-init_db}
+print(formals(init_db))
+```
+
+
+<br>
+
+#### **`init_db()` arguments**
+  
+If the project has been initialised, these pathways link the workflow to the file.system and process system. If you are starting a new project, they identify the directories in which the file and process systems will be created. The arguments that need specifying are:
+  
+  - **data.folder:** containing/will contain private input and output folders where data are stored, usually a googledrive folder) 
+  - **script.folder:** containing/will **scripts** associated with the project. This is usually an RStudio project directory, ideally version controlled on github. Data sheet processing scripts are stored in the **`"process/"`** folder in this directory.
+ - ***var.vars:** master column names defining the variables linking observations (**`"value"`**) from the original dataset (**`"data.ID"`**) to a master variable code (**`"var"`**). Do not edit these.
+ - **match.vars:** 
+ - **meta.vars: metadata associated with each observation**. This character vector defines the metadata columns in the master database, file.system set up and data access and processing. The default `meta.vars` represent observation metadata  commonly associated with macroecological datasets. You can add additional meta.vars to customise the master db, can remove default meta.vars but we do not recommend you modify them, especially **`"ref"`** and **`"n"`** which are reserved. Here are the **default `meta.vars`:**
+
+     - **`"ref"`**: the reference from which observation has been sourced. This is the only `meta.var` that *MUST* be correctly supplied for matching to proceed.
+     - **`"qc"`:** any quality control information regarding individual datapoints. Ideally, a consistent scoring system used across compiled datasets.
+     - **`"observer"`**: The name of the observer of data points. Used to allow assessment of observer bias, particularly in the case of data sourced manually form literature.
+     - **`"n"`**: if value is based on a summary of multiple observations, the number of original observations value is based on.
+     - `"notes"`: any notes associated with individual observations.
+
+<br>
+
+The function compiles and creates the paths to **input.**, **output.** and **script.** folders. These are to correctly setup the file.system and throughout the package for accessing data and custom processing code. I then appends the given arguments to environment `master_config` at position 2 in the search path (note position of `GlobalEnvironment` = 1). 
+
+
+
+I actually want to set **"D0"** as the file from which to extract the spp.list in a bit so I set `spp.list_src = "D0"`.
+
+```{r master-configuration, eval=T}
+init_db(data.folder = "/Users/Anna/Google Drive/bird trait networks/",
+        script.folder = "~/Documents/workflows/bird_trait_networks/", 
+        spp.list_src = "D0", fileEncoding = "mac")
+```
+
+
+Here's a list of the values of the objects we just attached as configurations:
+```{r print-master_config, echo=FALSE, purl=FALSE}
+ms_conf <- setNames(lapply(ls("master_config"), FUN = get, envir = environment()), 
+         ls("master_config"))
+jsonedit(ms_conf)
+```
+
+<br>
+
+
+## Set up **`file.system`**
+
+Once project folders have been set, we set up the *file system* by creating the required folders (if they don't exist already) in the project folders according to the configurations set in the previous step. 
+
+The function creates:
+
+- the necessary **meta.var** folders in **`input.folder/pre/`**, **`./post/`** and **`./raw/`**.
+- **`metadata/`** and **`taxo/`** folders in the **`input.folder`**. 
+- **`process/`** directory in the **`script.folder`** directory.
+
+```{r setup-input.folder}
+setupInputFolder(input.folder)
+```
+
+
+
+## make fcodes (folder codes) vector
+
+The `fcodes` vector specifies the details of folders in `pre/` and `post/` `input.folder` folders. It also creates appropriate code prefixes for each type of `data` or `meta.var` sheet. Note that **"D"** is reserved for **`data`** files, **"R"** for **`ref`** files and **"N"** for **`n`** files.
+
+```{r fcodes}
+fcodes <- ensure_fcodes(meta.vars)
+print(fcodes)
+```
+
+<br>
+
+***
+
+
+# Populating the **file.system**, and completing **`sys_ref`** files.
+
+The `sys_ref` files consists of **3 .csv files**:
+
+- **`"metadata.csv"`** which stores metadata on database variables / traits
+- **`"data_log.csv"`** which stores metadata on each file 
+- **`"vnames.csv"`** which stores metadata on variable name correspondence between master code names and names across data sheets.
+
+By storing all data (and meta.var) files in the correct folder the pre-processing input folder (**``r paste0(gsub("/Users/Anna/Google Drive/bird trait networks", ".", input.folder), "pre/")``**), rmacroRDM functions and the **sys_ref app** can extract information from the file.system to help you populate sys_ref files with required metadata while reducing the opportunity for errors.
+
+<br>
+
+## **Populate the file system:**
+
+  1. **Add all your raw data into the appropriate** ***`"raw/"`*** **data folder**.
+  2. **Make an exact copy of each file and save it as a .csv in the appropriate** ***`"pre/"`*** **preserving the names of the original files.** These names will be stored in the data_log under the appropriate meta.var file.name column and represent the link through data processing to the original data sheet. Do not be tempted to do any manual processing of data in excel. There is an automated processing stage where you can supply custom scripts to perform any file specific processing programmatically and in a documented way.
+
+<br>
+
+## **Create** ***`"metadata.csv"`:***
+
+The metadata.csv contains important metadata on each variable (trait) in the master database. The information recorded can be customised through the **`metadata.vars`** argument in `init_db()`. The defaults are:
+
+- **code:** variable code used throughout the master db and file.system.
+- **orig.vname:** name of variable in the original dataset from which it was first harvested.
+- **cat:** variable category (eg. ***Life-History, Ecological, Morphological***)
+- **descr:** an informative description of the variable. Useful as axis labels during plotting.
+- **scores:** FOR FACTORS codes used throughout db. Should be separated by `";"`.
+- **levels:** FOR FACTORS levels to which the codes specified above match to. Should also be separated by `";"`
+- **type:** type of variable. Choose from `num`: numeric, `int`: integer, `bin`: binary, `cat`: categorical, `nom`: nominal.
+- **units:** units in which variables were measured (if applicable)
+- **notes:** notes associated the variable
+- **source:** original dataset from which variable was first harvested
+
+```{r}
+create_metadata(overwrite = F)
+```
+
+<br>
+  
+## **Create** ***`"data_log.csv"`:***
+ 
+The **`data_log.csv`** file contains metadata on the datasets. The file keeps track of dataset level metadata including: the meta.var files associated with each data file, data file format (`"wide"` or `"long"`) source and source contact details.
+
+The `create_data_log()` function harvests information from the file.system to create the dataset entries. By default it will create rows and assigns fcodes alphabetically. To override the default, you can specify the sequence in which files are to be numbered by supplying a vector of datafile file.names (csv) to the file.names argument in the order in which you want them to be numbered.
+
+```{r create-data_log}
+create_data_log(file.names = c("Table.csv", "Amniote_Database_Aug_2015.csv"), 
+                overwrite = F)
+```
+
+```{r update-data_log}
+data_log <- update_data_log(overwrite = F)
+
+```
+
+## **`vnames.csv`**
+
+```{r vnames-create, eval=FALSE}
+vnames <- create_vnames(overwrite = F)
+```
+
+```{r update-vnames, eval=FALSE}
+vnames <- update_vnames(overwrite = F)
+```
+
+
+This app will help you complete the information to configure the rmacroRDM file.system. 
+
+If they don't exist yet they need to be created. 
+
+
+
+## load required data
+
+
+
+
+
+```{r}
+load_sys.ref(view = F)
+```
+
+
+

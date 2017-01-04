@@ -1,0 +1,103 @@
+---
+title: "pglsPhyloCor_README"
+author: "AK"
+date: "`r Sys.time()`"
+output: 
+  html_document:
+    theme: simple
+---
+## pglsPhyloCor function
+
+The phylocors function calculates **phylogenetically corrected correlations** between pairs of traits (defined by the *character vector of the trait names* supplied to argument `pair`), which are then used as edge weights in the network. The method is determined by the argument `pair.types`. 
+
+  - `"nn"`: numeric vs numeric (includes poisson). If `log = T`, data for traits defined in `log.vars` are logged. Method uses `pgls()`.
+  - `"nc"`: numeric vs categorical. (variables must be provided in the order "nc" in `data`). Method uses `pgls()`
+  - `"cc"`: categorical vs categorical. Method combines phylogenetic trait coevolution simulations and `GoodmanKruskal()`.
+  
+In also calculates and collates auxilliary metrics, useful for analysis diagnostics and for further insights.
+  
+
+- Calculates Taxonomic Distincness (and associated metrics)
+- For `mgm_types = "c"`, checks for categories with frequencies below `min.cat` and attempts to either aggregate or remove. If the final categorical variable consists of a singular category, an approprite error is recorded and passed to the functions. 
+- For `mgm_types = "n"` and `log = T`, data values are logged and trait relabelled
+- Then either **`fitNumDat()`** or **`fitGKtau()`** is called for `c("nn", "nc")` or `"cc"` respectively. 
+
+```{r echo=FALSE}
+  file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+  source(file_setup_path)
+source(paste0(script.folder, "Phylonetworker_functions.R"))
+```
+
+
+```{r}
+pglsPhyloCor
+```
+
+### **`fitNumDat()`**
+
+Function fitNumDat:
+
+- calculates phylogenetic signal in individual `"n"` traits using  `phylosig()` (`physig.var1` & `physig.var2`).
+- for `pair.type = "nn"` calculates a straight correlation (`cor`)
+- fits a pgls with lambda estimated using "ML"
+
+```{r}
+fitNumDat
+```
+
+### **`fitGKtau()`**
+
+Function fitGKtau:
+
+Calculates: 
+
+- Empirical **GoodmanKruskal τ** from observed trait state covariation.
+- Expected **GoodmanKruskal τ** from phylogeny, using simulated trait state covariation.
+
+Returns a list in order to retain additional pertinent information, such as the evolutionary model selected for trait simulation in the determination of phylogenetic GoodmanKruskal τ. 
+
+```{r}
+fitGKtau
+```
+
+#### `get_simGKtau()`
+
+function **get_sumGKtau** returns the GoodmanKruskal τ (measure of association between categorical traits, including binary) for each pair of simulated traits from the phylogeny. Used to phylogenetically correct observed GoodmanKruskal τ. 
+
+```{r}
+get_simGKtau
+```
+
+#### `get_traitQ()`
+
+function get_traitQ gets the fitted transition matrix between states (Q) by  [re-rooting](http://www.phytools.org/static.help/rerootingMethod.html), using empirical observations of trait state data across a phylogenetic tree. It tests two models of trait evolution ("EM" & "SYM") and returns the transition matrix from the best fitting model.
+
+```{r}
+get_traitQ
+```
+
+
+
+#### `get_traitSim()`
+
+[Simulates character evolution](https://rdrr.io/cran/geiger/man/sim.char.html) of a trait accroding to phylogeny using a **phylogenetic tree** and a **fitted transition matrix** between trait stages, *nsim* number of times. Returns a dataframe.
+
+```{r}
+get_traitSim
+```
+
+#### `get_cc.row`
+
+Once `pglsPhyloCor` has been called for `pair.type = "cc"`, function `get_cc.row` is used to extract information from the list output in a data.frame format, alignable with `pglsPhyloCor` ouputs for `pair.type = "nn"` or `"nc"`. 
+
+- the first two conditional processes extract error messages if appropriate.
+- Whether comparable or not (up to you to decide), the function extracts the phylogenetically expected GoomanKruskal τ ($τ_{exp}$ `base`) as λ (lambda) and confidence intervals are calculated through bootstrapping. 
+- Observed GoomanKruskal τ ($τ_{obs}$ `obs`) is then phylogenetically corrected to give $τ_{pg}$ in the following manner:
+  1. if $τ_{exp}>τ_{obs}$ then $τ_{pg}=0$
+  2. if $τ_{exp}<τ_{obs}$ then $τ_{pg}=\frac{τ_{obs}-τ_{exp}}{1 - τ_{exp}}$
+- Information compiled into data.frame format
+
+```{r}
+get_cc.row
+```
+

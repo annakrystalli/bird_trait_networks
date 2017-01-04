@@ -1,0 +1,284 @@
+---
+title: "PhyloNetworker_README"
+author: "Anna Krystalli"
+date: "`r Sys.time()`"
+output: html_document
+params:
+  file_setup_path: ~/Documents/workflows/bird_trait_networks/file_setup.R
+  save: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+attach(params)
+source(file_setup_path)
+```
+
+```{r read_chunks, echo=FALSE}
+read_chunk(paste0(script.folder, "PhyloNetworker.R"))
+read_chunk(paste0(script.folder, "params/phylonetworker.R"))
+read_chunk(paste0(script.folder, "Phylonetworker_setup.R"))
+source(paste0(script.folder, "Phylonetworker_functions.R"))
+
+```
+
+***
+<br>
+
+# **setup**
+
+First set up the file system by **providing the path to `file_setup.R`**. Make sure `file_setup.R` also contains valid paths to the project files. 
+
+To parametarise the analysis, `wkf` is set to **`"PhyloNetworker.R"`** and `param` to **`"phylonetworker.R"`**.
+
+```{r pn-setup}
+
+```
+
+<br>
+
+## Call project_ui
+
+Next initialise the analysis by calling **`project_ui`**. This script calls a number of setup scripts (for details see [**`project_ui_README`**]()). It also sources the previously defined:
+
+- **`params/phylonetworker.R`** parameter script
+```{r pm-params}
+
+```
+
+- **`PhyloNetworker-setup.R`**
+
+*** 
+
+### **`PhyloNetworker-setup.R`**
+
+You don't need to worry about running this, calling `project_ui` does. But I'm just running through it so you understand how the data and objects used in the analysis have been processed and created.
+
+#### First, `log.vars` are extacted from `metadata.csv`
+
+```{r pns-get-log.vars, eval=FALSE}
+
+```
+
+#### Files required for the analysis are loaded or created:
+```{r pns-load-files, eval=FALSE}
+
+```
+
+These including:
+
+- **`wide`:** trait data in wide format (output of `match_workflow.R`)
+- **`spp100`:** list of 100 species names for subset analysis
+- **`tree`:** the phylogenetic tree 
+- **`phylo.match`** taxonomic reference table linking species in tree to the data. 
+
+#### Prepare taxonomic & phylogenetic objects
+```{r pns-remove-dup-dftips, eval=FALSE}
+
+```
+
+- remove species in wide data that correnspond to duplicate tree tip synonyms. This is to ensure smooth alignment of the tree with the trait data.
+- trim tree to species list in de-duplicated data.
+
+Next, tree tip labeles are renamed to match data taxonomy
+```{r pns-rename-tip.labels, eval=FALSE}
+
+```
+
+and `spp.list` is created
+```{r pns-create-spp.list, eval=FALSE}
+
+```
+
+
+
+#### Subset data (for an.ID = `100spp`)
+```{r pns-subset-data, eval=FALSE}
+
+```
+
+#### Create data type reference objects
+```{r pns-create-ref.obj, eval=FALSE}
+
+```
+
+- **`vg`:** grid of available trait (var) pairs and the number of datapoints avalable for each. Pairs are only included in pair $n$ greater than $n_{min}$. 
+```{r}
+head(vg)
+```
+- **`ms_vars`:** character vector containing all unique trait names available for analysis.
+
+```{r pns-types-ref}
+
+```
+
+**`vtypes`:** reference table linking `metadata` data.types to mgm data types
+
+ - **`"g"`:** gaussian
+ - **`"p"`:** poisson
+ - **`"c"`:** categorical (including binomial)
+ 
+ I've kept the mgm data type system because it reminds us to think of distributions and also treat binary and categorical as a single category, as required by the `phylonetworker` workflow.
+
+```{r print.types}
+vtypes
+
+```
+
+**`meta_types`:** named vector of trait metadata category types, matched to and named by `ms_vars`. 
+
+```{r}
+head(meta_types)
+```
+
+**`mgm_types`:** corresponding named vector of trait mgm category types, matched to and named by `ms_vars`. 
+```{r}
+head(mgm_types)
+```
+
+
+#### load / get trait taxonomic diversity profiles.
+
+This chunck calculates the taxonomic diversity of subsamples dictated by data availability by trait. For each trait, the expected taxonic distinctness from a random subsample of the full pool of species of size $n_{trait}$
+
+```{r pns-get-TD, eval=FALSE}
+
+```
+
+```{r}
+kable(head(format(TDdf, digits = 2)))
+```
+
+#### Create master analysis reference objects
+```{r pns-create-ref.obj2, eval=FALSE}
+
+```
+
+- **`ms_spp`:** character vector of species included in analysis
+```{r}
+head(ms_spp)
+```
+- **`spp.ranks`:** data.frame containing the total number of data points from all possible combinations of species datasets across all traits when this species is included in the analysis. Sorted in descending order of cumulative data availibility.
+
+```{r}
+head(spp.ranks)
+```
+
+
+***
+
+<br>
+
+# **Edge determinations**
+
+
+### Create `vg_dt`
+Dataframe of **mgm data types**, coresponding to trait pair columns of `vg`.  
+```{r pn-get-vg_dt}
+
+```
+
+```{r}
+head(vg_dt)
+```
+
+
+Next edge weights between traits are calculated by calling the function **`pglsPhyloCor`** for each **`pair`** of each **`pair.type`**.
+
+#### pglsPhyloCor function
+
+The phylocors function calculates **phylogenetically corrected correlations** between pairs of traits (defined by the *character vector of the trait names* supplied to argument `pair`), which are then used as edge weights in the network. The method is determined by the argument `pair.types`. 
+
+  - `"nn"`: numeric vs numeric (includes poisson). If `log = T`, data for traits defined in `log.vars` are logged. Method uses `pgls()`.
+  - `"nc"`: numeric vs categorical. (variables must be provided in the order "nc" in `data`). Method uses `pgls()`
+  - `"cc"`: categorical vs categorical. Method combines phylogenetic trait coevolution simulations and `GoodmanKruskal()`.
+  
+  for more details see [**`pglsPhyloCor` README**]()
+```{r}
+
+```
+
+
+###  numeric vs numeric (`pair.type = "nn"`)
+```{r pn-nn, eval=FALSE}
+
+```
+
+###  numeric vs categorical (`pair.type = "nc"`)
+```{r pn-nc, eval=FALSE}
+
+```
+
+###  categorical vs categorical (`pair.type = "cc"`) 
+
+Edge determination for `pair.type = "cc"` proceeds in two steps
+
+1. `pglsPhyloCors` returns a list (in order to retain additional pertinent information, such as the evolutionary model selected for trait simulation in the determination of phylogenetic GoodmanKruskal τ)
+
+```{r pn-cc.list, eval=FALSE}
+
+```
+
+2. Information is extracted from the list and returned as a data.frame, alignable with `pglsPhyloCor` ouputs for `pair.type = "nn"` or `"nc"` (more details in [**`pglsPhyloCor` README**]()).    
+```{r pn-cc, eval=FALSE}
+
+```
+
+### Combine all pair.type results
+
+```{r pn-comp.res, eval=FALSE}
+
+```
+
+
+```{r pn-read.type-res, echo=FALSE}
+
+```
+
+```{r}
+kable(head(res))
+```
+
+***
+
+<br>
+
+# **Network analysis**
+
+First subset edges to include only edges where determination did not result in error and with weights greater than `cutoff` = `r cutoff`. 
+
+```{r pn-sub-res, eval=FALSE}
+
+```
+
+Then perform network analysis. The workflow uses the function `rnetcarto::netcarto()`. See further details on the [package](https://cran.r-project.org/web/packages/rnetcarto/vignettes/getting-started.html) and [theory](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2151742/). 
+
+```{r pn-network, eval=FALSE}
+
+```
+
+The results are saved as the output of the `rnetcarto()` function and also collapsed into a single data.frame and saved as a csv. 
+
+Here's an example of the collapsed data.frame output
+
+```{r, echo=FALSE}
+net.dat <- read.csv(paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
+                  if(log){"_log"},".csv", sep = ""))
+```
+```{r}
+kable(head(net.dat))
+```
+
+## Visualise network
+
+To visualise the network analysis, render the `.Rmd` report [`"reports/results/Network_viz.Rmd""`](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Network_viz.Rmd)
+
+```{r, eval=FALSE}
+require(rmarkdown)
+file <- "Network_viz.Rmd"
+render(paste("reports/results/", file, sep =""), output_format = "html_notebook",
+       output_file = paste(output.folder,"reports/results/",gsub(".Rmd", paste0("_",an.ID), 
+                                                         file), ".nb.html", sep =""))
+```
+
