@@ -7,11 +7,14 @@ if(exists(file_setup_path)){}else{
 wkf = "phylonetworker"
 param = "phylonetworker.R"
 source(paste0(script.folder,"project_ui.R"))
+
+# ---- pn-get-vg_dt ----
 vg <- orderby_vg_dt(vg, mgm_types)
 vg_dt <- get_vg_dt(vg, mgm_types)
 
-# numeric - numeric edges
+
 # ---- pn-nn ----
+# numeric - numeric edges
 nn_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(x %in% c("g", "p"))}),]
 nn_dat <- data[,c("species", unique(unlist(nn_vg[,1:2])))]  
 nn_res <- NULL
@@ -19,7 +22,7 @@ for(i in 1:dim(nn_vg)[1]){
   print(i)
   nn_res <- rbind(nn_res, pglsPhyloCor(pair = nn_vg[i, 1:2], data = nn_dat, 
                                        tree = tree, log.vars = log.vars, 
-                                       datTypes = "nn", mgm_types = mgm_types))
+                                       pair.type = "nn", mgm_types = mgm_types))
 }
 nn_res <- nn_res[order(abs(nn_res$phylocor), decreasing = T),]
 if(save){
@@ -28,15 +31,16 @@ if(save){
             row.names = F)
 }
 
-# categorical - categorical edges
+
 # ---- pn-cc.list ----
+# categorical - categorical edges (returns list)
 cc_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(x == "c")}),]
 cc_dat <- data[,c("species", unique(unlist(cc_vg[,1:2])))]  
 cc_res.list <- vector("list", nrow(cc_vg))
 for(i in 1:nrow(cc_vg)){
   print(i)
   cc_res.list[[i]] <- pglsPhyloCor(pair = cc_vg[i, 1:2], data = cc_dat, 
-                                   tree = tree, log.vars = NULL, datTypes = "cc", result = "row",
+                                   tree = tree, log.vars = NULL, pair.type = "cc", result = "row",
                                    mgm_types = mgm_types)
 }
 if(save){
@@ -49,6 +53,7 @@ load(file = paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn",
                   min.n, if(log){"_log"},"_cc.Rdata", sep = ""))
 
 # ---- pn-cc ----
+# categorical - categorical edges (list to data.frame)
 cc_res <- NULL
 for(i in 1:length(cc_res.list)){
   cc_res <- rbind(cc_res, get_cc.row(cc_res.list[[i]], cc_vg))
@@ -60,9 +65,8 @@ if(save){
             row.names = F)}
 
 
-
-# numeric - categorical edges
 # ---- pn-nc ----
+# numeric - categorical edges
 nc_vg <- vg[apply(vg_dt, 1, FUN = function(x) {all(c("c", "g") %in% x)}),]
 nc_dat <- data[,c("species", unique(unlist(nc_vg[,1:2])))]
 nc_res <- NULL
@@ -70,7 +74,7 @@ for(i in c(11:dim(nc_vg)[1])){
   nc_res <- rbind(nc_res, 
                   pglsPhyloCor(pair = nc_vg[i, 1:2], data = nc_dat, 
                                tree = tree, log.vars = log.vars, 
-                               datTypes = "nc", result = "row", 
+                               pair.type = "nc", result = "row", 
                                mgm_types = mgm_types))
   print(i)
 }
