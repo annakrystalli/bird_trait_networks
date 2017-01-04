@@ -1,0 +1,151 @@
+---
+title: "Categorical Phylocors"
+author: 
+date: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+wkf = "phylonetworker"
+param = "phylonetworker.R"
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+source(file_setup_path)
+source(paste0(script.folder, "params/", param))
+
+makeTransparent <- function(someColor, alpha=100){
+  newColor<-col2rgb(someColor)
+  apply(newColor, 2, function(curcoldata){rgb(red=curcoldata[1], green=curcoldata[2],
+                                              blue=curcoldata[3],alpha=alpha, maxColorValue=255)})
+}
+```
+
+
+```{r}
+load(file = paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                         min.n, if(log){"_log"},"_cc.Rdata", sep = ""))
+
+```
+
+```{r, echo=FALSE}
+all <- NULL
+obs <- NULL
+diff.max <- NULL
+diff.min <- NULL
+
+valid.ids <- (1:length(cc.res))[sapply(cc.res, FUN = length) != 1]
+for(i in valid.ids){
+  x <- cc.res[[i]]
+    
+  all <-  c(all, 
+            max(sapply(x$phy.GKtau, FUN = function(x){
+              mean(replace(x, is.infinite(x),NA),na.rm = T)})))
+
+  obs <- c(obs, max(x$GKtau[,5:6]))
+  max.id <- which(x$GKtau[,5:6] == max(x$GKtau[,5:6]))[1]
+  min.id <-setdiff(1:2, max.id)
+  diff.max <- c(diff.max, x$GKtau[,5:6][max.id] - mean(replace(x$phy.GKtau[,max.id],
+                                                            is.infinite(x$phy.GKtau[,max.id]),
+                                                            NA), 
+                                                       na.rm = T))
+  diff.min <- c(diff.min, x$GKtau[,5:6][min.id] -
+                  mean(replace(x$phy.GKtau[,min.id],
+                               is.infinite(x$phy.GKtau[,min.id]), 
+                               NA),
+                       na.rm = T))
+} 
+
+xlims <- range(unlist(c(diff.min, diff.max)))
+
+```
+
+## Density distribution of **mean** simulated trait pair GK $τ$ arising purely by phylogeny **across all trait pairs** (red) vs distribution of observed GK $τ$ (black).
+
+Red line indicates mean GK $τ$ across all simulations. Black line, mean of all observed GK $τ$. For each pair, the mean GK $τ$ of each trait on the other was calculated across all simulations and the maximum for each pair retained (remember the asymmetry). Similarly, for the observed GK $τ$, the maximum was retained for each pair.
+
+```{r, echo=FALSE}
+plot(density(all), xlim = range(c(all, obs)))
+polygon(density(all), col=makeTransparent("red", 60), border="red")
+polygon(density(obs), col=makeTransparent("black", 20), border="black")
+abline(v = mean(all), col = "red", lwd = 2)
+abline(v = mean(obs), lwd = 2)
+abline(v = 0, lty = 2, col = "blue")
+
+```
+
+### Density distribution of difference between **max observed GK $τ$** and **mean simulated trait pair GK $τ$** arising purely by phylogeny **across all trait pairs** (*remember GK $τ$ asymmetric hence maximum selected*).
+
+So value of 0 means no difference between phylogenetically simulated and observed GK $τ$, positive values indicate observed GK $τ$ being larger than phylogenetically simulated and negative values the opposite.
+
+```{r}
+
+plot(density(unlist(diff.max)))
+  polygon(density(unlist(diff.max)), col=makeTransparent("red", 60), border="red")
+  abline(v = 0, lty = 2)
+```
+
+### Density distribution of difference between **min observed GK $τ$** and **mean simulated trait pair GK $τ$** arising purely by phylogeny **across all trait pairs**
+
+```{r}
+plot(density(unlist(diff.min)))
+  polygon(density(unlist(diff.min)), col=makeTransparent("blue", 60), border="blue")
+  abline(v = 0, lty = 2)
+
+```
+
+
+# Individual pair plots
+
+Red areas indicate the density distribution of **simulated GK $τ$ based purely on phylogeny** for trait with the highest **observed** GK $τ$ on the other (remember the asymmetry). Blue indicates the lower observed GK $τ$. Solid lines indicate the **observed GK $τ$** while dashed lines indicate the mean of the **phylogenetically simulated GK $τ$s** (n = 500).
+
+The right panels show the frequency among **phylogenetically simulated GK $τ$s** in which the effect of each trait on the other was greatest.
+
+```{r, fig.width=10, results='asis'}
+
+par(mfrow = c(1,2))
+#
+for(i in valid.ids[order(unlist(diff.max), decreasing = T)]){
+    x <- cc.res[[i]]
+    if(length(x) == 1){
+      cat("### ", x)
+      next}
+
+#split.screen(figs = matrix(c(0,0.65,0,1, 0.65,1, 0,1), nrow = 2, byrow=TRUE))
+#screen(1)
+
+
+  x$phy.GKtau[,1] <- replace(x$phy.GKtau[,1], is.infinite(x$phy.GKtau[,1]), NA)
+  x$phy.GKtau[,2] <- replace(x$phy.GKtau[,2], is.infinite(x$phy.GKtau[,1]), NA)
+  
+
+  max.trait <- unlist(apply(x$phy.GKtau, 1, 
+                            FUN = function(x){
+                              which(x == max(x, na.rm = T), arr.ind = T)
+                              }))
+  
+  max.id <- which(x$GKtau[,5:6] == max(x$GKtau[,5:6]))[1]
+  min.id <-setdiff(1:2, max.id)
+  
+  d1 <- density(x$phy.GKtau[,max.id], na.rm = T)
+  d2 <- density(x$phy.GKtau[,min.id], na.rm = T)
+  plot(d1, main = x$pair,xlim = range(c(d1$x, d2$x, x$GKtau[,5:6][max.id])),
+       ylim = range(c(d1$y, d2$y)))
+  polygon(d1, col=makeTransparent("red", 60), border="red")
+  polygon(d2, col=makeTransparent("blue", 40), border="blue")
+  abline(v = mean(x$phy.GKtau[,max.id], na.rm = T), col = "red", lwd = 2, lty = 2)
+  abline(v = mean(x$phy.GKtau[,min.id], na.rm = T), col = "blue", lwd = 1, lty = 2)
+
+  abline(v = x$GKtau[,5:6][max.id], lwd = 3, col = "red")
+  abline(v = x$GKtau[,5:6][min.id], lwd = 2, col = "blue")
+  
+  
+  
+legend("topright", paste0("x: ", x$pair[c(max.id, min.id)]), bty = "n", fill = c("red", "blue"), cex = 0.5)
+#screen(2)
+barplot(table(max.trait), names.arg = x$pair[as.numeric(names(table(max.trait)))], main = "freq of trait GK τ being highest")
+}
+
+
+
+```
+
