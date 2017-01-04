@@ -1,0 +1,172 @@
+---
+title: "Network_viz"
+author: "Anna Krystalli"
+date: "`r Sys.time()`"
+output: 
+  html_document:
+    theme: paper
+params:
+  wkf: phylonetworker
+  param: phylonetworker.R
+  file_setup_path: ~/Documents/workflows/bird_trait_networks/file_setup.R
+---
+```{r nviz-setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F)
+options(stringsAsFactors=FALSE, scipen = 0)
+require(knitr)
+library(tidyr)
+library(plotrix)
+require(DT)
+require(visNetwork)
+
+attach(params)
+param
+source(file_setup_path)
+source(paste(script.folder, "params/", param, sep = ""))
+
+if(log){
+  metadata <- read.csv(paste(input.folder, "metadata/","metadata.csv", sep = ""),
+                       stringsAsFactors = F, fileEncoding = "mac", 
+                       na.strings = c("","NA", " "), strip.white = TRUE, 
+                       blank.lines.skip = TRUE)
+  log.vars <- metadata$code[as.logical(metadata$log)]
+}
+
+
+```
+
+
+## Analysis parameters
+- **edge determination method:** `r wkf`
+- **species subset:** `r an.ID`
+- **minimum $n$ for edge determination:** `r min.n`
+- **log numeric variables?:** `r log`
+- **edge correlation cutoff value:** `r cutoff`
+- **Minimum category $n$ (below which aggregated or removed):** `r min.cat`
+
+
+
+
+## Analysis diagnostics
+
+
+```{r, echo = F}
+res <- read.csv(paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                      min.n, if(log){"_log"},"_allDT.csv", sep = ""))
+
+net <- read.csv(paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
+                      if(log){"_log"},".csv", sep = ""))
+
+nvar <- length(unique(unlist(res[,1:2])))
+tpairs <- choose(nvar,2) 
+errors <- sum(!is.na(res$error)) - length(grep("ERROR: singular category:", res$error))
+pairs <- nrow(res) - length(grep("ERROR: singular category:", res$error))
+edges <- dim(res[abs(res$phylocor) > cutoff & !is.na(res$phylocor),])[1]
+nodes <- nrow(net)
+```
+
+- **Number of traits (potential nodes):** `r nvar`
+- **Number of pairs with enough data to determine edges (ie $n \ge n_{min}$):** `r pairs` (`r round((pairs/tpairs * 100), digits = 0)`%)
+- **Number of edge determinations failed to converge:** `r errors` (`r round((errors/pairs * 100), digits = 0)`%)
+
+### Results
+
+- **Number of nodes in final network:** `r nodes`
+- **Number of modules:** `r length(unique(net$module))`
+
+```{r, echo=FALSE}
+res <- res[abs(res$phylocor) > cutoff & !is.na(res$phylocor),]
+```
+
+
+### network
+
+```{r}
+shapes <- setNames(c("dot","circle","ellipse", "triangle", "square",
+           "database","diamond"),
+         c("Ultra peripheral", "Peripheral", "Connector", "Kinless",
+           "Peripheral Hub", "Connector Hub", "Kinless Hub"))[unique(net$role)]
+
+addNodes <- data.frame(label = names(shapes), shape = shapes, size = 2)
+
+net <- net[order(net$name),]
+
+nodes <- data.frame(id = 1:nrow(net),
+                    label = net$name,
+                    title = net$name,
+                    group = net$module,
+                    value = plotrix::rescale(net$connectivity, c(8.5,18)),
+                    shape = shapes[net$role],
+                    net)
+#nodes$colour.background
+
+links <- res[, c("var1","var2","n")]
+links$width <- res$phylocor
+links$from <- nodes$id[match(links$var1, nodes$title)]
+links$to <- nodes$id[match(links$var2, nodes$title)]
+
+
+visNetwork(nodes, links, height = "600px", width = "100%") %>% 
+  visPhysics(maxVelocity = 25) %>% 
+    
+  #  solver = "barnesHut",
+   #          barnesHut = list(gravitationalConstant = -1750,
+    #                          springConstant = 0.1)) %>%
+  #visEdges(value = "weight", arrows = "to") %>% 
+  visOptions(highlightNearest = TRUE, selectedBy ="module", nodesIdSelection = T) %>% 
+  visLegend(addNodes = addNodes)
+
+
+```
+
+
+
+#### modules
+
+- **total number of modules:** `r length(unique(net$module))`
+- **distribution of nodes across nodules:**
+
+```{r, fig.width = 3, fig.height = 2}
+barplot(table(net$module), col = "darkgreen")
+```
+
+### Node level and network data.
+
+`rnetcarto::netcarto()` output. For details on the [package](https://cran.r-project.org/web/packages/rnetcarto/vignettes/getting-started.html) and [theory](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2151742/).
+
+```{r ktab}
+DT::datatable(format(net, digits = 2, scientific = F), filter = list(position = 'top'), rownames = F)
+```
+
+***
+
+### Edges data 
+
+Results of phylogentically corrected trait correlation determination. See annalysis documentation for details:
+
+- **n:** number of data used in edge estimation
+- **Dplus:** species subsample estimate of taxonomic distinctness.
+- **sd.Dplus:** standard deviation of taxonomic distinctness estimate.
+- **EDplus:** expected taxonomic distinctness given subsample size
+- **physig.var1:** phylogenetic signal in var1
+- **physig.var2:** phylogenetic signal in var2
+- **cor:** standard correlation
+- **phylocor:** phylogenetically corrected correlation
+- **lambda:** $λ$
+- **p:** $p$
+- **l.ci.l:** $λ$ lower confidence interval
+- **l.ci.u:** $λ$ upper confidence interval
+- **error:** error message for failed determnations
+- **pair.type:** pair variable types: 
+    - `"nn"` numeric vs numeric
+    - `"nc"` numeric vs categorical
+    - `"cc"` categorical vs categorical
+
+
+```{r ntab}
+
+DT::datatable(format(res, digits = 1, scientific = F, signif = 4), filter = list(position = 'top'), rownames = F)
+
+```
+
+
