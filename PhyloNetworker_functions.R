@@ -25,7 +25,7 @@ calcTraitPairN <- function(data){
   
 }
 
-pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes, 
+pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, pair.type, 
                          result = "row", mgm_types = mgm_types){
   pair <- as.character(pair)
   error <- NULL
@@ -63,14 +63,17 @@ pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes,
   }
   
   # ---- fit-cor ---- 
-  if(datTypes %in% c("nc", "nn")) {
+  if(pair.type %in% c("nc", "nn")) {
     row <- fitNumDat(data, tree, pair, TD, result, mgm_types = mgm_types, 
-                     error, datTypes)
+                     error, pair.type)
   }
-  if(datTypes == "bb") {
+  if(pair.type == "cc"){
+    row <-  fitGKtau(data, tree, pair, TD, result = "row", error)
+  }
+  if(pair.type == "bb") {
     row <-  fitBinDat(data, tree, pair, TD, result, error) 
   }
-  if(datTypes == "ccMCMC") {
+  if(pair.type == "ccMCMC") {
     meta <- list(getLevels(metadata, pair[1]), getLevels(metadata, pair[2]))
     # factorise data
     data[,c(pair)] <- mapply(FUN = function(x, meta){factor(as.character(x),
@@ -81,9 +84,7 @@ pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes,
     
     row <-  fitCatDat(data, tree, pair, TD, result) }
   
-  if(datTypes == "cc"){
-    row <-  fitGKtau(data, tree, pair, TD, result = "row", error)
-  }
+
   
   # ---- return ----
   return(row)
@@ -91,7 +92,7 @@ pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, datTypes,
 }
 
 fitNumDat <- function(data, tree, pair, TD, result = "row", mgm_types = mgm_types, 
-                      error, datTypes) {
+                      error, pair.type) {
   
   # ---- configure-tree ----
   tree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
@@ -110,7 +111,7 @@ fitNumDat <- function(data, tree, pair, TD, result = "row", mgm_types = mgm_type
                       physig.var1, physig.var2,
                       cor = NA, phylocor = NA, 
                       lambda = NA, p = NA, l.ci.l = NA, l.ci.u = NA,
-                      error = error$error, pair.type = datTypes))
+                      error = error$error, pair.type = pair.type))
   }
   
   
@@ -160,7 +161,7 @@ fitNumDat <- function(data, tree, pair, TD, result = "row", mgm_types = mgm_type
                     physig.var1, physig.var2,
                     cor = cor, phylocor = phylocor2, 
                     lambda = lambda, p = p, l.ci.l = ci.l, l.ci.u = ci.u,
-                    error = error, pair.type = datTypes))
+                    error = error, pair.type = pair.type))
 }
 
 fitBinDat <- function(data, tree, pair, TD, result = "row") {
@@ -226,7 +227,7 @@ fitBinDat <- function(data, tree, pair, TD, result = "row") {
                     physig.var1, physig.var2,
                     cor = cor, phylocor = phylocor2, 
                     lambda = lambda, p = p, ci = ci, 
-                    error = error, ))
+                    error = error, pair.types = "bb"))
 }
 
 fitCatDat <- function(data, tree, pair, TD, result = "row") {
@@ -321,7 +322,7 @@ get_cc.row <- function(x, cc_vg){
   l.ci.u <- ci$basic[5]
   
   if(base > obs){phylocor <- 0}else{
-    phylocor <- (1-base/1) * obs}
+    phylocor <- (obs-base)/(1-base)}
   
   row <- data.frame(var1 = x$pair[max.id], var2 = x$pair[min.id], 
                     n = cc_vg$n[apply(cc_vg[,1:2], 1, 
