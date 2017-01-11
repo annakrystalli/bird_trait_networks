@@ -1,0 +1,142 @@
+---
+output: 
+  html_document:
+  theme: paper
+---
+# **`project_ui.R`: Project Interface Script**
+
+<br>
+
+The project_ui.R script launces an analysis environment. At the minimum, the porject folders defining the project file.system must first be set (see below) and should be the first step to any new scripts
+
+***
+
+
+```{r md-setup, message=F, warning=F, include=FALSE}
+require(knitr)
+opts_chunk$set(echo=TRUE, message=F, warning=F, cache=FALSE)
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+read_chunk(file_setup_path)
+source(file_setup_path)
+
+```
+
+```{r read-chunks, echo=FALSE}
+read_chunk(paste(script.folder, "project_ui.R", sep = ""))
+read_chunk(paste(script.folder, "file_setup.R", sep = ""))
+read_chunk(paste(script.folder, "pkgs.R", sep = ""))
+read_chunk(paste(script.folder, "load_dependencies.R", sep = ""))
+read_chunk(paste(script.folder, "load_global.R", sep = ""))
+read_chunk(paste(script.folder, "helper_functions.R", sep = ""))
+read_chunk(paste(script.folder, "load_files.R", sep = ""))
+read_chunk(paste(script.folder, "load_environment.R", sep = ""))
+read_chunk(paste(script.folder, "params/project_ui.R", sep = ""))
+
+```
+
+## **setup `file system`** ([see more]())
+
+### - edit the information in `file_setup.R`
+Link the workflow to the folders comprising the **project file system**:
+
+<br>
+
+### - source `file_setup.R`.
+full path to the file is required
+
+***
+
+<br>
+
+## **source `project_ui.R`: initialise project environment**
+
+```{r, message=F, warning=F, eval=FALSE}
+source(paste(script.folder, "project_ui.R", sep = ""))
+
+```
+
+This script sources script two further scripts:
+
+- **`load_global.R`**: intialises global settings and file system.
+- **`load_environment.R`**: initialises workflow specific environment.
+
+<br>
+***
+
+### - **`load_global.R`**
+
+#### sets global options
+
+```{r pui-init_global, eval=TRUE}
+
+```
+
+You can add any additional global options here
+
+```{r lg-global_options, eval=TRUE}
+
+```
+
+<br>
+
+#### installs / loads dependency pkgs
+
+**pkgs** set in `pkgs.R` script
+
+```{r lg-read_pkgs, eval=TRUE}
+
+```
+
+```{r lg-load_pkgs, eval=TRUE}
+
+```
+
+<br>
+
+#### loads global files and settings
+
+##### - parameters
+load global parameters defined in `params/project_ui`.
+
+```{r lg-load_params, eval=TRUE}
+
+```
+
+current global parameters:
+
+```{r project_ui-params, eval=TRUE}
+
+```
+
+##### - global files
+This provides input to `load_files.R` which is sourced next: 
+```{r lg-load_files, eval=TRUE}
+
+```
+
+and runs the following code:
+```{r load-sys.ref, eval=TRUE}
+
+```
+
+#### load helper function
+
+```{r lg-load_helper_functions, eval=TRUE}
+
+```
+
+
+***
+### - **`load_environment.R`**
+#### load analysis parameters
+Current param: `r if(exists("param")){param}else{"none set"}`
+```{r source-params, eval=FALSE}
+
+```
+#### load wkf environment
+```{r source-wkf, eval=FALSE}
+
+```
+
+
+[`phylonetworker` README](http://annakrystalli.github.io/bird_trait_networks/PhyloNetworker_README.nb.html)

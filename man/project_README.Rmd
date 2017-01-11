@@ -1,0 +1,86 @@
+---
+title: "Project README"
+date: "Last rendered: `r Sys.time()`"
+output: html_document
+
+---
+
+
+```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+require(knitr)
+require(rmarkdown)
+knitr::opts_chunk$set(echo = TRUE, root.dir = "~/Documents/workflows/bird_trait_networks/")
+knitr::read_chunk("~/Documents/workflows/bird_trait_networks/file_setup.R")
+```
+
+***
+
+<br>
+
+This README documents the script contained in the github repo and demonstrates their use to conduct analyses relating to the **bird trait networks project**. 
+
+Description is split into project set up and the various analyses attempted during the project.
+
+# Project setup
+
+<br>
+
+## get access to code:
+
+The ideal method to access the code is the through [**checking it out**](http://www.molecularecologist.com/2013/11/using-github-with-r-and-rstudio/) from the master [**github folder**](https://github.com/annakrystalli/bird_trait_networks). It is worth spending on time to set this up properly so here's more on [**github through Rstudio**](https://annakrystalli.github.io/Mozfest_github-rstudio/index.html), [setting yourself up on github and Rstudio](https://github.com/mikecroucher/ISBE_Symposium) and [forking & linking projects through RStudio](https://annakrystalli.github.io/Mozfest_github-rstudio/evolottery.html)
+
+<img src="assets/repo.png" alt="Smiley face" height="100" width="150"><img src="assets/rstudio.png" alt="Smiley face" height="100" width="150">
+
+You can create a static local implementation of the project by just downloading the github repo as a ZIP: 
+
+<img src="assets/dwnld_repo.png" alt="Smiley face" height="100" width="150">
+
+unzipping it and supplying the **path to the unzipped folder** to parameter `script.folder`. You will not be able to automatically update code with changes to the master repo however so not recommended.
+
+<br>
+
+## Initialise project - edit **`file_setup.R`**
+
+To initiate a project locally, the first thing to do is edit script [**`file_setup.R`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/file_setup.R) to **specify the paths to:**
+
+### 1. Folder containing the data (the googledrive folder)
+
+The best way to access the data is through authorised access through googledrive. You'll need to [install googledrive on your system](https://www.google.com/intl/en-GB/drive/download/) to enable this. 
+
+<img src="assets/gdrive.png" alt="Smiley face" height="100" width="150">
+
+Once installed, you'll be able to programmatically access files (see example below), by specifying your local path to the folder.  Analyses will also always be synched to most up to date version of data.
+
+```{r fs-data-setup}
+
+```
+
+<br>
+
+### 2. Folder containing the code (the github folder)
+
+Ideally it is the ***path to an Rstudio project, [checked out](http://www.molecularecologist.com/2013/11/using-github-with-r-and-rstudio/) from the master [github folder](https://github.com/annakrystalli/bird_trait_networks)*** 
+
+
+
+```{r fs-script-setup}
+
+```
+<br>
+
+## **Initialise a project
+
+Parametarise and source [**`project_ui.R`**]() script
+
+if no param
+
+
+### Workflows (`"wkf"`) within the project
+
+- **`rmacroRDM`**: Addition of the **amniote database** to originally supplied data. Outputs, long and aggregated wide versions of the data.
+- [**`phylonetworker`**](http://annakrystalli.github.io/bird_trait_networks/PhyloNetworker_README.nb.html): network analysis of phylogenetically corrected correlation between traits, current analysis in [**`"PhyloNeworker.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker.R)
+- **`mgm`**: network analysis of mgm analyses of trait marginal relationship, performed on imputed data.
+
+
+
+
