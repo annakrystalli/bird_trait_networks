@@ -1,0 +1,128 @@
+---
+title: "edge_explorer"
+author: "Anna Krystalli"
+date: "19 July 2016"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This R Markdown document is made interactive using Shiny. Unlike the more traditional workflow of creating static reports, you can now create documents that allow your readers to change the assumptions underlying your analysis and see the results immediately. 
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+```{r, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+require(knitr)
+
+knitr::read_chunk("~/Documents/workflows/bird_trait_networks/setup.R")
+knitr::read_chunk("~/Documents/workflows/bird_trait_networks/PhyloNetworker_functions.R")
+knitr::read_chunk("~/Documents/workflows/bird_trait_networks/tools/edge_explorer_setup.R")
+```
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+```
+```{r phylonetworker_functions, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+```
+
+```{r setup_edge, echo=FALSE, warning=FALSE, message=FALSE, cache=FALSE}
+```
+
+
+```{r eruptions, echo=FALSE, cache=FALSE}
+
+require(shiny)  
+
+options(shiny.error = browser)
+
+shinyApp(
+  ui = fluidPage(
+    fluidRow(style = "padding-bottom: 20px;",
+             column(4, selectInput("varTypes", label = "bivariate category:",
+                                   choices = setNames(as.list(c("nn", "bb", "cc")), 
+                                                      c("nn", "bb", "cc")), selected = "cc")),
+             column(4, uiOutput("var1")),
+             column(4, uiOutput("var2"))     
+    ),
+    fluidRow(
+      plotOutput('plot', height = "900px")  
+    )
+    
+    
+  ),
+  
+  server = function(input, output, session) {
+    
+    # Render var1 selector
+    output$var1 <- renderUI({
+      vars <- as.list(unique(unlist(vg[vg$varTypes == input$varTypes,1:2])))
+      names(vars) <- metadata$orig.vname[match(vars, metadata$code)]
+      vars <- vars[order(names(vars))]
+      choices1 <- vars
+      
+      selectInput("var1", label = "variable 1:",
+                  choices = choices1, selected = choices1[1])
+    })
+    
+    # Render var2 selector
+    output$var2 <- renderUI({
+      choices2 <- (c(vg$Var2[which(vg$Var1 == input$var1)],
+                     vg$Var1[which(vg$Var2 == input$var1)]))
+      names(choices2) <- metadata$orig.vname[match(choices2, metadata$code)]
+      choices2 <- as.list(choices2)
+      
+      selectInput("var2", label = "variable 2:",
+                  choices = choices2, selected = choices2[1])
+    })
+    
+    dataInput <- reactive({
+      if(input$varTypes == "nn"){num.dat}
+      if(input$varTypes == "bb"){bin.dat}
+      if(input$varTypes == "cc"){cat.dat}
+    })
+    
+    
+    # fit model
+    row <- reactive({
+      pglsPhyloCor(x = c(input$var1, input$var2), 
+                   data = dataInput(), 
+                   tree = tree, log.vars = log.vars, 
+                   datTypes = input$varTypes,
+                   result = "row")
+    })
+    results <- reactive({
+      pglsPhyloCor(x = c(input$var1, input$var2), 
+                   data = dataInput(), 
+                   tree = tree, log.vars = log.vars, 
+                   datTypes = input$varTypes,
+                   result = "model")
+    })
+    # Render var2 selector
+    
+    
+    output$plot <- renderPlot({
+      
+      vresults <- results()
+      
+      print(summary(vresults))
+      
+      if(input$varTypes == "nn"){
+        mod.l <- pgls.profile(vresults, 'lambda')
+        plot(mod.l)
+        plot(vresults)
+        
+      }
+      
+      if(input$varTypes == "cc"){  
+        par(mfrow=c(8,2), mar=c(2,2,1,0))
+        plot(vresults$Sol, auto.layout=F)}
+    })
+    
+  }
+)
+```
