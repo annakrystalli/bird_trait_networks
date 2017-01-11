@@ -96,15 +96,28 @@ param = "phylonetworker.R"
 
 if no `"param"` or `"wkf"` is specified, sourcing project_ui.R initalises a base global envrionment (see [project_ui README](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html) for more) 
 
-
+***
 #### Workflows (`"wkf"`) within the project
 
-- [**`rmacroRDM`**](http://annakrystalli.github.io/bird_trait_networks/rmacroRDM.nb.html): Addition of the **amniote database** to originally supplied data. Outputs, long and aggregated wide versions of the data. Current analysis in [**`"master workflow.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/match%20workflow.R) 
-- [**`phylonetworker`**](http://annakrystalli.github.io/bird_trait_networks/PhyloNetworker_README.nb.html): network analysis of phylogenetically corrected correlation between traits, current analysis in [**`"PhyloNeworker.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker.R)
-- **`mgm`**: network analysis of mgm analyses of trait marginal relationship, performed on imputed data.
-- [**`goodmankruskal`**](http://annakrystalli.github.io/bird_trait_networks/GoodmanKruskal.nb.html): goodmanKruskal τ determination (GKtau)  on categorical variables and network analysis of outputs. current analysis in [**`"goodmankruskal.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/goodmankruskal.R)
+- #### [**`rmacroRDM`**](http://annakrystalli.github.io/bird_trait_networks/rmacroRDM.nb.html): 
+Addition of the **amniote database** to originally supplied data. Outputs, long and aggregated wide versions of the data. Current analysis in [**`"master workflow.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/match%20workflow.R) 
 
-<br>
+***
+
+- #### [**`phylonetworker`**](http://annakrystalli.github.io/bird_trait_networks/PhyloNetworker_README.nb.html): 
+network analysis of phylogenetically corrected correlation between traits, current analysis in [**`"PhyloNeworker.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker.R)
+
+***
+
+- #### [**`mgm`**](http://annakrystalli.github.io/bird_trait_networks/mgm.html): 
+network analysis of mgm derived associations of trait marginal relationship, performed on imputed data. Current analysis in [**`"mgm.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/mgm.R). Use [`reports/results/mgm_viz.Rmd`](https://github.com/annakrystalli/bird_trait_networks/blob/master/docs/mgm_viz.nb.html) to [visualise anaysis](http://annakrystalli.github.io/bird_trait_networks/mgm_viz.nb.html)
+
+***
+
+- #### [**`goodmankruskal`**](http://annakrystalli.github.io/bird_trait_networks/GoodmanKruskal.nb.html): 
+  goodmanKruskal τ determination (GKtau)  on categorical variables and network analysis of outputs. current analysis in [**`"goodmankruskal.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/goodmankruskal.R)
+
+***
 
 ### **source [`project_ui.R`](https://github.com/annakrystalli/bird_trait_networks/blob/master/project_ui.R)**
 
