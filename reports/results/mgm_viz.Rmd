@@ -1,0 +1,97 @@
+---
+title: "mgm_viz"
+author: "Anna Krystalli"
+date: "17 August 2016"
+output: 
+  html_document:
+    theme: paper
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F)
+require(knitr)
+library(igraph)
+library(networkD3)
+library(tidyr)
+library(reshape2)
+require(DT)
+
+wkf = "mgm"
+param = "mgm.R"
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+source(file_setup_path)
+read_chunk(paste(script.folder, "params/", param, sep = ""))
+```
+
+### Analysis parameters
+```{r pm-params, echo=T}
+
+```
+
+```{r load-data, echo=T}
+load(file = paste(output.folder, "data/mgm/", an.ID, 
+                  "-", v.p, "-", s.p, "-", min.n, 
+                  "-", min.cat, ".Rdata", sep = ""))
+
+net[[1]]$module <- factor(net[[1]]$module)
+```
+
+### Analysis metrics
+
+#### imputation
+
+- **proportion data imputed:** `r  sum(is.na(g$data))/prod(dim(g$data))`
+- **oob error:** NRMSE: `r g$OOBerror[1]`, PFC: `r g$OOBerror[2]`
+
+
+#### mgm
+
+- **variance check:** `r all(mgm_mod$variance.check)`
+
+### network
+
+```{r prep-net, echo=FALSE}
+v <- data.frame(var = factor(names(g$imp_data)[as.numeric(net[[1]]$name)], 
+                             levels = names(g$imp_data)),
+                net[[1]])
+
+e <- graph.adjacency(mgm_mod$wadj, weighted = T)  %>% get.edgelist(names = T) %>% 
+  as.data.frame() %>% setNames(c("source", "target"))
+e$source.index = match(e$source, v$name)-1
+e$target.index = match(e$target, v$name)-1
+
+w <- melt(mgm_mod$wadj)
+w <- w[w$value > 0,]
+e <- data.frame(e, value = w$value)
+
+n <- forceNetwork(Links = e, Nodes = v, Source = "source.index",
+             Target = "target.index", Value = "value", NodeID = "var",
+             Group = "module", opacity = 0.75, fontSize = 18)
+
+```
+
+```{r net-viz, fig.width= 9, fig.height= 7, echo=FALSE}
+n
+```
+
+#### modules
+
+- **total number of modules:** `r length(unique(net[[1]]$module))`
+- **distribution of nodes across nodules:**
+```{r ktab}
+tab <- table(net[[1]]$module)
+ktab <- setNames(data.frame(t(as.vector(tab))), names(tab))
+kable(ktab, format.args = list(width = 3))
+```
+
+***
+```{r ntab}
+ntab <- net[[1]]
+ntab$name <- names(g$imp_data)[as.numeric(ntab$name)]
+ntab <- format(ntab, digits = 3)
+ntab$module <- factor(ntab$module)
+
+DT::datatable(ntab, filter = list(position = 'top'))
+
+```
+
