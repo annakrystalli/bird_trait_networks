@@ -68,20 +68,31 @@ Ideally it is the ***path to an Rstudio project, [checked out](http://www.molecu
 ```
 <br>
 
-## **Initialise a project
+***
 
-Parametarise and source **`project_ui.R`** script [see more](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html). 
+## **Initialise a workflow (wkf) environment.** 
 
-if no `"param"` or `"wkf"` is specified, 
+### specify environment
+
+Specify environment through setting `"param"` or `"wkf"`. 
+ - `param` should a character string of the **name of a script in `params/` folder**. Use this folder to store parametarisations of the environment to be called. 
+ - `"wkf"` specifies the workflow you wish to load in the environment
+
+if no `"param"` or `"wkf"` is specified, sourcing project_ui.R initalises a base global envrionment (see [project_ui README](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html) for more) 
 
 
-### Workflows (`"wkf"`) within the project
+#### Workflows (`"wkf"`) within the project
 
-- **`rmacroRDM`**: Addition of the **amniote database** to originally supplied data. Outputs, long and aggregated wide versions of the data.
+- [**`rmacroRDM`**](http://annakrystalli.github.io/bird_trait_networks/rmacroRDM.nb.html): Addition of the **amniote database** to originally supplied data. Outputs, long and aggregated wide versions of the data. Current analysis in [**`"master workflow.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/match%20workflow.R) 
 - [**`phylonetworker`**](http://annakrystalli.github.io/bird_trait_networks/PhyloNetworker_README.nb.html): network analysis of phylogenetically corrected correlation between traits, current analysis in [**`"PhyloNeworker.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker.R)
 - **`mgm`**: network analysis of mgm analyses of trait marginal relationship, performed on imputed data.
-- **`goodmankruskal`**: goodmanKruskal τ determination (GKtau)  on categorical variables and network analysis of outputs. Here's a [demo](http://annakrystalli.github.io/bird_trait_networks/GoodmanKruskal.nb.html)
+- [**`goodmankruskal`**](http://annakrystalli.github.io/bird_trait_networks/GoodmanKruskal.nb.html): goodmanKruskal τ determination (GKtau)  on categorical variables and network analysis of outputs. current analysis in [**`"goodmankruskal.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/goodmankruskal.R)
 
+<br>
 
+### **source [`project_ui.R`](https://github.com/annakrystalli/bird_trait_networks/blob/master/project_ui.R)**
 
+```{r, eval=FALSE, echo=TRUE}
+source(paste(script.folder, "project_ui.R", sep = ""))
+```
 
