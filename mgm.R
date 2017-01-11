@@ -91,5 +91,5 @@ qgraph(mgm_mod$wadj,
        details = T)
 
 #' or use [**tools/mgm_viz.Rmd**](https://github.com/annakrystalli/bird_trait_networks/blob/master/tools/mgm_viz.Rmd). 
-#' See [**example**}()
+#' See [**example**](http://annakrystalli.github.io/bird_trait_networks/docs/mgm_viz.nb.html)
 
