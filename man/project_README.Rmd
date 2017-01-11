@@ -68,15 +68,31 @@ Ideally it is the ***path to an Rstudio project, [checked out](http://www.molecu
 ```
 <br>
 
+## initialise file.system setup
+set path to `file_setup.R` script and source
+```{r}
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+source(file_setup_path)
+```
+
+
 ***
 
-## **Initialise a workflow (wkf) environment.** 
+# **Initialise a workflow (wkf) environment.** 
 
 ### specify environment
 
 Specify environment through setting `"param"` or `"wkf"`. 
+
  - `param` should a character string of the **name of a script in `params/` folder**. Use this folder to store parametarisations of the environment to be called. 
  - `"wkf"` specifies the workflow you wish to load in the environment
+
+e.g.
+```{r}
+wkf = "phylonetworker"
+param = "phylonetworker.R"
+```
+
 
 if no `"param"` or `"wkf"` is specified, sourcing project_ui.R initalises a base global envrionment (see [project_ui README](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html) for more) 
 
