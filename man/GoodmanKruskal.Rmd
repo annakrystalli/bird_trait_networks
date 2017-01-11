@@ -1,0 +1,168 @@
+---
+title: "wkf: GoodmanKruskal"
+author: 
+date: 
+output: 
+  html_document:
+    theme: paper
+
+---
+Demonstration of use of the GoodmanKruskal workflow. The data processing is based on `phylonetworker_setup.R` but includes a data processing stage from an `mgm` workflow.
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning=F, cache=F)
+```
+
+## parametarise and launch analysis environment:
+
+```{r, echo=TRUE}
+wkf = "goodmankruskal"
+param = "goodmankruskal.R"
+file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+source(file_setup_path)
+source("~/Documents/workflows/bird_trait_networks/project_ui.R")
+
+```
+
+### analysis parameters 
+
+```{r}
+read_chunk(paste0(script.folder,"params/", param))
+```
+
+```{r pm-params, echo=T, eval=FALSE}
+
+```
+
+
+Here we select all categorical traits and species, by setting `v.p` (proportion of variables) to `r v.p`and `s.p` is set to `r s.p`.
+
+```{r}
+vars <- ms_vars[1:(as.integer(length(ms_vars)*v.p))]
+spps <- spp.ranks$spp[1:(as.integer(nrow(spp.ranks)*s.p))]
+spp <- data$species %in% spps
+
+rownames(data) <- data$species
+
+```
+
+
+###create g object 
+
+collect all information required to process and fit data (for consistency and processing with other workflows) and prepare data.
+
+```{r, echo = T}
+
+g <- list(data = data[spp, vars], 
+          meta = metadata, 
+          mgm_types = mgm_types, meta_types = meta_types, 
+          log.vars = log.vars, 
+          spp.list = data.frame(species = data[spp, c("species")]),
+          v.p = v.p, s.p = s.p, phylo.match = phylo.match[spp,],
+          tree = drop.tip(tree, setdiff(tree$tip.label, data$species[spp])))
+
+source(paste(script.folder, "mgm_dataprep.R", sep = ""))
+
+```
+
+<br>
+
+### subset to only categorical variables. 
+
+```{r, echo = T}
+
+gdk_data <- g$data[,names(mgm_types[mgm_types %in% c("c","b")])]
+```
+#### $n_{species}$: `r length(spp)`
+
+#### $n_{var}$: `r ncol(gdk_data)`
+
+`r names(gdk_data)`
+
+#### ${min}_{{pair}_n}$: `r min.n`
+
+<br>
+
+### Calculate goodmankruskal $τ$ matrix.
+
+```{r, echo=T}
+gtau <- GKtauDataframe(gdk_data)
+```
+
+
+
+<br>
+
+### **plot goodmankruskal $τ$ matrix**
+
+```{r}
+diag(gtau) <- NA
+
+m.lab <- 120
+m = list(
+  l = m.lab,
+  r = 50,
+  b = m.lab,
+  t = 50,
+  pad = 4
+)
+
+plot_ly(z= gtau, x = colnames(gtau), y = rownames(gtau), type = plot.type) %>%
+  layout(title="GKtau among categorical variables", margins = m, 
+         yaxis = list(title = "", showgrid = F), 
+         xaxis = list(title = "", showgrid = F))
+
+
+```
+
+<br>
+
+***
+
+### fit netcarto
+
+```{r}
+diag(gtau) <- 0
+gtau[gtau < cutoff] <- 0
+
+g <- graph.adjacency(gtau, mode = c("directed"), weighted = T)
+e <- get.edgelist(g) %>% data.frame() %>% as.list()
+e$w <- E(g)$weight
+
+net <- rnetcarto::netcarto(e)
+
+```
+
+### plot network based on goodmankruskal $τ$ matrix
+
+```{r}
+v <- data.frame(var = factor(rownames(gtau), 
+                             levels = rownames(gtau)),
+                net[[1]][match(rownames(gtau), net[[1]]$name),])
+
+e <- graph.adjacency(gtau, mode = c("directed"), weighted = T)  %>% get.edgelist(names = T) %>% 
+  as.data.frame() %>% setNames(c("source", "target"))
+e$source.index = match(e$source, v$name)-1
+e$target.index = match(e$target, v$name)-1
+
+
+w <- melt(as.data.frame(as.matrix(get.adjacency(g, attr="weight"))))
+w <- w[w$value > 0,]
+e <- data.frame(e, value = w$value)
+
+
+
+n <- forceNetwork(Links = e, Nodes = v, Source = "source.index",
+             Target = "target.index", Value = "value", NodeID = "var",
+             Group = "module", opacity = 0.75, fontSize = 18, zoom = T)
+
+n
+```
+
+
+#### plot flat bi-directional network
+
+```{r}
+plot(g, edge.arrow.size=.2, edge.curved=.1, vertex.size = 3, vertex.label=NA)
+```
+

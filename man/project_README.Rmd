@@ -70,9 +70,9 @@ Ideally it is the ***path to an Rstudio project, [checked out](http://www.molecu
 
 ## **Initialise a project
 
-Parametarise and source [**`project_ui.R`**]() script
+Parametarise and source **`project_ui.R`** script [see more](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html). 
 
-if no param
+if no `"param"` or `"wkf"` is specified, 
 
 
 ### Workflows (`"wkf"`) within the project
@@ -80,6 +80,7 @@ if no param
 - **`rmacroRDM`**: Addition of the **amniote database** to originally supplied data. Outputs, long and aggregated wide versions of the data.
 - [**`phylonetworker`**](http://annakrystalli.github.io/bird_trait_networks/PhyloNetworker_README.nb.html): network analysis of phylogenetically corrected correlation between traits, current analysis in [**`"PhyloNeworker.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker.R)
 - **`mgm`**: network analysis of mgm analyses of trait marginal relationship, performed on imputed data.
+- **`goodmankruskal`**: goodmanKruskal τ determination (GKtau)  on categorical variables and network analysis of outputs. Here's a [demo](http://annakrystalli.github.io/bird_trait_networks/GoodmanKruskal.nb.html)
 
 
 
