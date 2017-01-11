@@ -12,13 +12,6 @@ file <- "data_gap_eval.Rmd"
 render(paste("reports/results/", file, sep =""), output_format = "html_notebook",
 output_dir = paste(output.folder, "Reports/Results/", sep = ""))
 
-
-
-
-file <- "GoodmanKruskal.Rmd"
-render(paste("reports/workflow_documentation/", file, sep =""), output_format = "html_notebook",
-output_dir = paste(output.folder, "Reports/workflow documentation/", sep = ""))
-
 file <- "Categorical_phylocors.Rmd"
 render(paste("reports/results/", file, sep =""), output_format = "html_notebook",
        output_dir = paste(output.folder, "Reports/Results/", sep = ""))
@@ -44,4 +37,16 @@ file <- "project_README.Rmd"
   file <- "project_ui.Rmd"
   render(paste0("man/", file), output_format = "html_notebook",
          output_file = paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
+  
+  file <- "GoodmanKruskal.Rmd"
+  render(paste0("man/", file), output_format = "html_notebook",
+         output_file = paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
+  
+  file <- "rmacroRDM.Rmd"
+  render(paste0("man/", file), output_format = "html_notebook",
+         output_file = paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
+  
+
+  spin("mgm.R")
+  file.copy(from = "mgm.R", to = "docs/mgm.R")
   
