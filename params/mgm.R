@@ -1,4 +1,4 @@
-## ---- param ----
+## ---- pm-params ----
 #an.ID <- "100spp"
 an.ID <- "all"
 min.n <- 10
