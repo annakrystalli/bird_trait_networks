@@ -5,8 +5,8 @@ source(file_setup_path)
 require(rmarkdown)
 
 file <- "mgm_viz.Rmd"
-render(paste("tools/", file, sep =""), 
-       output_dir = paste(output.folder, "Reports/Results/", sep = ""))
+render(paste("reports/results/", file, sep =""),  output_format = "html_notebook",
+       output_file = paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
 
 file <- "data_gap_eval.Rmd"
 render(paste("reports/results/", file, sep =""), output_format = "html_notebook",
@@ -48,5 +48,10 @@ file <- "project_README.Rmd"
   
 
   spin("mgm.R")
-  file.copy(from = "mgm.R", to = "docs/mgm.R")
+  file.copy(from = "mgm.html", to = "docs/mgm.html", overwrite = T)
+  
+  file <- "GoodmanKruskal.Rmd"
+  render(paste0("man/", file), output_format = "html_notebook",
+         output_file = paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
+  
   
