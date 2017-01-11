@@ -1,45 +1,41 @@
+## ----global-setup, echo = F----------------------------------------------
 rm(list=ls())
+options(stringsAsFactors = F)
 
-source("~/Documents/workflows/bird_trait_networks/setup.R")
+wkf = "rmacro"
+param = "rmacro.R"
+source("/Users/Anna/Documents/workflows/rmacroRDM/R/functions.R")
 
+## ----master-configuration, eval=T----------------------------------------
+init_db(data.folder = "/Users/Anna/Google Drive/bird trait networks/",
+        script.folder = "~/Documents/workflows/bird_trait_networks/", 
+        spp.list_src = "D0", fileEncoding = "mac")
 
-# PACKAGES & FUNCTIONS ###############################################################
-
-# source rmacroRDM functions
-source(paste(script.folder, "functions.R", sep = ""))
-source(paste(script.folder, "wideData_function.R", sep = ""))
-
-require(plotly)
-require(knitr)
-require(RColorBrewer)
+## ----intialise-project ----
+source("~/Documents/workflows/bird_trait_networks/project_ui.R")
 
 
 # SETTINGS ###############################################################
-# master settings
-var.vars <- c("var", "value", "data.ID")
-match.vars <- c("synonyms", "data.status")
-meta.vars = c("qc", "observer", "ref", "n", "notes")
-master.vars <- c("species", match.vars, var.vars, meta.vars)
-
-# spp.list settings
-taxo.vars <- c("genus", "family", "order")
-
-# var.omit settings
-var.omit <- c("no_sex_maturity_d", "adult_svl_cm", "male_maturity_d")
-
-setupInputFolder(input.folder, meta.vars)
-
-setwd(input.folder)
 
 
-# FILES ###############################################################
 
-# source("~/Documents/workflows/bird_trait_networks/process D0.R")
-# source("~/Documents/workflows/bird_trait_networks/process D1.R")
+## ----setup-input.folder--------------------------------------------------
+setupInputFolder(input.folder)
 
-D0 <- read.csv(file = "csv/D0.csv" ,fileEncoding = "mac")                    
+fcodes <- ensure_fcodes(meta.vars)
 
+file.names <- create_file.names(c("Table.csv", "Amniote_Database_Aug_2015.csv"))
 
+if(create.data_log){
+create_data_log(file.names = c("Table.csv", "Amniote_Database_Aug_2015.csv"), 
+                overwrite = T)
+}
+
+if(create.data_log){
+update_data_log(overwrite = T)
+}
+
+load_sys.ref(view = F)
 # Load match data.....................................................................
 
 
