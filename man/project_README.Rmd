@@ -96,6 +96,15 @@ param = "phylonetworker.R"
 
 if no `"param"` or `"wkf"` is specified, sourcing project_ui.R initalises a base global envrionment (see [project_ui README](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html) for more) 
 
+
+### **source [`project_ui.R`](https://github.com/annakrystalli/bird_trait_networks/blob/master/project_ui.R)**
+
+```{r, eval=FALSE, echo=TRUE}
+source(paste(script.folder, "project_ui.R", sep = ""))
+```
+
+
+
 ***
 #### Workflows (`"wkf"`) within the project
 
@@ -119,9 +128,7 @@ network analysis of mgm derived associations of trait marginal relationship, per
 
 ***
 
-### **source [`project_ui.R`](https://github.com/annakrystalli/bird_trait_networks/blob/master/project_ui.R)**
+#### Other useful documents
 
-```{r, eval=FALSE, echo=TRUE}
-source(paste(script.folder, "project_ui.R", sep = ""))
-```
-
+- #### [**`data_gap_eval.Rmd`**](http://annakrystalli.github.io/bird_trait_networks/data_gap_eval.nb.html): 
+Evaluation of data avalaibility and resulting biases.
