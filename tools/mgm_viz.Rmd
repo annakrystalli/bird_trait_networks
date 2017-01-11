@@ -24,11 +24,11 @@ read_chunk(paste(script.folder, "params/", param, sep = ""))
 ```
 
 ### Analysis parameters
-```{r param, echo=T}
+```{r pm-params, echo=T}
 
 ```
 
-```{r load-data, echo=FALSE}
+```{r load-data, echo=T}
 load(file = paste(output.folder, "data/mgm/", an.ID, 
                   "-", v.p, "-", s.p, "-", min.n, 
                   "-", min.cat, ".Rdata", sep = ""))
