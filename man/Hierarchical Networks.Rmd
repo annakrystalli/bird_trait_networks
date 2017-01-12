@@ -276,7 +276,7 @@ Another application of the hierarchical decomposition is the pre- diction of mis
 ***
 ### **code**
 
-```{r, echo=FALSE}
+```{r}
 
 library(igraph)
 ```
@@ -339,8 +339,8 @@ g <- graph_from_data_frame(relations, directed=TRUE, vertices=actors)
 print(g, e=TRUE, v=TRUE)
 
 ## The opposite operation
-as_data_frame(g, what="vertices")
-as_data_frame(g, what="edges")
+igraph::as_data_frame(g, what="vertices")
+igraph::as_data_frame(g, what="edges")
 ```
 
 
@@ -362,9 +362,6 @@ Usage
 
 
 ```{r}
-
-library(igraph)
-
 ## Not run: 
 ## A graph with two dense groups
 g <- sample_gnp(10, p=1/2) + sample_gnp(10, p=1/2)

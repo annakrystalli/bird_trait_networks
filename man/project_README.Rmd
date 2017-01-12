@@ -1,6 +1,6 @@
 ---
 title: "Project README"
-date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
+date: "Last rendered: `r Sys.time()`"
 output: html_document
 
 ---
@@ -137,3 +137,4 @@ network analysis of mgm derived associations of trait marginal relationship, per
 
 - #### [**`data_gap_eval.Rmd`**](http://annakrystalli.github.io/bird_trait_networks/data_gap_eval.nb.html): 
 Evaluation of data avalaibility and resulting biases.
+- #### []
