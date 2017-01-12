@@ -1,7 +1,6 @@
 ---
 title: "PhyloNetworker_README"
-author: "Anna Krystalli"
-date: "`r Sys.time()`"
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: html_document
 params:
   file_setup_path: ~/Documents/workflows/bird_trait_networks/file_setup.R
@@ -40,18 +39,19 @@ To parametarise the analysis, `wkf` is set to **`"PhyloNetworker.R"`** and `para
 
 ## Call project_ui
 
-Next initialise the analysis by calling **`project_ui`**. This script calls a number of setup scripts (for details see [**`project_ui_README`**]()). It also sources the previously defined:
+Next initialise the analysis by calling **`project_ui`**. This script calls a number of ***global*** and ***analysis specific*** setup scripts (for details see [**`project_ui_README`**](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html)), including:
 
 - **`params/phylonetworker.R`** parameter script
 ```{r pm-params}
 
 ```
 
-- **`PhyloNetworker-setup.R`**
+- [**`PhyloNetworker_setup.R`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker_setup.R)
+- [**`PhyloNetworker_functions.R`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker_functions.R)
 
 *** 
 
-### **`PhyloNetworker-setup.R`**
+### **`PhyloNetworker_setup.R`**
 
 You don't need to worry about running this, calling `project_ui` does. But I'm just running through it so you understand how the data and objects used in the analysis have been processed and created.
 
@@ -194,7 +194,7 @@ The phylocors function calculates **phylogenetically corrected correlations** be
   - `"nc"`: numeric vs categorical. (variables must be provided in the order "nc" in `data`). Method uses `pgls()`
   - `"cc"`: categorical vs categorical. Method combines phylogenetic trait coevolution simulations and `GoodmanKruskal()`.
   
-  for more details see [**`pglsPhyloCor` README**]()
+  for more details see [**`pglsPhyloCor` README**](http://annakrystalli.github.io/bird_trait_networks/pglsPhyloCor_README.nb.html)
 ```{r}
 
 ```

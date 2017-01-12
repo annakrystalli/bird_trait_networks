@@ -1,7 +1,6 @@
 ---
 title: "Hierarchical Networks"
-author: "Anna Krystalli"
-date: "29 March 2016"
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: html_document
 ---
 
@@ -36,7 +35,7 @@ Modularity [21] is a property of a network and a specific proposed division of t
   
 
   
-    <img src="/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/net_modules.png" width="350">
+    <img src="assets/net_modules.png" width="350">
   
 ***
 
@@ -127,7 +126,7 @@ We would start by grouping the nodes into a randomly chosen partition; let us sa
 
 
   
-  <img src="/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/sardo2.png" width="280">
+  <img src="assets/sardo2.png" width="280">
   
   
 There are two single node changes that increase the modularity. Node $b$ can be placed in the same group as node $d$; this is partition 15, which is a local maxima. Instead, node $b$ can be placed in the same group as nodes $a$ and $c$; this is partition 14. Partition 14 is not a modularity maximum; thus one would continue our random ascent of the modularity landscape. From partition 14, one could move to partition 1 or to partition 15, both local maxima. 
@@ -224,7 +223,7 @@ If a module at level $l$ (or the whole network at level 0) has internal modular 
 - The algorithm **iterates these steps** for each identified box **until no subnetworks are found to have internal structure.**
 
 
-  ![](/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/Sardo4.png) 
+  ![](assets/Sardo4.png) 
   
   ***
   
@@ -240,7 +239,7 @@ If a module at level $l$ (or the whole network at level 0) has internal modular 
 > We expect the probability of a connection between two vertices to depend on their degree of relatedness. Structure of this type can be modelled mathematically by using a probabilistic approach in which we **endow each internal node** $r$ of the dendrogram with a **probability** $p_r$ and then **connect each pair of vertices** for which $r$ **is the lowest common ancestor** independently with **probability** $p_r$
 
 
-  <img src="/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/clauset1.png" width="400">
+  <img src="assets/clauset1.png" width="400">
 
 <br>
 
@@ -259,7 +258,7 @@ If a module at level $l$ (or the whole network at level 0) has internal modular 
 
 + from this set we can, by **using techniques from phylogeny reconstruction[21]()**, create a **single consensus dendrogram**, which captures the topological features that appear consistently across all or a large fraction of the dendrograms and ***typically is a better summary of the network’s structure than any individual dendrogram***
 
-  <img src="/Users/Anna/Documents/workflows/bird_trait_networks/reports/workflow_documentation/figures/clauset2.png" width="400">
+  <img src="assets/clauset2.png" width="400">
   
   <br>
 

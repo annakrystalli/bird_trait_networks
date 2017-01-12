@@ -1,4 +1,5 @@
 ---
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: 
   html_document:
   theme: paper
@@ -45,7 +46,7 @@ Link the workflow to the folders comprising the **project file system**:
 full path to the file is required
 
 *** 
-## **source `project_ui.R`: initialise project environment**
+## **source [`project_ui.R`](https://github.com/annakrystalli/bird_trait_networks/blob/master/project_ui.R): initialise project environment**
 
 <br>
 
@@ -143,4 +144,4 @@ Current param: `r if(exists("param")){param}else{"none set"}`
 ```
 
 
-[`phylonetworker` README](http://annakrystalli.github.io/bird_trait_networks/PhyloNetworker_README.nb.html)
+Most workflow intialisations are based on the **phylonetworker** workflow. See [**`phylonetworker` README**](http://annakrystalli.github.io/bird_trait_networks/PhyloNetworker_README.nb.html) for more details on the setup.

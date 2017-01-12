@@ -1,6 +1,6 @@
 ---
 title: "Project README"
-date: "Last rendered: `r Sys.time()`"
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: html_document
 
 ---
@@ -17,15 +17,15 @@ knitr::read_chunk("~/Documents/workflows/bird_trait_networks/file_setup.R")
 
 <br>
 
-This README documents the script contained in the github repo and demonstrates their use to conduct analyses relating to the **bird trait networks project**. 
+This README documents the scripts contained in the github repo and demonstrates their use to conduct analyses relating to the **bird trait networks project**. 
 
 Description is split into project set up and the various analyses attempted during the project.
 
-# Project setup
+# **Project setup**
 
 <br>
 
-## get access to code:
+## **get access to code:**
 
 The ideal method to access the code is the through [**checking it out**](http://www.molecularecologist.com/2013/11/using-github-with-r-and-rstudio/) from the master [**github folder**](https://github.com/annakrystalli/bird_trait_networks). It is worth spending on time to set this up properly so here's more on [**github through Rstudio**](https://annakrystalli.github.io/Mozfest_github-rstudio/index.html), [setting yourself up on github and Rstudio](https://github.com/mikecroucher/ISBE_Symposium) and [forking & linking projects through RStudio](https://annakrystalli.github.io/Mozfest_github-rstudio/evolottery.html)
 
@@ -39,7 +39,7 @@ unzipping it and supplying the **path to the unzipped folder** to parameter `scr
 
 <br>
 
-## Initialise project - edit **`file_setup.R`**
+## **configure project - edit `file_setup.R`**
 
 To initiate a project locally, the first thing to do is edit script [**`file_setup.R`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/file_setup.R) to **specify the paths to:**
 
@@ -68,7 +68,7 @@ Ideally it is the ***path to an Rstudio project, [checked out](http://www.molecu
 ```
 <br>
 
-## initialise file.system setup
+## **set up file.system**
 set path to `file_setup.R` script and source
 ```{r}
 file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
@@ -76,11 +76,15 @@ source(file_setup_path)
 ```
 
 
+<br>
+
 ***
 
-# **Initialise a workflow (wkf) environment.** 
+# **initialise an analysis environment.** 
 
-### specify environment
+<br>
+
+## **specify environment**
 
 Specify environment through setting `"param"` or `"wkf"`. 
 
@@ -94,16 +98,17 @@ param = "phylonetworker.R"
 ```
 
 
-if no `"param"` or `"wkf"` is specified, sourcing project_ui.R initalises a base global envrionment (see [project_ui README](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html) for more) 
+*if no `"param"` or `"wkf"` is specified*, sourcing `project_ui.R` initalises a **base global envrionment.** 
 
 
-### **source [`project_ui.R`](https://github.com/annakrystalli/bird_trait_networks/blob/master/project_ui.R)**
+## **source `project_ui.R`**
+
 
 ```{r, eval=FALSE, echo=TRUE}
 source(paste(script.folder, "project_ui.R", sep = ""))
 ```
 
-
+#### see [**project_ui README**](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html) for more
 
 ***
 #### Workflows (`"wkf"`) within the project

@@ -1,7 +1,6 @@
 ---
-title: "Untitled"
-author: "Anna Krystalli"
-date: "8 September 2016"
+title: "Missing data bias evaluation"
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: 
   html_document:
     theme: paper
@@ -10,26 +9,22 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, message = F, warning = F, cache=F, fig.width = 9)
-
-require(plotly)
-require(RColorBrewer)
-
 ```
 
 
-```{r, echo=FALSE, cache = F}
-rm(list = ls())
+```{r, echo=T, cache = F, message=FALSE}
 wkf = "goodmankruskal"
 param = "min.n_test.R"
 file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
 source(file_setup_path)
 source("~/Documents/workflows/bird_trait_networks/project_ui.R")
 set.seed(1)
-
-if(exists(".Random.seed")){print("seed set")}
-
 ```
 
+```{r libraries}
+require(plotly)
+require(RColorBrewer)
+```
 
 ```{r}
 t.vars <- length(ms_vars)
@@ -40,6 +35,11 @@ TDdf$neg.res <- (TDdf$Dplus - (TDdf$EDplus - 2 * TDdf$sd.Dplus))/(2 * TDdf$sd.Dp
 **total number of variables:** `r t.vars`
 
 **total number of possible pairwise combinations:** `r t.pair_n`
+
+## Effect of minimum $n$ restriction on pairwise and variable wise data availability
+
+Here, I sampled `r n.spl_size` possible ${min}_{n_{{pair}_i}}$ values from the *sample of the unique pairwise $n_{pair}$ values* found in the data, weighted by their frequency distribution. For each sampled ${min}_{n_{{pair}_i}}$, I subsample the set of pairs $P_i$ to exclude any pair $p$ below ${min}_{n_{{pair}_i}}$. I then calculated the $n_{{pair}_i}$ for $P_i$. I also calculate $n_{{trait}_i}$, the size of the set of traits included in $P_i$. I also calculate $μ_{n_{{pair}_i}}$, the mean number of datapoints available per $p$ in $P_i$. 
+
 
 ```{r }
 # create df
@@ -59,11 +59,6 @@ for(i in spl.n){
 }
 
 ```
-
-
-## Effect of minimum $n$ restriction on pairwise and variable wise data availability
-
-Here, I sampled `r n.spl_size` possible ${min}_{n_{{pair}_i}}$ values from the *sample of the unique pairwise $n_{pair}$ values* found in the data, weighted by their frequency distribution. For each sampled ${min}_{n_{{pair}_i}}$, I subsample the set of pairs $P_i$ to exclude any pair $p$ below ${min}_{n_{{pair}_i}}$. I then calculated the $n_{{pair}_i}$ for $P_i$. I also calculate $n_{{trait}_i}$, the size of the set of traits included in $P_i$. I also calculate $μ_{n_{{pair}_i}}$, the mean number of datapoints available per $p$ in $P_i$. 
 
 ```{r, echo=FALSE, cache=FALSE, fig.height= 5}
 ay <- list(
@@ -167,15 +162,21 @@ require(DT)
 TDdf[dev,c("var", "Species", "Dplus", "sd.Dplus", "neg.res")] %>% DT::datatable()
 ```
 
+### Data availability across orders
+
 
 ```{r}
-o.dat <- data.frame(apply(wide[,-(1:4)], 2, FUN = function(x,o){
-  table(o[!is.na(x)])[order(table(o), 
-                            decreasing = T)]},
-         o = wide$order)[,order(apply(wide[,-(1:4)], 2, FUN = function(x){sum(!is.na(x))}),
-                                decreasing = T)])
+o.dat <- data.frame(apply(wide[,-(1:4)], 2, FUN = function(x,o.id){
+  o <- sort(unique(o.id))
+  orders <- o.id[!is.na(x)]
+  orders.tab <- table(orders)
+  out <- setNames(orders.tab[o], o)
+  out[is.na(out)] <- 0
+  out
+  },o.id = wide$order))
 
-op.dat <- o.dat / sort(table(wide$order), decreasing = T)
+op.dat <- o.dat / table(wide$order)[sort(unique(wide$order))]
+rownames(op.dat) <- names(sort(table(wide$order), decreasing = T))
 op.dat <- op.dat[order(apply(op.dat, 1, FUN = function(x){sum(x > 0)})), order(apply(op.dat, 2, FUN = mean), decreasing = T)]
 
 cols <- brewer.pal(5, "YlGnBu")
@@ -183,14 +184,14 @@ cols <- brewer.pal(5, "YlGnBu")
 plot_ly(z = as.matrix(op.dat), x = names(op.dat), y = rownames(op.dat), type = "heatmap", 
         #color = col, 
         name = "Variable proportional datapoint availability across orders",
-        colors = colorRamp(cols, bias = 2),
+        colors = colorRamp(cols, bias = 1.5),
         hoverinfo = "z+x+y", text = text) %>%
   
   layout(margin = list(l = 150,
                        r = 80,
                        b = 120,
                        t = 60),
-         title = "Matrix of proportionate bivariate datapoint availability",
+         title = "Proportional (proportion of total species in order) data availability across orders",
          xaxis = list(title = "var"),
          yaxis = list(title = "order")) 
 

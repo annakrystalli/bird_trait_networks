@@ -118,7 +118,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">PhyloNetworker_README</h1>
 <h4 class="author"><em>Anna Krystalli</em></h4>
-<h4 class="date"><em>2017-01-04 19:57:07</em></h4>
+<h4 class="date"><em>2017-01-12 10:26:36</em></h4>
 
 </div>
 
@@ -139,12 +139,12 @@ source(paste0(script.folder,&quot;project_ui.R&quot;))</code></pre>
 <p><br></p>
 <div id="call-project_ui" class="section level2">
 <h2>Call project_ui</h2>
-<p>Next initialise the analysis by calling <strong><code>project_ui</code></strong>. This script calls a number of setup scripts (for details see <a href><strong><code>project_ui_README</code></strong></a>). It also sources the previously defined:</p>
+<p>Next initialise the analysis by calling <strong><code>project_ui</code></strong>. This script calls a number of <strong><em>global</em></strong> and <strong><em>analysis specific</em></strong> setup scripts (for details see <a href="http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html"><strong><code>project_ui_README</code></strong></a>), including:</p>
 <ul>
 <li><strong><code>params/phylonetworker.R</code></strong> parameter script</li>
 </ul>
-<pre class="r"><code>an.ID &lt;- &quot;100spp&quot;
-#an.ID &lt;- &quot;all&quot;
+<pre class="r"><code>#an.ID &lt;- &quot;100spp&quot;
+an.ID &lt;- &quot;all&quot;
 min.n &lt;- 50
 log &lt;- T
 cutoff &lt;- 0.35
@@ -153,11 +153,12 @@ remove_dtips &lt;- T
 dist.types &lt;- &quot;all&quot;
 save &lt;- T</code></pre>
 <ul>
-<li><strong><code>PhyloNetworker-setup.R</code></strong></li>
+<li><a href="https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker_setup.R"><strong><code>PhyloNetworker_setup.R</code></strong></a></li>
+<li><a href="https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker_functions.R"><strong><code>PhyloNetworker_functions.R</code></strong></a></li>
 </ul>
 <hr />
-<div id="phylonetworker-setup.r" class="section level3">
-<h3><strong><code>PhyloNetworker-setup.R</code></strong></h3>
+<div id="phylonetworker_setup.r" class="section level3">
+<h3><strong><code>PhyloNetworker_setup.R</code></strong></h3>
 <p>You don’t need to worry about running this, calling <code>project_ui</code> does. But I’m just running through it so you understand how the data and objects used in the analysis have been processed and created.</p>
 <div id="first-log.vars-are-extacted-from-metadata.csv" class="section level4">
 <h4>First, <code>log.vars</code> are extacted from <code>metadata.csv</code></h4>
@@ -213,13 +214,13 @@ ms_vars &lt;- vg[,1:2] %&gt;% as.matrix() %&gt;% t() %&gt;% as.vector() %&gt;% u
 <li><strong><code>vg</code>:</strong> grid of available trait (var) pairs and the number of datapoints avalable for each. Pairs are only included in pair <span class="math inline">\(n\)</span> greater than <span class="math inline">\(n_{min}\)</span>.</li>
 </ul>
 <pre class="r"><code>head(vg)</code></pre>
-<pre><code>##            Var1            Var2  n
-## 2    aerial.for activity.period 98
-## 26    body.mass activity.period 98
-## 27  body.mass.f activity.period 98
-## 29  body.mass.m activity.period 98
-## 35 breed.system activity.period 98
-## 47    clutch.no activity.period 98</code></pre>
+<pre><code>##             Var1        Var2    n
+## 5223 clutch.size   body.mass 3643
+## 5205 body.mass.u   body.mass 3451
+## 5236    egg.mass   body.mass 3022
+## 6051 clutch.size body.mass.u 3008
+## 5202 body.mass.f   body.mass 2996
+## 9790    egg.mass clutch.size 2933</code></pre>
 <ul>
 <li><strong><code>ms_vars</code>:</strong> character vector containing all unique trait names available for analysis.</li>
 </ul>
@@ -246,16 +247,12 @@ mgm_types &lt;- vtypes$mgm[match(meta_types, vtypes$meta)] %&gt;%
 ## 5   c  Nom</code></pre>
 <p><strong><code>meta_types</code>:</strong> named vector of trait metadata category types, matched to and named by <code>ms_vars</code>.</p>
 <pre class="r"><code>head(meta_types)</code></pre>
-<pre><code>##      aerial.for activity.period       body.mass     body.mass.f 
-##           &quot;Bin&quot;           &quot;Cat&quot;           &quot;Con&quot;           &quot;Con&quot; 
-##     body.mass.m    breed.system 
-##           &quot;Con&quot;           &quot;Cat&quot;</code></pre>
+<pre><code>## clutch.size   body.mass body.mass.u    egg.mass body.mass.f body.mass.m 
+##       &quot;Con&quot;       &quot;Con&quot;       &quot;Con&quot;       &quot;Con&quot;       &quot;Con&quot;       &quot;Con&quot;</code></pre>
 <p><strong><code>mgm_types</code>:</strong> corresponding named vector of trait mgm category types, matched to and named by <code>ms_vars</code>.</p>
 <pre class="r"><code>head(mgm_types)</code></pre>
-<pre><code>##      aerial.for activity.period       body.mass     body.mass.f 
-##             &quot;c&quot;             &quot;c&quot;             &quot;g&quot;             &quot;g&quot; 
-##     body.mass.m    breed.system 
-##             &quot;g&quot;             &quot;c&quot;</code></pre>
+<pre><code>## clutch.size   body.mass body.mass.u    egg.mass body.mass.f body.mass.m 
+##         &quot;g&quot;         &quot;g&quot;         &quot;g&quot;         &quot;g&quot;         &quot;g&quot;         &quot;g&quot;</code></pre>
 </div>
 <div id="load-get-trait-taxonomic-diversity-profiles." class="section level4">
 <h4>load / get trait taxonomic diversity profiles.</h4>
@@ -290,100 +287,100 @@ mgm_types &lt;- vtypes$mgm[match(meta_types, vtypes$meta)] %&gt;%
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">log_body.mass.f</td>
-<td align="left">100</td>
-<td align="left">96</td>
-<td align="left">96</td>
-<td align="left">1430</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">9626</td>
-<td align="left">93</td>
-<td align="left">92</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">NaN</td>
-<td align="left">NaN</td>
+<td align="left">clutch.size</td>
+<td align="left">3681</td>
+<td align="left">136</td>
+<td align="left">136</td>
+<td align="left">1060</td>
+<td align="left">136</td>
+<td align="left">0.217</td>
+<td align="left">500349</td>
+<td align="left">140</td>
+<td align="left">132</td>
+<td align="left">134</td>
+<td align="left">0.217</td>
+<td align="left">7.38</td>
+<td align="left">1.6e-13</td>
 </tr>
 <tr class="even">
 <td align="left">log_body.mass</td>
-<td align="left">100</td>
-<td align="left">96</td>
-<td align="left">96</td>
-<td align="left">1430</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">9626</td>
-<td align="left">93</td>
-<td align="left">92</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">NaN</td>
-<td align="left">NaN</td>
+<td align="left">4244</td>
+<td align="left">134</td>
+<td align="left">134</td>
+<td align="left">1092</td>
+<td align="left">134</td>
+<td align="left">0.075</td>
+<td align="left">569823</td>
+<td align="left">140</td>
+<td align="left">132</td>
+<td align="left">134</td>
+<td align="left">0.075</td>
+<td align="left">-0.82</td>
+<td align="left">4.1e-01</td>
 </tr>
 <tr class="odd">
-<td align="left">log_body.mass.m</td>
-<td align="left">100</td>
-<td align="left">96</td>
-<td align="left">96</td>
-<td align="left">1430</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">9626</td>
-<td align="left">93</td>
-<td align="left">92</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">NaN</td>
-<td align="left">NaN</td>
-</tr>
-<tr class="even">
-<td align="left">clutch.no</td>
-<td align="left">100</td>
-<td align="left">96</td>
-<td align="left">96</td>
-<td align="left">1430</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">9626</td>
-<td align="left">93</td>
-<td align="left">92</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">NaN</td>
-<td align="left">NaN</td>
-</tr>
-<tr class="odd">
-<td align="left">clutch.size</td>
-<td align="left">100</td>
-<td align="left">96</td>
-<td align="left">96</td>
-<td align="left">1430</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">9626</td>
-<td align="left">93</td>
-<td align="left">92</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">NaN</td>
-<td align="left">NaN</td>
+<td align="left">log_body.mass.u</td>
+<td align="left">3451</td>
+<td align="left">134</td>
+<td align="left">134</td>
+<td align="left">1127</td>
+<td align="left">134</td>
+<td align="left">0.261</td>
+<td align="left">462394</td>
+<td align="left">140</td>
+<td align="left">132</td>
+<td align="left">134</td>
+<td align="left">0.261</td>
+<td align="left">-1.30</td>
+<td align="left">1.9e-01</td>
 </tr>
 <tr class="even">
 <td align="left">log_egg.mass</td>
-<td align="left">100</td>
-<td align="left">96</td>
-<td align="left">96</td>
-<td align="left">1430</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">9626</td>
-<td align="left">93</td>
-<td align="left">92</td>
-<td align="left">96</td>
-<td align="left">0.00</td>
-<td align="left">NaN</td>
-<td align="left">NaN</td>
+<td align="left">3035</td>
+<td align="left">136</td>
+<td align="left">136</td>
+<td align="left">1132</td>
+<td align="left">136</td>
+<td align="left">0.337</td>
+<td align="left">411394</td>
+<td align="left">140</td>
+<td align="left">132</td>
+<td align="left">134</td>
+<td align="left">0.337</td>
+<td align="left">3.63</td>
+<td align="left">2.9e-04</td>
+</tr>
+<tr class="odd">
+<td align="left">log_body.mass.f</td>
+<td align="left">2996</td>
+<td align="left">137</td>
+<td align="left">137</td>
+<td align="left">1098</td>
+<td align="left">137</td>
+<td align="left">0.345</td>
+<td align="left">409520</td>
+<td align="left">140</td>
+<td align="left">132</td>
+<td align="left">134</td>
+<td align="left">0.345</td>
+<td align="left">6.86</td>
+<td align="left">7.0e-12</td>
+</tr>
+<tr class="even">
+<td align="left">log_body.mass.m</td>
+<td align="left">2921</td>
+<td align="left">137</td>
+<td align="left">137</td>
+<td align="left">1068</td>
+<td align="left">137</td>
+<td align="left">0.359</td>
+<td align="left">401243</td>
+<td align="left">140</td>
+<td align="left">132</td>
+<td align="left">134</td>
+<td align="left">0.359</td>
+<td align="left">8.47</td>
+<td align="left">2.4e-17</td>
 </tr>
 </tbody>
 </table>
@@ -397,20 +394,20 @@ spp.ranks &lt;- getSppRanks(ms_vars, data = data, load = T, input.folder, an.ID)
 <li><strong><code>ms_spp</code>:</strong> character vector of species included in analysis</li>
 </ul>
 <pre class="r"><code>head(ms_spp)</code></pre>
-<pre><code>## [1] &quot;Acanthis_flammea&quot;           &quot;Accipiter_nisus&quot;           
-## [3] &quot;Acrocephalus_arundinaceus&quot;  &quot;Acrocephalus_palustris&quot;    
-## [5] &quot;Acrocephalus_schoenobaenus&quot; &quot;Acrocephalus_scirpaceus&quot;</code></pre>
+<pre><code>## [1] &quot;Abroscopus_albogularis&quot;   &quot;Abroscopus_superciliaris&quot;
+## [3] &quot;Acanthagenys_rufogularis&quot; &quot;Acanthidops_unicolor&quot;    
+## [5] &quot;Acanthis_flammea&quot;         &quot;Acanthis_hornemanni&quot;</code></pre>
 <ul>
 <li><strong><code>spp.ranks</code>:</strong> data.frame containing the total number of data points from all possible combinations of species datasets across all traits when this species is included in the analysis. Sorted in descending order of cumulative data availibility.</li>
 </ul>
 <pre class="r"><code>head(spp.ranks)</code></pre>
-<pre><code>##       spp.cs.species row.sums
-## 64 Passer_domesticus    35910
-## 88  Sturnus_vulgaris    33672
-## 63       Parus_major    32580
-## 96     Turdus_merula    32580
-## 74         Pica_pica    32220
-## 47   Hirundo_rustica    31862</code></pre>
+<pre><code>##         spp.cs.species row.sums
+## 2740 Passer_domesticus    35910
+## 3834  Sturnus_vulgaris    33672
+## 2735       Parus_major    32580
+## 2968         Pica_pica    32580
+## 4203     Turdus_merula    32580
+## 1806   Hirundo_rustica    31862</code></pre>
 <hr />
 <p><br></p>
 </div>
@@ -426,12 +423,12 @@ spp.ranks &lt;- getSppRanks(ms_vars, data = data, load = T, input.folder, an.ID)
 vg_dt &lt;- get_vg_dt(vg, mgm_types)</code></pre>
 <pre class="r"><code>head(vg_dt)</code></pre>
 <pre><code>##   Var1 Var2
-## 1    c    c
-## 2    g    c
-## 3    g    c
-## 4    g    c
-## 5    c    c
-## 6    g    c</code></pre>
+## 1    g    g
+## 2    g    g
+## 3    g    g
+## 4    g    g
+## 5    g    g
+## 6    g    g</code></pre>
 <p>Next edge weights between traits are calculated by calling the function <strong><code>pglsPhyloCor</code></strong> for each <strong><code>pair</code></strong> of each <strong><code>pair.type</code></strong>.</p>
 <div id="pglsphylocor-function" class="section level4">
 <h4>pglsPhyloCor function</h4>
@@ -441,7 +438,7 @@ vg_dt &lt;- get_vg_dt(vg, mgm_types)</code></pre>
 <li><code>&quot;nc&quot;</code>: numeric vs categorical. (variables must be provided in the order “nc” in <code>data</code>). Method uses <code>pgls()</code></li>
 <li><code>&quot;cc&quot;</code>: categorical vs categorical. Method combines phylogenetic trait coevolution simulations and <code>GoodmanKruskal()</code>.</li>
 </ul>
-<p>for more details see <a href><strong><code>pglsPhyloCor</code> README</strong></a></p>
+<p>for more details see <a href="http://annakrystalli.github.io/bird_trait_networks/pglsPhyloCor_README.nb.html"><strong><code>pglsPhyloCor</code> README</strong></a></p>
 </div>
 </div>
 <div id="numeric-vs-numeric-pair.type-nn" class="section level3">
@@ -547,110 +544,110 @@ if(save){
 </thead>
 <tbody>
 <tr class="odd">
+<td align="left">log_telencheph</td>
+<td align="left">log_hipp.vol</td>
+<td align="right">95</td>
+<td align="right">114.33988</td>
+<td align="right">3.4604075</td>
+<td align="right">134.3268</td>
+<td align="right">0.5012395</td>
+<td align="right">0.5012395</td>
+<td align="right">1.0000000</td>
+<td align="right">1.0000000</td>
+<td align="right">1.0000000</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="left">NA</td>
+<td align="left">nn</td>
+</tr>
+<tr class="even">
+<td align="left">log_egg.width</td>
+<td align="left">log_egg.length</td>
+<td align="right">125</td>
+<td align="right">138.79297</td>
+<td align="right">3.0025869</td>
+<td align="right">134.3268</td>
+<td align="right">0.0578132</td>
+<td align="right">0.0682045</td>
+<td align="right">0.9908001</td>
+<td align="right">0.9987952</td>
+<td align="right">1.0000000</td>
+<td align="right">0</td>
+<td align="right">0.9695018</td>
+<td align="right">NA</td>
+<td align="left">NA</td>
+<td align="left">nn</td>
+</tr>
+<tr class="odd">
+<td align="left">log_tarsus.len</td>
+<td align="left">log_tarsus.f</td>
+<td align="right">54</td>
+<td align="right">95.04559</td>
+<td align="right">4.6287177</td>
+<td align="right">134.3268</td>
+<td align="right">1.7519353</td>
+<td align="right">1.8201614</td>
+<td align="right">0.9959854</td>
+<td align="right">0.9939774</td>
+<td align="right">0.3841268</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0.8004899</td>
+<td align="left">NA</td>
+<td align="left">nn</td>
+</tr>
+<tr class="even">
 <td align="left">log_body.mass.u</td>
 <td align="left">log_body.mass</td>
-<td align="right">93</td>
-<td align="right">95.44124</td>
-<td align="right">1.1000024</td>
-<td align="right">94.70501</td>
-<td align="right">3.6683018</td>
-<td align="right">3.7677477</td>
-<td align="right">0.9973395</td>
-<td align="right">0.9973395</td>
-<td align="right">0.0000010</td>
+<td align="right">3451</td>
+<td align="right">133.98852</td>
+<td align="right">0.2607173</td>
+<td align="right">134.3268</td>
+<td align="right">2.0461228</td>
+<td align="right">2.0461922</td>
+<td align="right">0.9984587</td>
+<td align="right">0.9937226</td>
+<td align="right">0.1640666</td>
 <td align="right">0</td>
-<td align="right">NA</td>
-<td align="right">0.2708231</td>
-<td align="left">NA</td>
-<td align="left">nn</td>
-</tr>
-<tr class="even">
-<td align="left">log_body.mass.u</td>
-<td align="left">log_body.mass.m</td>
-<td align="right">93</td>
-<td align="right">95.44124</td>
-<td align="right">1.1000024</td>
-<td align="right">94.70501</td>
-<td align="right">3.6683018</td>
-<td align="right">3.6014507</td>
-<td align="right">0.9969013</td>
-<td align="right">0.9969013</td>
-<td align="right">0.0000010</td>
-<td align="right">0</td>
-<td align="right">NA</td>
-<td align="right">0.6436584</td>
+<td align="right">0.0770403</td>
+<td align="right">0.2603140</td>
 <td align="left">NA</td>
 <td align="left">nn</td>
 </tr>
 <tr class="odd">
-<td align="left">log_body.mass.u</td>
-<td align="left">log_body.mass.f</td>
-<td align="right">93</td>
-<td align="right">95.44124</td>
-<td align="right">1.1000024</td>
-<td align="right">94.70501</td>
-<td align="right">3.6683018</td>
-<td align="right">3.6777501</td>
-<td align="right">0.9962160</td>
-<td align="right">0.9962159</td>
-<td align="right">0.0000010</td>
-<td align="right">0</td>
-<td align="right">NA</td>
-<td align="right">0.6841109</td>
-<td align="left">NA</td>
-<td align="left">nn</td>
-</tr>
-<tr class="even">
 <td align="left">log_tarsus.m</td>
-<td align="left">log_tarsus.f</td>
-<td align="right">92</td>
-<td align="right">86.82701</td>
-<td align="right">1.2115418</td>
-<td align="right">94.70501</td>
-<td align="right">1.8349786</td>
-<td align="right">1.9004076</td>
-<td align="right">0.9980756</td>
-<td align="right">0.9959602</td>
-<td align="right">0.9817246</td>
+<td align="left">log_tarsus.len</td>
+<td align="right">54</td>
+<td align="right">95.04559</td>
+<td align="right">4.6287177</td>
+<td align="right">134.3268</td>
+<td align="right">1.7596445</td>
+<td align="right">1.7519353</td>
+<td align="right">0.9958999</td>
+<td align="right">0.9930471</td>
+<td align="right">0.6230614</td>
 <td align="right">0</td>
-<td align="right">0.8839354</td>
-<td align="right">NA</td>
-<td align="left">NA</td>
-<td align="left">nn</td>
-</tr>
-<tr class="odd">
-<td align="left">log_wing.am</td>
-<td align="left">log_wing.af</td>
-<td align="right">94</td>
-<td align="right">89.46407</td>
-<td align="right">0.9786102</td>
-<td align="right">94.70501</td>
-<td align="right">3.1322691</td>
-<td align="right">3.4113976</td>
-<td align="right">0.9977300</td>
-<td align="right">0.9949653</td>
-<td align="right">0.9960050</td>
-<td align="right">0</td>
-<td align="right">0.9231716</td>
-<td align="right">NA</td>
+<td align="right">0.2193470</td>
+<td align="right">0.9330048</td>
 <td align="left">NA</td>
 <td align="left">nn</td>
 </tr>
 <tr class="even">
-<td align="left">log_bill.len.sm</td>
-<td align="left">log_bill.len.sf</td>
-<td align="right">76</td>
-<td align="right">89.77459</td>
-<td align="right">2.5532326</td>
-<td align="right">94.70501</td>
-<td align="right">0.8197064</td>
-<td align="right">0.8294754</td>
-<td align="right">0.9959179</td>
-<td align="right">0.9949394</td>
-<td align="right">0.9318339</td>
+<td align="left">log_tail.am</td>
+<td align="left">log_tail.af</td>
+<td align="right">73</td>
+<td align="right">80.92689</td>
+<td align="right">3.9634788</td>
+<td align="right">134.3268</td>
+<td align="right">1.6620784</td>
+<td align="right">1.9369359</td>
+<td align="right">0.9954438</td>
+<td align="right">0.9912178</td>
+<td align="right">0.9391466</td>
 <td align="right">0</td>
-<td align="right">0.8126265</td>
-<td align="right">0.9801440</td>
+<td align="right">0.7471810</td>
+<td align="right">0.9930133</td>
 <td align="left">NA</td>
 <td align="left">nn</td>
 </tr>
@@ -693,52 +690,52 @@ if(save){
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">breed.system</td>
+<td align="left">allele.no</td>
 <td align="right">0</td>
-<td align="right">-1.1649536</td>
+<td align="right">0.0000000</td>
 <td align="right">0.0000000</td>
 <td align="left">Ultra peripheral</td>
-<td align="right">0.1935081</td>
+<td align="right">0.2352246</td>
 </tr>
 <tr class="even">
-<td align="left">colony.size</td>
+<td align="left">heteroz</td>
 <td align="right">0</td>
-<td align="right">-1.1546910</td>
+<td align="right">0.0000000</td>
 <td align="right">0.0000000</td>
 <td align="left">Ultra peripheral</td>
-<td align="right">0.1935081</td>
+<td align="right">0.2352246</td>
 </tr>
 <tr class="odd">
-<td align="left">log_range.breed</td>
-<td align="right">0</td>
-<td align="right">-1.1506549</td>
-<td align="right">-1.6996730</td>
+<td align="left">egg.reject</td>
+<td align="right">1</td>
+<td align="right">-1.1122776</td>
+<td align="right">0.0000000</td>
 <td align="left">Ultra peripheral</td>
-<td align="right">0.1935081</td>
+<td align="right">0.2352246</td>
 </tr>
 <tr class="even">
-<td align="left">sex.dichrom</td>
-<td align="right">0</td>
-<td align="right">-1.1276770</td>
+<td align="left">log_caroten.liver</td>
+<td align="right">1</td>
+<td align="right">-1.0146011</td>
 <td align="right">0.0000000</td>
 <td align="left">Ultra peripheral</td>
-<td align="right">0.1935081</td>
+<td align="right">0.2352246</td>
 </tr>
 <tr class="odd">
-<td align="left">eosinph</td>
-<td align="right">0</td>
-<td align="right">-1.0944914</td>
-<td align="right">0.4370626</td>
+<td align="left">inc.feed.m</td>
+<td align="right">1</td>
+<td align="right">-0.9936808</td>
+<td align="right">0.0000000</td>
+<td align="left">Ultra peripheral</td>
+<td align="right">0.2352246</td>
+</tr>
+<tr class="even">
+<td align="left">olfact.ratio</td>
+<td align="right">1</td>
+<td align="right">-0.9932069</td>
+<td align="right">0.4999735</td>
 <td align="left">Peripheral</td>
-<td align="right">0.1935081</td>
-</tr>
-<tr class="even">
-<td align="left">aerial.for</td>
-<td align="right">0</td>
-<td align="right">-0.9745899</td>
-<td align="right">0.0000000</td>
-<td align="left">Ultra peripheral</td>
-<td align="right">0.1935081</td>
+<td align="right">0.2352246</td>
 </tr>
 </tbody>
 </table>

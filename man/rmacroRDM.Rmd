@@ -1,7 +1,10 @@
 ---
 title: rmacroRDM workflow
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: html_notebook
+
 ---
+<br>
 
 The **`rmacroRDM`** package contains functions to help with the compilation of
 macroecological datasets. It compiles datasets into a **master long
@@ -166,7 +169,7 @@ The metadata.csv contains important metadata on each variable (trait) in the mas
 - **notes:** notes associated the variable
 - **source:** original dataset from which variable was first harvested
 
-```{r}
+```{r create-metadata}
 create_metadata(overwrite = F)
 ```
 
@@ -211,7 +214,7 @@ If they don't exist yet they need to be created.
 
 
 
-```{r}
+```{r load-sr}
 load_sys.ref(view = F)
 ```
 

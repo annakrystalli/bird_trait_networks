@@ -1,7 +1,6 @@
 ---
 title: "mgm_viz"
-author: "Anna Krystalli"
-date: "17 August 2016"
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: 
   html_document:
     theme: paper
