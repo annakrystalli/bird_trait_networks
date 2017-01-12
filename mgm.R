@@ -90,6 +90,6 @@ qgraph(mgm_mod$wadj,
        legend.cex=0.4,
        details = T)
 
-#' or use [**tools/mgm_viz.Rmd**](https://github.com/annakrystalli/bird_trait_networks/blob/master/tools/mgm_viz.Rmd). 
-#' See [**example**](http://annakrystalli.github.io/bird_trait_networks/docs/mgm_viz.nb.html)
+#' or use [**tools/mgm_viz.Rmd**](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/mgm_viz.Rmd). 
+#' See [**example**](http://annakrystalli.github.io/bird_trait_networks/mgm_viz.nb.html)
 
