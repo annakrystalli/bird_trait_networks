@@ -33,9 +33,9 @@ obs <- NULL
 diff.max <- NULL
 diff.min <- NULL
 
-valid.ids <- (1:length(cc.res))[sapply(cc.res, FUN = length) != 1]
+valid.ids <- (1:length(cc_res.list))[sapply(cc_res.list, FUN = length) != 2]
 for(i in valid.ids){
-  x <- cc.res[[i]]
+  x <- cc_res.list[[i]]
     
   all <-  c(all, 
             max(sapply(x$phy.GKtau, FUN = function(x){
@@ -105,7 +105,7 @@ The right panels show the frequency among **phylogenetically simulated GK $τ$s*
 par(mfrow = c(1,2))
 #
 for(i in valid.ids[order(unlist(diff.max), decreasing = T)]){
-    x <- cc.res[[i]]
+    x <- cc_res.list[[i]]
     if(length(x) == 1){
       cat("### ", x)
       next}
