@@ -134,7 +134,27 @@ network analysis of mgm derived associations of trait marginal relationship, per
 ***
 
 #### Other useful documents
+<br>
 
-- #### [**`data_gap_eval.Rmd`**](http://annakrystalli.github.io/bird_trait_networks/data_gap_eval.nb.html): 
-Evaluation of data avalaibility and resulting biases.
-- #### []
+#### Public
+
+- #### [**`data_gap_eval`**](http://annakrystalli.github.io/bird_trait_networks/data_gap_eval.nb.html): 
+Evaluation of data avalaibility in response to `min.n` and resulting biases.
+
+- #### [**`Network_Data_Availability`**](http://annakrystalli.github.io/bird_trait_networks/Network_Data_Availability.nb.html): 
+Evaluation of trait pair data avalaibility (full data). [Network_Data_Availability.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Network_Data_Availability.Rmd) in `reports/results/` folder in repo.
+
+- #### [**`Network_Data_Availability_100spp`**](http://annakrystalli.github.io/bird_trait_networks/Network_Data_Availability_100spp.nb.html): 
+Evaluation of trait pair data avalaibility (100spp data). [Network_Data_Availability 100spp.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Network_Data_Availability_100spp.Rmd) in `reports/results/` folder in repo.
+
+<br>
+
+#### Sensitive (**in `outputs/Reports/Results` folder on Googledrive**)
+- #### **Categorical_phylocors.html**
+ examination of phylogenetically simulated vs observed GoodmanKruskal τ of categorical variables. [Categorical_phylocors.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Categorical_phylocors.Rmd) in `reports/results/` folder in repo.
+ 
+ - #### **Network_viz.html**
+ results of phylonetworker analysis. [Network_viz.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Network_viz.Rmd) in `reports/results/` folder in repo.
+ 
+  - #### **CorNetwork plots.html**
+ early network visualisation report. [CorNetwork plots.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/CorNetwork plots.Rmd) in `reports/results/` folder in repo.
