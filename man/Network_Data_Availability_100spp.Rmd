@@ -1,7 +1,6 @@
 ---
 title: "Network data availability"
-author: "Anna Krystalli"
-date: "14 December 2015"
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: html_document
 ---
 
@@ -102,7 +101,7 @@ labels <- paste(substr(cat, 1,2), dimnames(m)[[1]])[m.order]
 m <- m[rev(m.order),m.order]
 
 plot_ly(x = var.grid$n, type = "histogram") %>%
-  layout(title = "Distribution of bivariate datapoint availability",
+  layout(title = "Distribution of trait pair datapoint availability",
          xaxis = list(title = "number of datapoints available per bivariate combination"),
          yaxis = list(title = "frequency"))
 
@@ -118,7 +117,7 @@ col <- brewer.pal(5, "YlGnBu")
 
 plot_ly(z = m, x = labels, y = rev(labels), type = "heatmap", 
         #color = col, 
-        name = "Bivariate proportional datapoint availability",
+        name = "trait pair proportional datapoint availability",
         colors = col,
         hoverinfo = "z+x+y", text = text) %>%
   
@@ -126,7 +125,7 @@ plot_ly(z = m, x = labels, y = rev(labels), type = "heatmap",
                        r = 80,
                        b = 120,
                        t = 60),
-         title = "Matrix of proportionate bivariate datapoint availability",
+         title = "Matrix of proportionate trait pair datapoint availability",
          xaxis = list(title = "var1"),
          yaxis = list(title = "var2")) 
 
