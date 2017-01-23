@@ -142,10 +142,13 @@ network analysis of mgm derived associations of trait marginal relationship, per
 Evaluation of data avalaibility in response to `min.n` and resulting biases.
 
 - #### [**`Network_Data_Availability`**](http://annakrystalli.github.io/bird_trait_networks/Network_Data_Availability.nb.html): 
-Evaluation of trait pair data avalaibility (full data). [Network_Data_Availability.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Network_Data_Availability.Rmd) in `reports/results/` folder in repo.
+Evaluation of trait pair data avalaibility (full data). [Network_Data_Availability.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/man/Network_Data_Availability.Rmd) in `man/` folder in repo.
 
 - #### [**`Network_Data_Availability_100spp`**](http://annakrystalli.github.io/bird_trait_networks/Network_Data_Availability_100spp.nb.html): 
-Evaluation of trait pair data avalaibility (100spp data). [Network_Data_Availability 100spp.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Network_Data_Availability_100spp.Rmd) in `reports/results/` folder in repo.
+Evaluation of trait pair data avalaibility (100spp data). [Network_Data_Availability 100spp.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/man/Network_Data_Availability_100spp.Rmd) in `man/` folder in repo.
+
+- #### [**`Hierarchical Networks`**](http://annakrystalli.github.io/bird_trait_networks/Hierarchical_Networks.html): 
+Report on Hierarchical network theory and tools. [Hierarchical Networks.Rmd generating script](https://github.com/annakrystalli/bird_trait_networks/blob/master/man/Hierarchical Networks.Rmd) in `man/` folder in repo.
 
 <br>
 
