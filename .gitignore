@@ -16,4 +16,7 @@ rsconnect/
 script_resources/
 reports/results/data_gap_eval_cache/
 workflows/
+reports/render_te*
+reports/progress reports/*/*
+reports/progress reports/*/*.Rmd
 
