@@ -98,9 +98,11 @@ fitNumDat <- function(data, tree, pair, TD, result = "row", mgm_types = mgm_type
   tree <- drop.tip(tree, setdiff(tree$tip.label, data$species))
 
   # ---- get-phylosig ----
-  physig.var1 <- phylosig(tree, setNames(data[,pair[1]], data$species))
+  physig.var1 <- phylosig(tree, setNames(data[,pair[1]], data$species),
+                          method = "lambda")
   if(mgm_types[pair[2]] == "g"){
-    physig.var2 <- phylosig(tree, setNames(data[,pair[2]], data$species))
+    physig.var2 <- phylosig(tree, setNames(data[,pair[2]], data$species),
+                            method = "lambda")
   }else{
     physig.var2 <- NA  
   }
