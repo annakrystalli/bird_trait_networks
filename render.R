@@ -45,7 +45,7 @@ file <- "project_README.Rmd"
   render(paste0("man/", file), output_format = "html_notebook",
          output_file = paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
   
-  file <- "Network_Data_Availability_100.Rmd"
+  file <- "Network_Data_Availability_100spp.Rmd"
   render(paste0("man/", file), output_format = "html_notebook",
          output_file = paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
 
@@ -53,6 +53,10 @@ file <- "project_README.Rmd"
   file.copy(from = "mgm.html", to = "docs/mgm.html", overwrite = T)
   
   file <- "data_gap_eval.Rmd"
+  render(paste("reports/results/", file, sep =""), output_format = "html_notebook",
+         output_file =  paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
+  
+  file <- "mgm_viz.Rmd"
   render(paste("reports/results/", file, sep =""), output_format = "html_notebook",
          output_file =  paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))
   
