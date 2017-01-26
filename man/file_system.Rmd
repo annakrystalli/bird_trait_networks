@@ -1,0 +1,54 @@
+---
+title: "file.system"
+author: "Anna Krystalli"
+date: "24/01/2017"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# google drive folder
+
+### **info/**
+
+Information regarding the project and data, including admin. Includes action plans and literature reviews
+
+- #### **invoicing/**
+    - **Leave Sheet.gsheet:** googlesheet of booked holiday
+    - **`invoice_id`-Bird Train Networks `purchase_order_id`:** copies of issued invoices.
+- #### **Literature/**
+  useful literature
+
+### **inputs/**
+
+- #### **data/**
+  input data and metadata folder. Many input folders (`{rmacroRDM}`) are required by the functions of  `rmacroRDM`. Please do not alter the structure of these folders. For more details see [**rmacroRDM README]()
+    - **analytical/** 
+        - **`master.csv`** : master (long) analytical dataset. Output of `wkf = "rmacroRDM"` in `match.workflow.R`
+        - **`master wide.csv`** : master wide analytical dataset. Output of `wkf = "rmacroRDM"` in `match.workflow.R`
+    - **metadata/ {rmarcroRDM folder}**
+        - **`data_log.csv`** : metadata on raw datasets used to compile analytical
+        - **`vnames.csv`** : metadata on raw data variable name matching to master
+        - **`outliers.csv`** : table identifying outliers in duplicate `spp:var` entries
+        - **`outlier_refs.csv`** : references supporting outlier identification
+    - **pre/ {rmarcroRDM folder}** : contains `meta.var` folders, used to supply data to the `rmacroRDM` compilation functions. 
+        - **csv/**
+        - **ref/**
+        - **n/**
+        - **notes/**
+        - **observer/**
+        - **qc/**
+    - **post/ {rmarcroRDM folder}** :
+    - **tree/** :
+
+### **outputs/**
+
+
+***
+
+# github folder
