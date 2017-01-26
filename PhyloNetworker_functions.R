@@ -99,10 +99,10 @@ fitNumDat <- function(data, tree, pair, TD, result = "row", mgm_types = mgm_type
 
   # ---- get-phylosig ----
   physig.var1 <- phylosig(tree, setNames(data[,pair[1]], data$species),
-                          method = "lambda")
+                          method = "lambda")$lambda
   if(mgm_types[pair[2]] == "g"){
     physig.var2 <- phylosig(tree, setNames(data[,pair[2]], data$species),
-                            method = "lambda")
+                            method = "lambda")$lambda
   }else{
     physig.var2 <- NA  
   }
@@ -482,10 +482,10 @@ logData <- function(data, var) {
 
 getSppRanks <- function(ms_vars, data, load = T, input.folder, an.ID) {
   
-  if(load & file.exists(paste(input.folder, "r data/", 
+  if(load & file.exists(paste(input.folder, "taxo/", 
                               an.ID, "species_ranks.Rdata",
                               sep = ""))){
-    load(paste(input.folder, "r data/", an.ID, "species_ranks.Rdata",
+    load(paste(input.folder, "taxo/", an.ID, "species_ranks.Rdata",
                sep = ""))
   }else{
     spp.vg <- expand.grid(ms_vars, ms_vars, stringsAsFactors = F)
@@ -500,7 +500,7 @@ getSppRanks <- function(ms_vars, data, load = T, input.folder, an.ID) {
     spp.rank <- data.frame(spp.cs$species, row.sums = rowSums(spp.cs[,-1]))
     spp.rank <- spp.rank[order(spp.rank$row.sums, decreasing = T),]
     save(spp.rank, spp.cs, spp.vg, 
-         file = paste(input.folder, "r data/", an.ID, "species_ranks.Rdata",
+         file = paste(input.folder, "taxo/", an.ID, "species_ranks.Rdata",
                       sep = ""))
   }
   return(spp.rank)

@@ -1,7 +1,7 @@
 rm(list = ls())
 
 # ---- pn-setup ----
-if(exists(file_setup_path)){}else{
+if(exists("file_setup_path")){}else{
   file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
   source(file_setup_path)}
 wkf = "phylonetworker"

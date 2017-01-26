@@ -19,10 +19,10 @@ require(plotly)
 require(knitr)
 require(RColorBrewer)
 
-wide <- read.csv(file = paste(input.folder, "csv/","master wide.csv", sep = "")
+wide <- read.csv(file = paste(input.folder, "analytical/","master wide.csv", sep = "")
                ,fileEncoding = "mac")
 
-  spp100 <- unlist(read.csv(file = paste(input.folder,"csv/100spp.csv", sep= "")))
+  spp100 <- unlist(read.csv(file = paste(input.folder,"taxo/100spp.csv", sep= "")))
 
 
 

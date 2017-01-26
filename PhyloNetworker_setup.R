@@ -3,12 +3,12 @@ if(log){log.vars <- metadata$code[as.logical(metadata$log)]
 }else{log.vars <- ""}
 
 # ---- pns-load-files ----
-wide <- read.csv(file = paste(input.folder,"csv/master wide.csv", sep = ""), fileEncoding = "mac")
-spp100 <- unlist(read.csv(file = paste(input.folder,"csv/100spp.csv", sep = "")))
+wide <- read.csv(file = paste(input.folder,"analytical/master wide.csv", sep = ""), fileEncoding = "mac")
+spp100 <- unlist(read.csv(file = paste(input.folder,"taxo/100spp.csv", sep = "")))
 # load selected tree (see select_tree.R)
 load(file = paste(input.folder, "tree/tree.RData", sep = ""))
 # load match data
-load(file = paste(input.folder,"r data/match data/tree m.RData", sep = ""))
+load(file = paste(input.folder,"taxo/match data/tree m.RData", sep = ""))
 phylo.match <- m$data
 
 
@@ -46,13 +46,13 @@ mgm_types <- vtypes$mgm[match(meta_types, vtypes$meta)] %>%
   setNames(ms_vars)
 
 # ---- pns-get-TD ----
-if(!file.exists(paste(input.folder, "r data/TD_", an.ID, 
+if(!file.exists(paste(input.folder, "taxo/TD_", an.ID, 
                       ".Rdata", sep = ""))){
   td <- getTD(data, tree, all.vars = F)
   TDdf <- extractTD(td, vars = ms_vars)
-  save(td, TDdf, file = paste(input.folder, "r data/TD_", an.ID, 
+  save(td, TDdf, file = paste(input.folder, "taxo/TD_", an.ID, 
                               ".Rdata", sep = ""))}else{
-                                load(file = paste(input.folder, "r data/TD_", 
+                                load(file = paste(input.folder, "taxo/TD_", 
                                                   an.ID, ".Rdata", sep = ""))}
 # ---- pns-create-ref.obj2 ----
 ms_spp <- data$species

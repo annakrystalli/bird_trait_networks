@@ -103,7 +103,7 @@ master <- updateMaster(master, data = D0, spp.list = NULL)
   master <- updateMaster(master, data = output$data, spp.list = output$spp.list)
   
   
-  outliers <- read.csv("r data/R03/outliers.csv")
+  outliers <- read.csv("metadata/outliers.csv")
   outliers$data.ID <- "D0"
   outliers$data.ID[outliers$select == "D0"] <- "D1"
 
@@ -120,7 +120,7 @@ master <- updateMaster(master, data = D0, spp.list = NULL)
   # from D1 for all other variables
   master$data <- master$data[!duplicated(master$data[,c("species", "var")]),]
   
-  write.csv(master$data, file =  "csv/master.csv", row.names = F, fileEncoding = "mac")
+  write.csv(master$data, file =  "analytical/master.csv", row.names = F, fileEncoding = "mac")
   
   save(master, file = paste(output.folder, "data/master.RData", sep = ""))
   
@@ -130,5 +130,5 @@ master <- updateMaster(master, data = D0, spp.list = NULL)
                       master = master, add.taxo = T, taxo.vars)
   
   
-  write.csv(wide, file =  "csv/master wide.csv", row.names = F, fileEncoding = "mac")
+  write.csv(wide, file =  "analytical/master wide.csv", row.names = F, fileEncoding = "mac")
   

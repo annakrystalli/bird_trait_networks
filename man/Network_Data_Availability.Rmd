@@ -19,7 +19,7 @@ require(plotly)
 require(knitr)
 require(RColorBrewer)
 
-wide <- read.csv(file = paste(input.folder, "csv/","master wide.csv", sep = "")
+wide <- read.csv(file = paste(input.folder, "analytical/","master wide.csv", sep = "")
                ,fileEncoding = "mac")
 
 numerise <- function(x){if(all(grepl('^[0-9.]+$', x))) as.numeric(x) else x}
@@ -60,7 +60,7 @@ vnames <- read.csv(paste(input.folder, "metadata/","vnames.csv", sep = ""),
 vnames[vnames == ""] <- NA
 
 #__________________________________________________________________
-### Data availability across **`D0`** bivariate combinations
+### Data availability across **`master`** trait pairs combinations
 ```
 
 I've calculated counts of data available for each possible bivariate combination of variables in the dataset. Below is the distribution of counts across all bivariate combination.
