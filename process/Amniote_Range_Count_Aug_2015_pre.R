@@ -1,8 +1,7 @@
 ## ---- prN1-subset ----
-data <- data[data$class == "Aves",]
+data <- data[data$classx == "Aves",]
 
 ## ---- prN1-derive_repro.age.diff ----
-data$repro.age.diff <- data$female_maturity + data.n$male_maturity
+add_keep.dat <- data.frame(repro.age.diff = data$count_female_maturity + data$count_male_maturity)
 data[data == 0] <- NA
-
 add_keep.vars <- "repro.age.diff"
