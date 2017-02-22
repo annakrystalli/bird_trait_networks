@@ -10,7 +10,7 @@ wkf = "mgm"
 param = "mgm.R"
 file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
 source(file_setup_path)
-source(paste0(input.folder, "project_ui.R"))
+source(paste0(script.folder, "project_ui.R"))
 
 #+ define-dirs, include = F
 knitr::opts_chunk$set(echo = T, warning = F, message = F)
