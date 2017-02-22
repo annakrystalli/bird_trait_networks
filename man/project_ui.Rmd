@@ -25,12 +25,12 @@ source(file_setup_path)
 ```{r read-chunks, echo=FALSE}
 read_chunk(paste(script.folder, "project_ui.R", sep = ""))
 read_chunk(paste(script.folder, "file_setup.R", sep = ""))
-read_chunk(paste(script.folder, "pkgs.R", sep = ""))
-read_chunk(paste(script.folder, "load_dependencies.R", sep = ""))
-read_chunk(paste(script.folder, "load_global.R", sep = ""))
-read_chunk(paste(script.folder, "helper_functions.R", sep = ""))
-read_chunk(paste(script.folder, "load_files.R", sep = ""))
-read_chunk(paste(script.folder, "load_environment.R", sep = ""))
+read_chunk(paste(script.folder, "R/pkgs.R", sep = ""))
+read_chunk(paste(script.folder, "R/load_dependencies.R", sep = ""))
+read_chunk(paste(script.folder, "R/load_global.R", sep = ""))
+read_chunk(paste(script.folder, "R/helper_functions.R", sep = ""))
+read_chunk(paste(script.folder, "R/load_files.R", sep = ""))
+read_chunk(paste(script.folder, "R/load_environment.R", sep = ""))
 read_chunk(paste(script.folder, "params/project_ui.R", sep = ""))
 
 ```

@@ -25,7 +25,7 @@ In also calculates and collates auxilliary metrics, useful for analysis diagnost
 ```{r echo=FALSE}
   file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
   source(file_setup_path)
-source(paste0(script.folder, "Phylonetworker_functions.R"))
+source(paste0(script.folder, "R/Phylonetworker_functions.R"))
 ```
 
 

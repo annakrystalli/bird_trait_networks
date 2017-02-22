@@ -17,8 +17,8 @@ source(file_setup_path)
 ```{r read_chunks, echo=FALSE}
 read_chunk(paste0(script.folder, "PhyloNetworker.R"))
 read_chunk(paste0(script.folder, "params/phylonetworker.R"))
-read_chunk(paste0(script.folder, "Phylonetworker_setup.R"))
-source(paste0(script.folder, "Phylonetworker_functions.R"))
+read_chunk(paste0(script.folder, "R/Phylonetworker_setup.R"))
+source(paste0(script.folder, "R/Phylonetworker_functions.R"))
 
 ```
 
@@ -46,8 +46,8 @@ Next initialise the analysis by calling **`project_ui`**. This script calls a nu
 
 ```
 
-- [**`PhyloNetworker_setup.R`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker_setup.R)
-- [**`PhyloNetworker_functions.R`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/PhyloNetworker_functions.R)
+- [**`PhyloNetworker_setup.R`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/R/PhyloNetworker_setup.R)
+- [**`PhyloNetworker_functions.R`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/R/PhyloNetworker_functions.R)
 
 *** 
 

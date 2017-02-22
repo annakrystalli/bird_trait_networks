@@ -38,7 +38,7 @@ input.folder <- "/Users/Anna/Google Drive/bird trait networks/inputs/data/"
 
 # FILES ##################################################################
 
-wide <- read.csv(file = paste(input.folder, "csv/master wide.csv", sep = ""), fileEncoding = "mac")
+wide <- read.csv(file = paste(input.folder, "analytical/master wide.csv", sep = ""), fileEncoding = "mac")
 
 dd <- data.frame(n = sort(table(wide$order)))
 kable(dd, decreasing = T, caption = "Data availability across individual variables")

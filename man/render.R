@@ -3,6 +3,7 @@ rm(list = ls())
 file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
 source(file_setup_path)
 require(rmarkdown)
+require(knitr)
 require(dplyr)
 
 # ---- render-site-ALL ----

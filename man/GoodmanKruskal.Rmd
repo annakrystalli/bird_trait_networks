@@ -19,7 +19,7 @@ wkf = "goodmankruskal"
 param = "goodmankruskal.R"
 file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
 source(file_setup_path)
-source("~/Documents/workflows/bird_trait_networks/project_ui.R")
+source(paste(script.folder, "project_ui.R", sep = ""))
 
 ```
 
@@ -60,7 +60,7 @@ g <- list(data = data[spp, vars],
           v.p = v.p, s.p = s.p, phylo.match = phylo.match[spp,],
           tree = drop.tip(tree, setdiff(tree$tip.label, data$species[spp])))
 
-source(paste(script.folder, "mgm_dataprep.R", sep = ""))
+source(paste(script.folder, "R/mgm_dataprep.R", sep = ""))
 
 ```
 

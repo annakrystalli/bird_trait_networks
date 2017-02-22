@@ -114,7 +114,7 @@ source(paste(script.folder, "project_ui.R", sep = ""))
 #### Workflows (`"wkf"`) within the project
 
 - #### [**`rmacroRDM`**](http://annakrystalli.github.io/bird_trait_networks/rmacroRDM.nb.html): 
-Addition of the **amniote database** to originally supplied data. Outputs, long and aggregated wide versions of the data. Current analysis in [**`"master workflow.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/match%20workflow.R) 
+Addition of the **amniote database** to originally supplied data. Outputs, long and aggregated wide versions of the data. Current analysis in [**`"rmacroRDM_data.R"`**](https://github.com/annakrystalli/bird_trait_networks/blob/master/rmacroRDM_data.R) 
 
 ***
 
