@@ -10,7 +10,7 @@ wkf = "mgm"
 param = "mgm.R"
 file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
 source(file_setup_path)
-source("~/Documents/workflows/bird_trait_networks/project_ui.R")
+source(paste0(input.folder, "project_ui.R"))
 
 #+ define-dirs, include = F
 knitr::opts_chunk$set(echo = T, warning = F, message = F)
@@ -34,10 +34,10 @@ g <- list(data = data[spp, vars],
           tree = drop.tip(tree, setdiff(tree$tip.label, data$species[spp])))
 
 #' ## prepare data for imputation
-source(paste(script.folder, "mgm_dataprep.R", sep = ""))
+source(paste(script.folder, "R/mgm_dataprep.R", sep = ""))
 
 #' ## impute data
-source(paste(script.folder, "impute_mgm.R", sep = ""))
+source(paste(script.folder, "R/impute_mgm.R", sep = ""))
 
 
 #' proportion of data imputed: `r sum(is.na(g$data))/prod(dim(g$data))`
