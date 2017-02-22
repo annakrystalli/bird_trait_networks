@@ -43,12 +43,11 @@ First source the rmacroRDM functions. Currently the best way is to just source f
 ```{r source-rmacroRDM, message=FALSE, warning=FALSE, eval=FALSE}
 require(RCurl)
 eval(parse(text = getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/functions.R", ssl.verifypeer = FALSE)))
-eval(parse(text = getURL("https://raw.githubusercontent.com/annakrystalli/rmacroRDM/master/R/wideData_function.R", ssl.verifypeer = FALSE)))
 
 ```
 
 ```{r source-local, echo=FALSE}
-source("/Users/Anna/Documents/workflows/rmacroRDM/R/functions.R")
+
 ```
 
 ***
