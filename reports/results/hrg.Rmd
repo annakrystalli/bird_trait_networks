@@ -1,0 +1,90 @@
+---
+title: "HRG"
+author: "Anna Krystalli"
+date: "23 May 2016"
+output: html_document
+---
+
+
+Example hrg workflow and preliminary hrg
+
+```{r, echo=T, warning=F, message=F, fig.height=18}
+
+options(stringsAsFactors = F)
+
+
+### SETTINGS ##############################################################
+
+output.folder <- "/Users/Anna/Google Drive/bird trait networks/outputs/"
+input.folder <- "/Users/Anna/Google Drive/bird trait networks/inputs/data/"
+script.folder <- "~/Documents/workflows/rmacroRDM/R/"
+
+require(dplyr)
+
+metadata <- read.csv(paste(input.folder, "metadata/","metadata.csv", sep = ""), 
+                     stringsAsFactors = F, fileEncoding = "mac") %>% 
+  apply(2, FUN = trimws) %>% data.frame(stringsAsFactors = F)
+
+
+
+# PACKAGES & SETTINGS ###############################################################
+
+library(igraph)
+
+an.ID <- "all"
+min.n <- 50
+log <- T
+cutoff <- 0.35
+if(log){log.vars <- metadata$code[as.logical(metadata$log)]}else{log.vars <- ""}
+
+
+# DATA ###############################################################################
+
+load(file = paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
+                  if(log){"_log"},".RData", sep = ""))
+
+res <- read.csv(paste(output.folder, "data/phylocors/", an.ID,"_phylocor_mn", 
+                      min.n, if(log){"_log"},"_allDT.csv", sep = ""),
+                stringsAsFactors = F)
+
+
+# process data ###############################################################################
+
+edges <- res[abs(res$phylocor) > 0.35 & !is.na(res$phylocor),]
+
+
+v.n <- unique(as.vector(apply(edges[,c("var1", "var2")],1,FUN = unlist)))
+
+vertices <- unique(metadata[match(gsub("log_", "", v.n), metadata$code),
+                     c("code", "cat", "log", "descr")])
+
+vertices$code <- v.n
+
+g <- graph_from_data_frame(edges, directed=F, vertices=vertices)
+print(g, e=TRUE, v=TRUE)
+
+hrg <- hrg.fit(g)
+
+# hrg <- as.igraph(hrg)
+# hrg.con <- hrg.consensus(g, hrg=hrg, start = T)
+# save(hrg.con, file = paste(output.folder, "data/hrg/consensus/hrg.con_", an.ID,"_",
+                    # if(log){"_log"}, "_", min.n, "_", cutoff, ".RData", sep = ""))
+
+load(file = paste(output.folder, "data/hrg/consensus/hrg.con_", an.ID,"_",
+                    if(log){"_log"}, "_", min.n, "_", cutoff, ".RData", sep = ""))
+
+hrg.con$consensus
+
+dendPlot(hrg,  cex = 0.7)
+#dendPlot(hrg.con$hrg,  cex = 0.7)
+
+#as.igraph(hrg.con)
+
+print(hrg.con)
+
+hrg.pred <- hrg.predict(g)
+
+
+```
+
+
