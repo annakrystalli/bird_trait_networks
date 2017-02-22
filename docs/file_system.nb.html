@@ -196,7 +196,7 @@ useful literature</li>
 <h3><strong>inputs/</strong></h3>
 <ul>
 <li><h4 id="data"><strong>data/</strong></h4>
-input data and metadata folder. Many input folders (<code>{rmacroRDM}</code>) are required by the functions of <code>rmacroRDM</code>. Please do not alter the structure of these folders. For more details see <a href>**rmacroRDM README</a>
+input data and metadata folder. Many input folders (<code>{rmacroRDM}</code>) are required by the functions of <code>rmacroRDM</code>. Please do not alter the structure of these folders. For more details see <a href><strong>rmacroRDM README</strong></a>
 <ul>
 <li><strong>analytical/</strong>
 <ul>
@@ -210,22 +210,86 @@ input data and metadata folder. Many input folders (<code>{rmacroRDM}</code>) ar
 <li><strong><code>outliers.csv</code></strong> : table identifying outliers in duplicate <code>spp:var</code> entries</li>
 <li><strong><code>outlier_refs.csv</code></strong> : references supporting outlier identification</li>
 </ul></li>
-<li><strong>pre/ {rmarcroRDM folder}</strong> : contains <code>meta.var</code> folders, used to supply data to the <code>rmacroRDM</code> compilation functions.
+<li><strong>pre/ {rmarcroRDM folder}</strong> : contains <code>meta.var</code> folders, used to supply data to the <code>rmacroRDM</code> compilation functions. Dataset details can be found in <code>data_log.csv</code>.
 <ul>
 <li><strong>csv/</strong></li>
-<li><strong>ref/</strong></li>
 <li><strong>n/</strong></li>
 <li><strong>notes/</strong></li>
 <li><strong>observer/</strong></li>
 <li><strong>qc/</strong></li>
+<li><strong>ref/</strong></li>
 </ul></li>
-<li><strong>post/ {rmarcroRDM folder}</strong> :</li>
-<li><strong>tree/</strong> :</li>
+<li><strong>post/ {rmarcroRDM folder}</strong> : mirror folders of contents of <strong>pre/</strong> where post processed raw data is saved.
+<ul>
+<li><strong>csv/</strong></li>
+<li><strong>n/</strong></li>
+<li><strong>notes/</strong></li>
+<li><strong>observer/</strong></li>
+<li><strong>qc/</strong></li>
+<li><strong>ref/</strong></li>
+</ul></li>
+<li><strong>taxo/ {rmarcroRDM folder}</strong> : contains taxonomic metadata.
+<ul>
+<li><strong>match data/</strong> : data relating to the taxonomic match workflow. Includes:
+<ul>
+<li><code>mmatch</code> and <code>mmatched</code> match output <code>.csv</code>s used to complete manual matching (deprecated: compiled to syn.links sheet).</li>
+<li>match <code>m .RData</code> object for each dataset matched to the project <code>spp.list</code> (ie in our case <code>D1</code> and the <code>tree</code>)</li>
+</ul></li>
+<li><strong>synonyms/</strong> : various synonym lists from which <code>syn.links</code> were extracted.</li>
+<li><strong>100spp.csv</strong> : list of 100 species for subset analysis.</li>
+<li><strong><code>an.ID</code>species_ranks.RData</strong> : Loaded during <code>Phylonetworker_setup.R</code> in <code>wkf = &quot;phylonetworker&quot;</code>. Contains:
+<ul>
+<li><strong><code>spp.rank</code></strong> : rank of sum of each species datapoint contribution across all possible trait pairs.</li>
+</ul></li>
+<li>**<code>dcode</code>_taxo.csv** : taxonomic data extracted from matched dataset <code>dcode</code></li>
+<li><strong>syn.links.csv</strong> : synonym links lookup table.</li>
+<li><strong>TD_<code>an.ID</code>.Rdata</strong> : table of taxonomic distincteness assessment outputs of trait data subset taxonomic makeup. Loaded during <code>Phylonetworker_setup.R</code> in <code>wkf = &quot;phylonetworker&quot;</code>.</li>
+</ul></li>
+<li><strong>tree/</strong> : contains files relating to the phylogenetic tree used in the analysis
+<ul>
+<li><strong>tree.RData</strong> : tree used in analysis. Extracted from <code>Stage2_MayrAll_Hackett_set10_decisive.tre</code>.</li>
+</ul></li>
 </ul></li>
 </ul>
 </div>
 <div id="outputs" class="section level3">
 <h3><strong>outputs/</strong></h3>
+<ul>
+<li><h4 id="data-1"><strong>data/</strong></h4>
+<ul>
+<li><strong>hrg/</strong> : outputs of experimentation with fiting consensus hierarchical networks using the <code>hrg</code> package</li>
+<li><strong>imputed_data/</strong> : outputs of missing data imputation (for data preparation for <code>mgm</code> analysis) using different subsets of the original data. Subselection of data uses the ranks of variable and species to the total data pool and is accomplished by setting the <strong>proportion of top var/species</strong> to be used through parameters <strong><code>v</code></strong> and <strong><code>s</code></strong> respectively.
+<ul>
+<li>file naming: <strong><code>an.ID</code>spp-v<code>v</code>-s<code>s</code>.Rdata</strong></li>
+</ul></li>
+<li><strong>match objects/</strong> : m object resulting from processing and matching D1 data. {rmacroRDM}</li>
+<li><strong>mgm/</strong> : mixed graphical models. filenaming <strong><code>an.ID</code>-<code>v</code>-<code>s</code>-<code>min.n</code>-<code>min.cat</code></strong>. {mgm}</li>
+<li><strong>networks/</strong> : rnetcarto network outputs (as .Rdata as well as flat .csv). {phylonetworker}
+<ul>
+<li>Filenames: <strong><code>an.ID</code><em>net_mn<code>min.n</code></em><code>log</code></strong>…</li>
+</ul></li>
+<li><strong>phylocors/</strong> : outputs of phylogenetically corrected trait pair correlation analysis. {phylonetworker}
+<ul>
+<li>Filenames: **<code>an.ID</code><em>phylocor_mn<code>min.n</code></em><code>log</code>_<code>pair.type</code>.Rdata**.<br />
+</li>
+<li>All <code>pair.type</code> results complied into <strong><code>all_phylocor_mn50_log_allDT.csv</code></strong>.</li>
+</ul></li>
+<li><h5 id="master.rda-master-object-resulting-from-rmacrordm-workflow"><strong><code>master.rda</code></strong> : master object resulting from {rmacroRDM} workflow</h5></li>
+</ul></li>
+<li><h4 id="reports"><strong>reports/</strong></h4>
+<ul>
+<li><strong>progress reports/</strong> : Rendered (html) progress reports 01-05 and associated files</li>
+<li><strong>Results/</strong> : Rendered (html) results reports
+<ul>
+<li><strong>Categorical_phylocors.nb.html</strong> : Report on distribution of expected GKtau between pair of traits simulated from the phylogeny.</li>
+<li><strong>CorNetwork_plots.html</strong> : early report (“nn” trait pairs only) on trait association network structure. Flat network plots.</li>
+<li><strong>data_gap_eval.nb.html</strong> : Report on data availability across traits. Include assessment of taxonomic distinctness of available trait data subsambles.</li>
+<li><strong>hrg.html</strong> : Demo of fitting a hierarchical graphical model.</li>
+<li><strong>mgm_viz.html</strong> : Visualisation of mixed graphical model (mgm) network</li>
+<li><strong>Network_viz_<code>an.ID</code>.nb</strong> : Vizualisation of phylonetworker networks</li>
+</ul></li>
+</ul></li>
+</ul>
 <hr />
 </div>
 </div>
@@ -234,7 +298,7 @@ input data and metadata folder. Many input folders (<code>{rmacroRDM}</code>) ar
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiZmlsZS5zeXN0ZW0iCmF1dGhvcjogIkFubmEgS3J5c3RhbGxpIgpkYXRlOiAiMjQvMDEvMjAxNyIKb3V0cHV0OiAKICBodG1sX2RvY3VtZW50OgogICAgdG9jOiB0cnVlCiAgICB0b2NfZmxvYXQ6IHRydWUKLS0tCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGVjaG8gPSBUUlVFKQpgYGAKCiMgZ29vZ2xlIGRyaXZlIGZvbGRlcgoKIyMjICoqaW5mby8qKgoKSW5mb3JtYXRpb24gcmVnYXJkaW5nIHRoZSBwcm9qZWN0IGFuZCBkYXRhLCBpbmNsdWRpbmcgYWRtaW4uIEluY2x1ZGVzIGFjdGlvbiBwbGFucyBhbmQgbGl0ZXJhdHVyZSByZXZpZXdzCgotICMjIyMgKippbnZvaWNpbmcvKioKICAgIC0gKipMZWF2ZSBTaGVldC5nc2hlZXQ6KiogZ29vZ2xlc2hlZXQgb2YgYm9va2VkIGhvbGlkYXkKICAgIC0gKipgaW52b2ljZV9pZGAtQmlyZCBUcmFpbiBOZXR3b3JrcyBgcHVyY2hhc2Vfb3JkZXJfaWRgOioqIGNvcGllcyBvZiBpc3N1ZWQgaW52b2ljZXMuCi0gIyMjIyAqKkxpdGVyYXR1cmUvKioKICB1c2VmdWwgbGl0ZXJhdHVyZQoKIyMjICoqaW5wdXRzLyoqCgotICMjIyMgKipkYXRhLyoqCiAgaW5wdXQgZGF0YSBhbmQgbWV0YWRhdGEgZm9sZGVyLiBNYW55IGlucHV0IGZvbGRlcnMgKGB7cm1hY3JvUkRNfWApIGFyZSByZXF1aXJlZCBieSB0aGUgZnVuY3Rpb25zIG9mICBgcm1hY3JvUkRNYC4gUGxlYXNlIGRvIG5vdCBhbHRlciB0aGUgc3RydWN0dXJlIG9mIHRoZXNlIGZvbGRlcnMuIEZvciBtb3JlIGRldGFpbHMgc2VlIFsqKnJtYWNyb1JETSBSRUFETUVdKCkKICAgIC0gKiphbmFseXRpY2FsLyoqIAogICAgICAgIC0gKipgbWFzdGVyLmNzdmAqKiA6IG1hc3RlciAobG9uZykgYW5hbHl0aWNhbCBkYXRhc2V0LiBPdXRwdXQgb2YgYHdrZiA9ICJybWFjcm9SRE0iYCBpbiBgbWF0Y2gud29ya2Zsb3cuUmAKICAgICAgICAtICoqYG1hc3RlciB3aWRlLmNzdmAqKiA6IG1hc3RlciB3aWRlIGFuYWx5dGljYWwgZGF0YXNldC4gT3V0cHV0IG9mIGB3a2YgPSAicm1hY3JvUkRNImAgaW4gYG1hdGNoLndvcmtmbG93LlJgCiAgICAtICoqbWV0YWRhdGEvIHtybWFyY3JvUkRNIGZvbGRlcn0qKgogICAgICAgIC0gKipgZGF0YV9sb2cuY3N2YCoqIDogbWV0YWRhdGEgb24gcmF3IGRhdGFzZXRzIHVzZWQgdG8gY29tcGlsZSBhbmFseXRpY2FsCiAgICAgICAgLSAqKmB2bmFtZXMuY3N2YCoqIDogbWV0YWRhdGEgb24gcmF3IGRhdGEgdmFyaWFibGUgbmFtZSBtYXRjaGluZyB0byBtYXN0ZXIKICAgICAgICAtICoqYG91dGxpZXJzLmNzdmAqKiA6IHRhYmxlIGlkZW50aWZ5aW5nIG91dGxpZXJzIGluIGR1cGxpY2F0ZSBgc3BwOnZhcmAgZW50cmllcwogICAgICAgIC0gKipgb3V0bGllcl9yZWZzLmNzdmAqKiA6IHJlZmVyZW5jZXMgc3VwcG9ydGluZyBvdXRsaWVyIGlkZW50aWZpY2F0aW9uCiAgICAtICoqcHJlLyB7cm1hcmNyb1JETSBmb2xkZXJ9KiogOiBjb250YWlucyBgbWV0YS52YXJgIGZvbGRlcnMsIHVzZWQgdG8gc3VwcGx5IGRhdGEgdG8gdGhlIGBybWFjcm9SRE1gIGNvbXBpbGF0aW9uIGZ1bmN0aW9ucy4gCiAgICAgICAgLSAqKmNzdi8qKgogICAgICAgIC0gKipyZWYvKioKICAgICAgICAtICoqbi8qKgogICAgICAgIC0gKipub3Rlcy8qKgogICAgICAgIC0gKipvYnNlcnZlci8qKgogICAgICAgIC0gKipxYy8qKgogICAgLSAqKnBvc3QvIHtybWFyY3JvUkRNIGZvbGRlcn0qKiA6CiAgICAtICoqdHJlZS8qKiA6CgojIyMgKipvdXRwdXRzLyoqCgoKKioqCgojIGdpdGh1YiBmb2xkZXI=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiZmlsZS5zeXN0ZW0iCmF1dGhvcjogIkFubmEgS3J5c3RhbGxpIgpkYXRlOiAiMjQvMDEvMjAxNyIKb3V0cHV0OiAKICBodG1sX2RvY3VtZW50OgogICAgdG9jOiB0cnVlCiAgICB0b2NfZmxvYXQ6IHRydWUKLS0tCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGVjaG8gPSBUUlVFKQpgYGAKCiMgZ29vZ2xlIGRyaXZlIGZvbGRlcgoKIyMjICoqaW5mby8qKgoKSW5mb3JtYXRpb24gcmVnYXJkaW5nIHRoZSBwcm9qZWN0IGFuZCBkYXRhLCBpbmNsdWRpbmcgYWRtaW4uIEluY2x1ZGVzIGFjdGlvbiBwbGFucyBhbmQgbGl0ZXJhdHVyZSByZXZpZXdzCgotICMjIyMgKippbnZvaWNpbmcvKioKICAgIC0gKipMZWF2ZSBTaGVldC5nc2hlZXQ6KiogZ29vZ2xlc2hlZXQgb2YgYm9va2VkIGhvbGlkYXkKICAgIC0gKipgaW52b2ljZV9pZGAtQmlyZCBUcmFpbiBOZXR3b3JrcyBgcHVyY2hhc2Vfb3JkZXJfaWRgOioqIGNvcGllcyBvZiBpc3N1ZWQgaW52b2ljZXMuCi0gIyMjIyAqKkxpdGVyYXR1cmUvKioKICB1c2VmdWwgbGl0ZXJhdHVyZQoKIyMjICoqaW5wdXRzLyoqCgotICMjIyMgKipkYXRhLyoqCiAgaW5wdXQgZGF0YSBhbmQgbWV0YWRhdGEgZm9sZGVyLiBNYW55IGlucHV0IGZvbGRlcnMgKGB7cm1hY3JvUkRNfWApIGFyZSByZXF1aXJlZCBieSB0aGUgZnVuY3Rpb25zIG9mICBgcm1hY3JvUkRNYC4gUGxlYXNlIGRvIG5vdCBhbHRlciB0aGUgc3RydWN0dXJlIG9mIHRoZXNlIGZvbGRlcnMuIEZvciBtb3JlIGRldGFpbHMgc2VlIFsqKnJtYWNyb1JETSBSRUFETUUqKl0oKQogICAgLSAqKmFuYWx5dGljYWwvKiogCiAgICAgICAgLSAqKmBtYXN0ZXIuY3N2YCoqIDogbWFzdGVyIChsb25nKSBhbmFseXRpY2FsIGRhdGFzZXQuIE91dHB1dCBvZiBgd2tmID0gInJtYWNyb1JETSJgIGluIGBtYXRjaC53b3JrZmxvdy5SYAogICAgICAgIC0gKipgbWFzdGVyIHdpZGUuY3N2YCoqIDogbWFzdGVyIHdpZGUgYW5hbHl0aWNhbCBkYXRhc2V0LiBPdXRwdXQgb2YgYHdrZiA9ICJybWFjcm9SRE0iYCBpbiBgbWF0Y2gud29ya2Zsb3cuUmAKICAgIC0gKiptZXRhZGF0YS8ge3JtYXJjcm9SRE0gZm9sZGVyfSoqCiAgICAgICAgLSAqKmBkYXRhX2xvZy5jc3ZgKiogOiBtZXRhZGF0YSBvbiByYXcgZGF0YXNldHMgdXNlZCB0byBjb21waWxlIGFuYWx5dGljYWwKICAgICAgICAtICoqYHZuYW1lcy5jc3ZgKiogOiBtZXRhZGF0YSBvbiByYXcgZGF0YSB2YXJpYWJsZSBuYW1lIG1hdGNoaW5nIHRvIG1hc3RlcgogICAgICAgIC0gKipgb3V0bGllcnMuY3N2YCoqIDogdGFibGUgaWRlbnRpZnlpbmcgb3V0bGllcnMgaW4gZHVwbGljYXRlIGBzcHA6dmFyYCBlbnRyaWVzCiAgICAgICAgLSAqKmBvdXRsaWVyX3JlZnMuY3N2YCoqIDogcmVmZXJlbmNlcyBzdXBwb3J0aW5nIG91dGxpZXIgaWRlbnRpZmljYXRpb24KICAgIC0gKipwcmUvIHtybWFyY3JvUkRNIGZvbGRlcn0qKiA6IGNvbnRhaW5zIGBtZXRhLnZhcmAgZm9sZGVycywgdXNlZCB0byBzdXBwbHkgZGF0YSB0byB0aGUgYHJtYWNyb1JETWAgY29tcGlsYXRpb24gZnVuY3Rpb25zLiBEYXRhc2V0IGRldGFpbHMgY2FuIGJlIGZvdW5kIGluIGBkYXRhX2xvZy5jc3ZgLgogICAgICAgIC0gKipjc3YvKioKICAgICAgICAtICoqbi8qKgogICAgICAgIC0gKipub3Rlcy8qKgogICAgICAgIC0gKipvYnNlcnZlci8qKgogICAgICAgIC0gKipxYy8qKgogICAgICAgIC0gKipyZWYvKioKICAgIC0gKipwb3N0LyB7cm1hcmNyb1JETSBmb2xkZXJ9KiogOiBtaXJyb3IgZm9sZGVycyBvZiBjb250ZW50cyBvZiAqKnByZS8qKiB3aGVyZSBwb3N0IHByb2Nlc3NlZCByYXcgZGF0YSBpcyBzYXZlZC4KICAgICAgICAtICoqY3N2LyoqCiAgICAgICAgLSAqKm4vKioKICAgICAgICAtICoqbm90ZXMvKioKICAgICAgICAtICoqb2JzZXJ2ZXIvKioKICAgICAgICAtICoqcWMvKioKICAgICAgICAtICoqcmVmLyoqCiAgICAtICoqdGF4by8ge3JtYXJjcm9SRE0gZm9sZGVyfSoqIDogY29udGFpbnMgdGF4b25vbWljIG1ldGFkYXRhLgogICAgICAgIC0gKiptYXRjaCBkYXRhLyoqIDogZGF0YSByZWxhdGluZyB0byB0aGUgdGF4b25vbWljIG1hdGNoIHdvcmtmbG93LiBJbmNsdWRlczoKICAgICAgICAgICAgLSBgbW1hdGNoYCBhbmQgYG1tYXRjaGVkYCBtYXRjaCBvdXRwdXQgYC5jc3ZgcyB1c2VkIHRvIGNvbXBsZXRlIG1hbnVhbCBtYXRjaGluZyAoZGVwcmVjYXRlZDogY29tcGlsZWQgdG8gc3luLmxpbmtzIHNoZWV0KS4gCiAgICAgICAgICAgIC0gbWF0Y2ggYG0gLlJEYXRhYCBvYmplY3QgZm9yIGVhY2ggZGF0YXNldCBtYXRjaGVkIHRvIHRoZSBwcm9qZWN0IGBzcHAubGlzdGAgKGllIGluIG91ciBjYXNlIGBEMWAgYW5kIHRoZSBgdHJlZWApCiAgICAgICAgLSAqKnN5bm9ueW1zLyoqIDogdmFyaW91cyBzeW5vbnltIGxpc3RzIGZyb20gd2hpY2ggYHN5bi5saW5rc2Agd2VyZSBleHRyYWN0ZWQuCiAgICAgICAgLSAqKjEwMHNwcC5jc3YqKiA6IGxpc3Qgb2YgMTAwIHNwZWNpZXMgZm9yIHN1YnNldCBhbmFseXNpcy4KICAgICAgICAtICoqYGFuLklEYHNwZWNpZXNfcmFua3MuUkRhdGEqKiA6IExvYWRlZCBkdXJpbmcgYFBoeWxvbmV0d29ya2VyX3NldHVwLlJgIGluIGB3a2YgPSAicGh5bG9uZXR3b3JrZXIiYC4gQ29udGFpbnM6IAogICAgICAgICAgICAtICoqYHNwcC5yYW5rYCoqIDogcmFuayBvZiBzdW0gb2YgZWFjaCBzcGVjaWVzIGRhdGFwb2ludCBjb250cmlidXRpb24gYWNyb3NzIGFsbCBwb3NzaWJsZSB0cmFpdCBwYWlycy4KICAgICAgICAtICoqYGRjb2RlYF90YXhvLmNzdioqIDogdGF4b25vbWljIGRhdGEgZXh0cmFjdGVkIGZyb20gbWF0Y2hlZCBkYXRhc2V0IGBkY29kZWAKICAgICAgICAtICoqc3luLmxpbmtzLmNzdioqIDogc3lub255bSBsaW5rcyBsb29rdXAgdGFibGUuIAogICAgICAgIC0gKipURF9gYW4uSURgLlJkYXRhKiogOiB0YWJsZSBvZiB0YXhvbm9taWMgZGlzdGluY3RlbmVzcyBhc3Nlc3NtZW50IG91dHB1dHMgb2YgdHJhaXQgZGF0YSBzdWJzZXQgdGF4b25vbWljIG1ha2V1cC4gTG9hZGVkIGR1cmluZyBgUGh5bG9uZXR3b3JrZXJfc2V0dXAuUmAgaW4gYHdrZiA9ICJwaHlsb25ldHdvcmtlciJgLgogICAgLSAqKnRyZWUvKiogOiBjb250YWlucyBmaWxlcyByZWxhdGluZyB0byB0aGUgcGh5bG9nZW5ldGljIHRyZWUgdXNlZCBpbiB0aGUgYW5hbHlzaXMKICAgICAgICAtICoqdHJlZS5SRGF0YSoqIDogdHJlZSB1c2VkIGluIGFuYWx5c2lzLiBFeHRyYWN0ZWQgZnJvbSBgU3RhZ2UyX01heXJBbGxfSGFja2V0dF9zZXQxMF9kZWNpc2l2ZS50cmVgLgoKIyMjICoqb3V0cHV0cy8qKgoKLSAjIyMjICoqZGF0YS8qKgogICAgLSAqKmhyZy8qKiA6IG91dHB1dHMgb2YgZXhwZXJpbWVudGF0aW9uIHdpdGggZml0aW5nIGNvbnNlbnN1cyBoaWVyYXJjaGljYWwgbmV0d29ya3MgdXNpbmcgdGhlIGBocmdgIHBhY2thZ2UKICAgIC0gKippbXB1dGVkX2RhdGEvKiogOiBvdXRwdXRzIG9mIG1pc3NpbmcgZGF0YSBpbXB1dGF0aW9uIChmb3IgZGF0YSBwcmVwYXJhdGlvbiBmb3IgYG1nbWAgYW5hbHlzaXMpIHVzaW5nIGRpZmZlcmVudCBzdWJzZXRzIG9mIHRoZSBvcmlnaW5hbCBkYXRhLiBTdWJzZWxlY3Rpb24gb2YgZGF0YSB1c2VzIHRoZSByYW5rcyBvZiB2YXJpYWJsZSBhbmQgc3BlY2llcyB0byB0aGUgdG90YWwgZGF0YSBwb29sIGFuZCBpcyBhY2NvbXBsaXNoZWQgYnkgc2V0dGluZyB0aGUgKipwcm9wb3J0aW9uIG9mIHRvcCB2YXIvc3BlY2llcyoqIHRvIGJlIHVzZWQgdGhyb3VnaCBwYXJhbWV0ZXJzICoqYHZgKiogYW5kICoqYHNgKiogcmVzcGVjdGl2ZWx5LiAKICAgICAgICAtIGZpbGUgbmFtaW5nOiAqKmBhbi5JRGBzcHAtdmB2YC1zYHNgLlJkYXRhKiogCiAgICAtICoqbWF0Y2ggb2JqZWN0cy8qKiA6IG0gb2JqZWN0IHJlc3VsdGluZyBmcm9tIHByb2Nlc3NpbmcgYW5kIG1hdGNoaW5nIEQxIGRhdGEuIHtybWFjcm9SRE19CiAgICAtICoqbWdtLyoqIDogbWl4ZWQgZ3JhcGhpY2FsIG1vZGVscy4gZmlsZW5hbWluZyAqKmBhbi5JRGAtYHZgLWBzYC1gbWluLm5gLWBtaW4uY2F0YCoqLiB7bWdtfQogICAgLSAqKm5ldHdvcmtzLyoqIDogcm5ldGNhcnRvIG5ldHdvcmsgb3V0cHV0cyAoYXMgLlJkYXRhIGFzIHdlbGwgYXMgZmxhdCAuY3N2KS4ge3BoeWxvbmV0d29ya2VyfQogICAgICAgIC0gRmlsZW5hbWVzOiAqKmBhbi5JRGBfbmV0X21uYG1pbi5uYF9gbG9nYCoqLi4uCiAgICAtICoqcGh5bG9jb3JzLyoqIDogb3V0cHV0cyBvZiBwaHlsb2dlbmV0aWNhbGx5IGNvcnJlY3RlZCB0cmFpdCBwYWlyIGNvcnJlbGF0aW9uIGFuYWx5c2lzLiB7cGh5bG9uZXR3b3JrZXJ9IAogICAgICAgIC0gRmlsZW5hbWVzOiAqKmBhbi5JRGBfcGh5bG9jb3JfbW5gbWluLm5gX2Bsb2dgX2BwYWlyLnR5cGVgLlJkYXRhKiouICAgCiAgICAgICAgLSAgIEFsbCBgcGFpci50eXBlYCByZXN1bHRzIGNvbXBsaWVkIGludG8gKipgYWxsX3BoeWxvY29yX21uNTBfbG9nX2FsbERULmNzdmAqKi4KICAgIC0gIyMjIyMgKipgbWFzdGVyLnJkYWAqKiA6IG1hc3RlciBvYmplY3QgcmVzdWx0aW5nIGZyb20ge3JtYWNyb1JETX0gd29ya2Zsb3cKICAgIAoKCi0gIyMjIyAqKnJlcG9ydHMvKioKICAgIC0gKipwcm9ncmVzcyByZXBvcnRzLyoqIDogUmVuZGVyZWQgKGh0bWwpIHByb2dyZXNzIHJlcG9ydHMgMDEtMDUgYW5kIGFzc29jaWF0ZWQgZmlsZXMKICAgIC0gKipSZXN1bHRzLyoqIDogUmVuZGVyZWQgKGh0bWwpIHJlc3VsdHMgcmVwb3J0cwogICAgICAgIC0gKipDYXRlZ29yaWNhbF9waHlsb2NvcnMubmIuaHRtbCoqIDogUmVwb3J0IG9uIGRpc3RyaWJ1dGlvbiBvZiBleHBlY3RlZCBHS3RhdSBiZXR3ZWVuIHBhaXIgb2YgdHJhaXRzIHNpbXVsYXRlZCBmcm9tIHRoZSBwaHlsb2dlbnkuIAogICAgICAgIC0gKipDb3JOZXR3b3JrX3Bsb3RzLmh0bWwqKiA6IGVhcmx5IHJlcG9ydCAoIm5uIiB0cmFpdCBwYWlycyBvbmx5KSBvbiB0cmFpdCBhc3NvY2lhdGlvbiBuZXR3b3JrIHN0cnVjdHVyZS4gRmxhdCBuZXR3b3JrIHBsb3RzLgogICAgICAgIC0gKipkYXRhX2dhcF9ldmFsLm5iLmh0bWwqKiA6IFJlcG9ydCBvbiBkYXRhIGF2YWlsYWJpbGl0eSBhY3Jvc3MgdHJhaXRzLiBJbmNsdWRlIGFzc2Vzc21lbnQgb2YgdGF4b25vbWljIGRpc3RpbmN0bmVzcyBvZiBhdmFpbGFibGUgdHJhaXQgZGF0YSBzdWJzYW1ibGVzLgogICAgICAgIC0gKipocmcuaHRtbCoqIDogRGVtbyBvZiBmaXR0aW5nIGEgaGllcmFyY2hpY2FsIGdyYXBoaWNhbCBtb2RlbC4KICAgICAgICAtICoqbWdtX3Zpei5odG1sKiogOiBWaXN1YWxpc2F0aW9uIG9mIG1peGVkIGdyYXBoaWNhbCBtb2RlbCAobWdtKSBuZXR3b3JrCiAgICAgICAgLSAqKk5ldHdvcmtfdml6X2Bhbi5JRGAubmIqKiA6IFZpenVhbGlzYXRpb24gb2YgcGh5bG9uZXR3b3JrZXIgbmV0d29ya3MKICAgICAgICAKICAgICAgICAKKioqCgojIGdpdGh1YiBmb2xkZXI=</div>
 
 
 
