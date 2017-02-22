@@ -1,4 +1,5 @@
 # ---- load-sys.ref ----
+if(wkf != "rmacro"){
 metadata <- read.csv(paste(input.folder, "metadata/","metadata.csv", sep = ""), 
                      stringsAsFactors = F, fileEncoding = fileEncoding, 
                      na.strings=na.strings, strip.white = T, 
@@ -13,4 +14,4 @@ vnames <- read.csv(paste(input.folder, "metadata/","vnames.csv", sep = ""),
                    stringsAsFactors = F, fileEncoding = fileEncoding,
                    na.strings=na.strings, strip.white = T, 
                    blank.lines.skip = T, header = T)
-
+}

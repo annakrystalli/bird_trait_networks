@@ -3,8 +3,8 @@ wkf = "mgm"
 param = "var_impute_test.R"
 file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
 source(file_setup_path)
-source("~/Documents/workflows/bird_trait_networks/project_ui.R")
-source("~/Documents/workflows/bird_trait_networks/test_impute_functions.R")
+source(paste0(input.folder, "project_ui.R"))
+source(paste0(input.folder, "test_impute_functions.R"))
 
 par.pkgs <- c("foreach", "doParallel", "doMC")
 if (!require("pacman")) install.packages("pacman")

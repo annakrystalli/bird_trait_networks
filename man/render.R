@@ -8,6 +8,7 @@ require(dplyr)
 # ---- render-site-ALL ----
 files <- list.files("man/")[grep(".Rmd", list.files("man/"))]
 files <- files[files != "Hierarchical Networks.Rmd"]
+# files <- files[-1:-3]
 for(file in files){
 render(paste0("man/", file), output_format = "html_notebook",
        output_file = paste0(script.folder,"docs/",gsub(".Rmd", ".nb.html", file)))}

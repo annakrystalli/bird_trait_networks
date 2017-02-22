@@ -3,7 +3,7 @@ if(log){log.vars <- metadata$code[as.logical(metadata$log)]
 }else{log.vars <- ""}
 
 # ---- pns-load-files ----
-wide <- read.csv(file = paste(input.folder,"analytical/master wide.csv", sep = ""), fileEncoding = "mac")
+wide <- read.csv(file = paste(input.folder,"analytical/master wide.csv", sep = ""))
 spp100 <- unlist(read.csv(file = paste(input.folder,"taxo/100spp.csv", sep = "")))
 # load selected tree (see select_tree.R)
 load(file = paste(input.folder, "tree/tree.RData", sep = ""))

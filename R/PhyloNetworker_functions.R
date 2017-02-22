@@ -53,12 +53,10 @@ pglsPhyloCor <- function(pair, data, tree, log.vars = NULL, pair.type,
                                    "' in variable ", var))}
     }
     if(mgm_types[var] == "g"){
-      if(validateLog(var = var, log.vars, data)){
         data[, var] <- log(data[, var])
         colnames(data)[colnames(data) == var] <- paste("log", var, sep = "_")
         pair[pair == var] <- paste("log", var, sep = "_")
         names(mgm_types)[names(mgm_types) == var] <- paste("log", var, sep = "_")
-      }
     }
   }
   
@@ -469,8 +467,29 @@ validateLog <- function(var, log.vars, data) {
   var %in% log.vars & all(na.omit(data[,var]) > 0)
 }
 
+
+validate_log.vars <- function(log.vars, data) {
+  valid <- NULL
+  for(i in 1:length(log.vars)){
+    var <- log.vars[i]
+    valid <- c(valid, all(na.omit(data[,var]) > 0))
+  }
+  names(valid) <- log.vars
+  valid
+}
+
+
+
 validateInt <- function(var, data) {
   var %in% log.vars & is.integer(all(na.omit(data[,var])))
+}
+
+corr_zero.logs <- function(data, replace, replace.with = NA) {
+  for(i in 1:length(replace)){
+    var <- replace[i]
+    data[which(data[,var] == 0), var] <- replace.with
+  }
+  data
 }
 
 logData <- function(data, var) {
