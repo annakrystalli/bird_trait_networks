@@ -27,7 +27,7 @@ Information regarding the project and data, including admin. Includes action pla
 ### **inputs/**
 
 - #### **data/**
-  input data and metadata folder. Many input folders (`{rmacroRDM}`) are required by the functions of  `rmacroRDM`. Please do not alter the structure of these folders. For more details see [**rmacroRDM README]()
+  input data and metadata folder. Many input folders (`{rmacroRDM}`) are required by the functions of  `rmacroRDM`. Please do not alter the structure of these folders. For more details see [**rmacroRDM README**]()
     - **analytical/** 
         - **`master.csv`** : master (long) analytical dataset. Output of `wkf = "rmacroRDM"` in `match.workflow.R`
         - **`master wide.csv`** : master wide analytical dataset. Output of `wkf = "rmacroRDM"` in `match.workflow.R`
@@ -36,19 +36,62 @@ Information regarding the project and data, including admin. Includes action pla
         - **`vnames.csv`** : metadata on raw data variable name matching to master
         - **`outliers.csv`** : table identifying outliers in duplicate `spp:var` entries
         - **`outlier_refs.csv`** : references supporting outlier identification
-    - **pre/ {rmarcroRDM folder}** : contains `meta.var` folders, used to supply data to the `rmacroRDM` compilation functions. 
+    - **pre/ {rmarcroRDM folder}** : contains `meta.var` folders, used to supply data to the `rmacroRDM` compilation functions. Dataset details can be found in `data_log.csv`.
         - **csv/**
-        - **ref/**
         - **n/**
         - **notes/**
         - **observer/**
         - **qc/**
-    - **post/ {rmarcroRDM folder}** :
-    - **tree/** :
+        - **ref/**
+    - **post/ {rmarcroRDM folder}** : mirror folders of contents of **pre/** where post processed raw data is saved.
+        - **csv/**
+        - **n/**
+        - **notes/**
+        - **observer/**
+        - **qc/**
+        - **ref/**
+    - **taxo/ {rmarcroRDM folder}** : contains taxonomic metadata.
+        - **match data/** : data relating to the taxonomic match workflow. Includes:
+            - `mmatch` and `mmatched` match output `.csv`s used to complete manual matching (deprecated: compiled to syn.links sheet). 
+            - match `m .RData` object for each dataset matched to the project `spp.list` (ie in our case `D1` and the `tree`)
+        - **synonyms/** : various synonym lists from which `syn.links` were extracted.
+        - **100spp.csv** : list of 100 species for subset analysis.
+        - **`an.ID`species_ranks.RData** : Loaded during `Phylonetworker_setup.R` in `wkf = "phylonetworker"`. Contains: 
+            - **`spp.rank`** : rank of sum of each species datapoint contribution across all possible trait pairs.
+        - **`dcode`_taxo.csv** : taxonomic data extracted from matched dataset `dcode`
+        - **syn.links.csv** : synonym links lookup table. 
+        - **TD_`an.ID`.Rdata** : table of taxonomic distincteness assessment outputs of trait data subset taxonomic makeup. Loaded during `Phylonetworker_setup.R` in `wkf = "phylonetworker"`.
+    - **tree/** : contains files relating to the phylogenetic tree used in the analysis
+        - **tree.RData** : tree used in analysis. Extracted from `Stage2_MayrAll_Hackett_set10_decisive.tre`.
 
 ### **outputs/**
 
+- #### **data/**
+    - **hrg/** : outputs of experimentation with fiting consensus hierarchical networks using the `hrg` package
+    - **imputed_data/** : outputs of missing data imputation (for data preparation for `mgm` analysis) using different subsets of the original data. Subselection of data uses the ranks of variable and species to the total data pool and is accomplished by setting the **proportion of top var/species** to be used through parameters **`v`** and **`s`** respectively. 
+        - file naming: **`an.ID`spp-v`v`-s`s`.Rdata** 
+    - **match objects/** : m object resulting from processing and matching D1 data. {rmacroRDM}
+    - **mgm/** : mixed graphical models. filenaming **`an.ID`-`v`-`s`-`min.n`-`min.cat`**. {mgm}
+    - **networks/** : rnetcarto network outputs (as .Rdata as well as flat .csv). {phylonetworker}
+        - Filenames: **`an.ID`_net_mn`min.n`_`log`**...
+    - **phylocors/** : outputs of phylogenetically corrected trait pair correlation analysis. {phylonetworker} 
+        - Filenames: **`an.ID`_phylocor_mn`min.n`_`log`_`pair.type`.Rdata**.   
+        -   All `pair.type` results complied into **`all_phylocor_mn50_log_allDT.csv`**.
+    - ##### **`master.rda`** : master object resulting from {rmacroRDM} workflow
+    
 
+
+- #### **reports/**
+    - **progress reports/** : Rendered (html) progress reports 01-05 and associated files
+    - **Results/** : Rendered (html) results reports
+        - **Categorical_phylocors.nb.html** : Report on distribution of expected GKtau between pair of traits simulated from the phylogeny. 
+        - **CorNetwork_plots.html** : early report ("nn" trait pairs only) on trait association network structure. Flat network plots.
+        - **data_gap_eval.nb.html** : Report on data availability across traits. Include assessment of taxonomic distinctness of available trait data subsambles.
+        - **hrg.html** : Demo of fitting a hierarchical graphical model.
+        - **mgm_viz.html** : Visualisation of mixed graphical model (mgm) network
+        - **Network_viz_`an.ID`.nb** : Vizualisation of phylonetworker networks
+        
+        
 ***
 
 # github folder

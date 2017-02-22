@@ -1,0 +1,249 @@
+---
+title: ''
+author: "Anna Krystalli"
+date: "26 May 2016"
+output: html_document
+---
+
+## Data sampling
+
+Problems when working with datasets with highly skewed data availability in both species and variable space. 
+- generally reduced power with fewer observations.
+- phylogenetically restricted data availability can introduce biases.
+
+Complete cases only increasingly limits data availability as variables with fewer or non overlapping variables are added and represents the trade-off between axes of data availability. Bivariate data availability less restrictive but can exarcebate biases by including links in the network calculated on a data sample of highly diverging phylogenetic composition. 
+
+<br>
+
+see [Meyer *et al.* 2016, "***Multidimensional biases, gaps and uncertainties in global plant occurrence information***"](http://onlinelibrary.wiley.com/doi/10.1111/ele.12624/abstract). 
+
+**Analysis from the BAAD project:** [Duursma & Falster 2016, ***"Leaf mass per area, not total leaf area, drives differences in above-ground biomass distribution among woody plant functional types"***](http://onlinelibrary.wiley.com/doi/10.1111/nph.14033/full)
+
+**Coral traits database reasoning:** [Madin *et al.* 2016 "***A Trait-Based Approach to Advance Coral Reef  Science***"](http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=26969335&retmode=ref&cmd=prlinks) 
+
+**Coral traits database analysis:** [Madin *et al.* 2016 "***The Coral Trait Database, a curated database of trait information for coral species from the global oceans***"](http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&id=26969335&retmode=ref&cmd=prlinks) 
+
+
+
+```{r, echo=FALSE, message=F, warning=FALSE, fig.height= 7}
+options(stringsAsFactors = F)
+
+require(dplyr)
+require(plotly)
+require(knitr)
+require(RColorBrewer)
+
+output.folder <- "/Users/Anna/Google Drive/bird trait networks/outputs/"
+input.folder <- "/Users/Anna/Google Drive/bird trait networks/inputs/data/"
+
+# FILES ##################################################################
+
+wide <- read.csv(file = paste(input.folder, "csv/master wide.csv", sep = ""), fileEncoding = "mac")
+
+dd <- data.frame(n = sort(table(wide$order)))
+kable(dd, decreasing = T, caption = "Data availability across individual variables")
+
+o.dat <- data.frame(apply(wide[,-(1:4)], 2, FUN = function(x,o){
+  table(o[!is.na(x)])[order(table(o), 
+                            decreasing = T)]},
+         o = wide$order)[,order(apply(wide[,-(1:4)], 2, FUN = function(x){sum(!is.na(x))}),
+                                decreasing = T)])
+
+op.dat <- o.dat / sort(table(wide$order), decreasing = T)
+op.dat <- op.dat[order(apply(op.dat, 1, FUN = function(x){sum(x > 0)})), order(apply(op.dat, 2, FUN = mean), decreasing = T)]
+
+col <- brewer.pal(5, "YlGnBu")
+
+plot_ly(z = as.matrix(op.dat), x = names(op.dat), y = rownames(op.dat), type = "heatmap", 
+        #color = col, 
+        name = "Variable proportional datapoint availability across orders",
+        colors = colorRamp(col, bias = 2),
+        hoverinfo = "z+x+y", text = text) %>%
+  
+  layout(margin = list(l = 150,
+                       r = 80,
+                       b = 120,
+                       t = 60),
+         title = "Matrix of proportionate bivariate datapoint availability",
+         xaxis = list(title = "var"),
+         yaxis = list(title = "order")) 
+
+
+```
+
+### order data:
+
+Algorithm to test different data configurations? Random?
+
+- Sample data and crop to complete cases.
+
+- $X_i$ matrix of complete cases given data for network variables $v$ ans species $s$. 
+
+- Calculate [phylogenetic representativeness]() of bivariate data availability
+- calculate the size and identitity of species unions
+
+Use to select species and variables.
+
+
+Cros-validate: include questionable variables and compare full network to limited but phylo.representative and predicted
+
+
+#### tools
+
+picante, vegan, SYNCSA, phylotools, PCPS, caper, DAMOCLES, and cati integrate several tools for using phylogenetics with community ecology. 
+
+- betapart allows computing pair-wise dissimilarities (distance matrices) and multiple-site dissimilarities, separating the turnover and nestedness-resultant components of taxonomic (incidence and abundance based), functional and phylogenetic beta diversity.
+
+- vegan: calculate taxonomic distinctness:
+
+Details
+Clarke & Warwick (1998, 2001) suggested several alternative indices of taxonomic diversity or distinctness. Two basic indices are called taxonomic diversity ($Δ$) and distinctness (Δ^*):
+Δ = (∑ ∑_{i
+Δ^* = (∑ ∑_{i
+The equations give the index value for a single site, and summation goes over species i and j. Here ω are taxonomic distances among taxa, and x are species abundances, and n is the total abundance for a site. With presence/absence data both indices reduce to the same index Δ^+, and for this index Clarke & Warwick (1998) also have an estimate of its standard deviation. Clarke & Warwick (2001) presented two new indices: sΔ^+ is the product of species richness and Δ^+, and index of variation in taxonomic distinctness (Λ^+) defined as
+Λ^+ = (∑ ∑_{i
+The dis argument must be species dissimilarities. These must be similar to dissimilarities produced by dist. It is customary to have integer steps of taxonomic hierarchies, but other kind of dissimilarities can be used, such as those from phylogenetic trees or genetic differences. Further, the dis need not be taxonomic, but other species classifications can be used.
+
+Function taxa2dist can produce a suitable dist object from a classification table. Each species (or basic taxon) corresponds to a row of the classification table, and columns give the classification at different levels. With varstep = FALSE the successive levels will be separated by equal steps, and with varstep = TRUE the step length is relative to the proportional decrease in the number of classes (Clarke & Warwick 1999). With check = TRUE, the function removes classes which are distinct for all species or which combine all species into one class, and assumes that each row presents a distinct basic taxon. The function scales the distances so that longest path length between taxa is 100 (not necessarily when check = FALSE). Function plot.taxondive plots Δ^+ against Number of species, together with expectation and its approximate 2*sd limits. Function summary.taxondive finds the z values and their significances from Normal distribution for Δ^+.
+
+```{r, message=F, warning=FALSE, eval=FALSE}
+require(vegan)
+require(ape)
+
+#load match data
+load(file = paste(input.folder, "tree/tree.RData", sep = ""))
+load(file = paste(input.folder, "r data/match data/tree m.RData", sep = ""))
+match.dat <- m$data
+
+spp <- wide$species[!wide$species %in% tree$tip.label]
+
+
+datID <- which(m$data$species %in% spp)
+treeID <- match(m$data$synonyms[datID], tree$tip.label)
+
+tree$tip.label[treeID] <- m$data$species[datID]
+
+ds <- cophenetic.phylo(tree)
+
+
+# cd <- comparative.data(phy = tree, data = data, names.col = "synonyms", vcv=F)
+
+data(dune)
+data(dune.taxon)
+
+# Taxonomic distances from a classification table with variable step lengths.
+taxdis <- taxa2dist(dune.taxon, varstep=TRUE)
+plot(hclust(ds), hang = -1)
+
+
+var.com <- wide[, -(1:4)]
+vars <- names(var.com)
+rownames(var.com) <- wide$species
+var.com[!is.na(var.com)] <- 1
+var.com[is.na(var.com)] <- 0
+add.spp <- tree$tip.label[!tree$tip.label %in% rownames(var.com)]
+add.m <- matrix(0, ncol = ncol(var.com), nrow = length(add.spp),
+                dimnames = list(add.spp,
+                                colnames(var.com)))
+
+var.com <- rbind(var.com, add.m)
+
+
+var.com <- data.frame(t(var.com))
+
+
+#var species composition distances
+#dis <- dist(var.com)
+#plot(hclust(dis), cex = 0.5)
+
+#hclust <- hclust(dis)
+
+
+# Indices
+#mod <- taxondive(var.com, ds)
+
+#head(mod)
+#head(summary(mod))
+
+#plot(mod)
+```
+
+
+```{r, echo=FALSE, message=F, warning=FALSE, fig.height= 7}
+
+plot_ly(z = as.matrix(op.dat), x = names(op.dat), y = rownames(op.dat), type = "heatmap", 
+        #color = col, 
+        name = "Bivariate proportional datapoint availability",
+        colors = colorRamp(col, bias = 2),
+        hoverinfo = "z+x+y", text = text) %>%
+  
+  layout(margin = list(l = 150,
+                       r = 80,
+                       b = 120,
+                       t = 60),
+         title = "Matrix of proportionate bivariate datapoint availability",
+         xaxis = list(title = "var1"),
+         yaxis = list(title = "var2")) 
+```
+
+## estimate links between variables
+
+### Phylogenetic correction
+
+pgls? or gmmm?
+
+For each bivariate combination ${v_i, v_j}$ calculate $n_{ij}$ and taxomic distinctness (phylogenetic representativeness) $t_{ij}$. 
+
+- fit pgls between ${v_i, v_j}$ and extract $\lambda_{ij}$ and phylogenetic corrected correlation $r_{p_{ij}}$
+
+The limits of $\lambda_{ij}$ are dominated by bivariate combinations with small $n_{ij}$. Determine the minimum $n_{ij}$. Also check whether low $\lambda_{ij}$
+
+      
+      - corHMM can look for hidden rates in discrete traits as well as fit correlational models for two or three binary traits (similar to Pagel's old Discrete program) and complex models for multistate traits (similar to Pagel's old Multistate program).
+      - Other continuous models, including Pagel's transforms and models with trends, can be fit with geiger. 
+      - Phylogenetic autoregression (sensu Cheverud et al) and Phylogenetic autocorrelation (Moran's I) can be implemented in ape or--if you wish the significance test of Moran's I to be calculated via a randomization procedure--in adephylo
+      - Correlation between traits using a GLMM can also be investigated using MCMCglmm. 
+      - phylolm can fit phylogenetic linear regression and phylogenetic logistic regresssion models using a fast algorithm, making it suitable for large trees. 
+      -  metafor can perform meta-analyses accounting for phylogenetic structure
+      - MPSEM can predict features of one species based on information from related species using phylogenetic eigenvector maps.
+
+
+
+
+### Allometric correction
+
+
+
+## Network
+
+### rnetcarto
+
+Information on [Cartography of complex networks: modules and universal roles](http://iopscience.iop.org/article/10.1088/1742-5468/2005/02/P02001/pdf)
+
+- modules
+- participation
+- connectivity
+- network plot
+
+Re-implement modularity detection for each module including only internal links to produce hierarchical clustering?
+
+
+
+### hrg
+
+- fit hrg
+- predict missing links
+    - compare to full
+- consensus
+
+[Preliminiray hrg set up](https://drive.google.com/open?id=0B9BMeZ9H2nRxMU5GZDlkdTd0TjA)
+
+
+
+
+#### tools
+ - geiger can prune trees and data to an overlapping set of taxa
+ -  Rphylip wraps PHYLIP , a broad variety of programs for tree inference under parsimony, likelihood, and distance, bootstrapping, character evolution, and more.
+ - pastis can use taxonomic information to make constraints for Bayesian tree searches.
+
+
