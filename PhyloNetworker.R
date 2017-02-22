@@ -8,9 +8,20 @@ wkf = "phylonetworker"
 param = "phylonetworker.R"
 source(paste0(script.folder,"project_ui.R"))
 
+# ---- pn-correct-zeros ----
+valid.log <- validate_log.vars(log.vars, data = wide)
+zero.vars <- names(valid.log)[!valid.log]
+wide <- corr_zero.logs(wide, replace = zero.vars[!zero.vars %in% "disperse.dist"]) %>%
+  corr_zero.logs(replace = "disperse.dist", replace.with = 0.001)
+# all log.vars valid to log?
+all(validate_log.vars(log.vars, data = wide))
+
 # ---- pn-get-vg_dt ----
 vg <- orderby_vg_dt(vg, mgm_types)
 vg_dt <- get_vg_dt(vg, mgm_types)
+
+
+
 
 
 # ---- pn-nn ----
