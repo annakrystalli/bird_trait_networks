@@ -14,7 +14,7 @@ source(paste0(script.folder,"project_ui.R"))
 ## ----master-configuration, eval=T----------------------------------------
 init_db(data.folder = data.folder,
         script.folder = getwd(), 
-        spp.list_src = "D0", fileEncoding = "UTF-8")
+        spp.list_src = "D0")
 
 # SETTINGS ###############################################################
 
@@ -85,7 +85,7 @@ master <- updateMaster(master, output = output)
   
   # ---- save-outputs ----
   write.csv(master$data, file =  paste0(input.folder, "analytical/master.csv"), 
-            row.names = F, fileEncoding = ds$fileEncoding)
+            row.names = F, fileEncoding = "MAC")
   save(master, file = paste(output.folder, "data/master.rda", sep = ""))
   
   
