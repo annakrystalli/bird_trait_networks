@@ -1,9 +1,9 @@
 rm(list = ls())
 wkf = "goodmankruskal"
 param = "goodmankruskal.R"
-file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+file_setup_path <- "file_setup.R"
 source(file_setup_path)
-source("~/Documents/workflows/bird_trait_networks/project_ui.R")
+source(paste0(script.folder, "project_ui.R"))
 
 
 vars <- ms_vars[1:(as.integer(length(ms_vars)*v.p))]
