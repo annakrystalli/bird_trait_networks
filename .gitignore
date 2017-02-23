@@ -1,9 +1,9 @@
 .Rproj.user
 *.Rproj
-*.html
 .Rhistory
 .Rapp.history
 .RData
+README.html
 packrat/lib*/
 Network_Data_Availability_100spp.html
 mgm.html
