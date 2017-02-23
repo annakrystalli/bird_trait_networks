@@ -10,7 +10,6 @@ if(exists("file_setup_path")){}else{
   source(file_setup_path)}
 source(paste0(script.folder,"project_ui.R"))
 
-launch_sr_configurator(sr_configurator, file_setup_path)
 
 ## ----master-configuration, eval=T----------------------------------------
 init_db(data.folder = data.folder,
@@ -18,6 +17,12 @@ init_db(data.folder = data.folder,
         spp.list_src = "D0", fileEncoding = "UTF-8")
 
 # SETTINGS ###############################################################
+
+##  ............................................................................
+##  sys_ref_configurator-app                                                ####
+## check or update sys_ref files using sys_ref_configurator app
+launch_sr_configurator(sr_configurator, file_setup_path)
+
 # ---- load-sy.ref ----
 load_sys.ref(view = F)
 
