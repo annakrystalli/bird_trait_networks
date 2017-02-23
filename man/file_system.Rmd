@@ -95,3 +95,27 @@ Information regarding the project and data, including admin. Includes action pla
 ***
 
 # github folder
+
+<br>
+
+### **R/**
+  folder containing scripts either sourced by primary workflows, or relating to secondary workflows.  
+  - **PhyloNetworker_functions.R** : functions sourced for a number of workflows (see [`load_environment](https://github.com/annakrystalli/bird_trait_networks/blob/master/R/load_environment.R) to process data, determine trait associations and fit and visualise networks.
+  - **PhyloNetworker_setup.R** : workflow script, sourced to prepare data and associated objects for analysis.
+   - **add amniote synonyms.R** : script to extract synonyms from supplied synonym list with `Amniote_Databsae`
+   - **goodmankruskal.R** : GK  τ determination workflow for categorical variables.
+   - **helper_functions.R** : project wide helper functions loaded during `project_ui`.
+   - **impute_mgm.R** : script sourced during `mgm` wkf to impute missing data prior to mode fitting.
+   - **load_dependencies.R** : script to load dependencies during `project_ui`.
+   - **load_environment.R** : script to load wkf environment (functions and perform pre-processing) during `project_ui`.
+   - **load_files.R** : loads `ref_system` files 
+   - **load_global.R** :
+   - **mgm_dataprep.R** :
+   - **pkgs.R** :
+   - **rerun_phylosig.R** :
+   - **select_tree.R** :
+   - **test_impute.R** :
+   - **test_impute_functions.R** :
+   - **test_impute_tools.R** :
+   
+   
