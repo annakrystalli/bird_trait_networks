@@ -1,5 +1,7 @@
 
-#' # mixed graphical model analysis of bird trait data.
+#' # mixed graphical model analysis of bird trait data
+#' ### Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`
+#' 
 #' ***
 #' <br>
 #'
@@ -8,7 +10,7 @@
 rm(list = ls())
 wkf = "mgm"
 param = "mgm.R"
-file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+file_setup_path <- "file_setup.R"
 source(file_setup_path)
 source(paste0(script.folder, "project_ui.R"))
 
