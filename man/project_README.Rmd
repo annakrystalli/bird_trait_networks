@@ -19,9 +19,9 @@ knitr::read_chunk("../file_setup.R")
 
 <br>
 
-This README documents the scripts contained in the github repo and demonstrates their use to conduct analyses relating to the **bird trait networks project**. 
+This README documents the workflows associated with the **bird trait networks project**. 
 
-Description is split into project set up and the various analyses attempted during the project. See [**full list of files associated with the project**](http://annakrystalli.github.io/bird_trait_networks/file_system.html). If you are an authorised collaborator you can access all materials through the [**Open Science Framework project: `h7kgy`**](https://osf.io/h7kgy/).
+Description is split into project set up and the various analyses attempted during the project. See [**full list of files associated with the project**](http://annakrystalli.github.io/bird_trait_networks/file_system.html). If you are an authorised collaborator you can access all materials through the [**Open Science Framework project: `h7kgy`**](https://osf.io/h7kgy/). Check out the public wiki for more information.
 
 # **Project setup**
 
@@ -61,7 +61,7 @@ Once installed, you'll be able to programmatically access files (see example bel
 
 ### 2. Folder containing the code (the github folder)
 
-Ideally it is the ***path to an Rstudio project, [checked out](http://www.molecularecologist.com/2013/11/using-github-with-r-and-rstudio/) from the master [github folder](https://github.com/annakrystalli/bird_trait_networks)*** 
+Ideally it is the **path to an Rstudio project**, [**checked out**](http://www.molecularecologist.com/2013/11/using-github-with-r-and-rstudio/) from the master [**github repository**](https://github.com/annakrystalli/bird_trait_networks). Otherwise the path to the folder containing downloaded contents of repo.
 
 
 
