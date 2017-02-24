@@ -6,13 +6,10 @@ output: html_document
 
 
 ```{r, echo=F, message=FALSE, warning= F}
-
-codewd <- "~/Documents/worflows/bird_trait_networks/"
-datawd <- "~/"
-
-output.folder <- "/Users/Anna/Google Drive/bird trait networks/outputs/"
-input.folder <- "/Users/Anna/Google Drive/bird trait networks/inputs/data/"
-
+wkf = "goodmankruskal"
+param = "goodmankruskal.R"
+file_setup_path <- "../file_setup.R"
+source(file_setup_path)
 
 require(dplyr)
 require(plotly)
@@ -70,7 +67,7 @@ I've calculated counts of data available for each possible bivariate combination
 ```{r, echo=F, message=FALSE, warning= F}
 
 # make grid with unique combinations of variables
-var.grid <- calcTraitPairN(wide[,-(1:3)])
+var.grid <- calcTraitPairN(wide[,-(1:4)])
  vars <- unique(c(var.grid$Var1, var.grid$Var2))
   var.grid$np <- var.grid$n/dim(wide)[1]
 
@@ -82,17 +79,19 @@ m[cbind(var.grid[,2], var.grid[,1])] <- var.grid$np
 
 m[cbind(vars, vars)] <- 1
 
-# order by categories
-cat <- metadata$cat[match(dimnames(m)[[1]], metadata$master.vname)]
-
  cum.cor <- c() 
   for(var in dimnames(m)[[1]]){
-   cum.cor <- c(cum.cor, mean(var.grid$np[var.grid$Var1 == var | var.grid$Var2 == var], na.rm = T))
+   cum.cor <- c(cum.cor, setNames(mean(var.grid$np[var.grid$Var1 == var | var.grid$Var2 == var], na.rm = T),
+                                  var))
   }
 
-m.order <- order(cum.cor, decreasing = T)
-labels <- paste(substr(cat, 1,2), dimnames(m)[[1]])[m.order]
-m <- m[rev(m.order),m.order]
+cum.cor <- sort(cum.cor, decreasing = F)
+m <- m[names(cum.cor),rev(names(cum.cor))]
+labs <- paste(substr(metadata$cat[match(names(cum.cor), metadata$code)], 1,3), names(cum.cor))
+y.labels <- factor(labs, levels = labs)
+x.labels <- factor(labs, levels = rev(labs))
+
+
 
 plot_ly(x = var.grid$n, type = "histogram") %>%
   layout(title = "Distribution of trait pair datapoint availability",
@@ -109,11 +108,14 @@ I've also plotted interactively (*ie hover over the matrix for details of each c
 ```{r, echo=F, message=FALSE, warning= F}
 col <- brewer.pal(5, "YlGnBu")
 
-plot_ly(z = m, x = labels, y = rev(labels), type = "heatmap", 
+plot_ly(z = m, 
+        x = x.labels, y = y.labels, 
+        type = "heatmap", 
         #color = col, 
         name = "Trait pair proportional datapoint availability",
         colors = colorRamp(col, bias = 2),
-        hoverinfo = "z+x+y", text = text) %>%
+        hoverinfo = "z+x+y", text = text,
+        colorbar = list(yanchor = "middle")) %>%
   
   layout(margin = list(l = 150,
                        r = 80,
