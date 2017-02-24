@@ -6,7 +6,7 @@ wkf = "rmacro"
 param = "rmacro.R"
 
 if(exists("file_setup_path")){}else{
-  file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+  file_setup_path <- "file_setup.R"
   source(file_setup_path)}
 source(paste0(script.folder,"project_ui.R"))
 

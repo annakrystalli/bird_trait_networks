@@ -1,25 +1,21 @@
-# SETUP ###############################################################
-rm(list=ls())
-
 ## ----global-setup, echo = F----------------------------------------------
 rm(list=ls())
 options(stringsAsFactors = F)
 
+if(exists("file_setup_path")){}else{
+  file_setup_path <- "file_setup.R"
+  source(file_setup_path)}
+source(paste0(script.folder,"project_ui.R"))
+
+## ----intialise-project ----
 wkf = "rmacro"
 param = "rmacro.R"
-source("/Users/Anna/Documents/workflows/rmacroRDM/R/functions.R")
+source("~/Documents/workflows/bird_trait_networks/project_ui.R")
 
 ## ----master-configuration, eval=T----------------------------------------
 init_db(data.folder = "/Users/Anna/Google Drive/bird trait networks/",
         script.folder = "~/Documents/workflows/bird_trait_networks/", 
         spp.list_src = "D0", fileEncoding = "mac")
-
-## ----intialise-project ----
-source("~/Documents/workflows/bird_trait_networks/project_ui.R")
-
-# source rmacroRDM functions
-source("/Users/Anna/Documents/workflows/rmacroRDM/R/functions.R")
-
 
 # SETTINGS ###############################################################
 
