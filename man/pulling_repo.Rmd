@@ -1,0 +1,108 @@
+---
+title: "Pulling changes from `master` repo"
+date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
+output: 
+  html_document:
+    theme: journal
+    number_sections: true
+---
+***
+
+<br>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# make pull request
+
+To **update `your-fork` of the project** from the [**`master` repo** : `annakrystalli/bird_trait_networks`](https://github.com/annakrystalli/bird_trait_networks), you need to **head to your own fork** on github.
+
+Updating `your-fork` with the changes that have occured in the`master` since the two forks (`master` and `your-fork`) were in sync is achieved by making a **pull request**. 
+
+<br>
+
+<img src="assets/make_pull.png" width="700px">
+
+<br>
+
+# reverse the comparison direction
+
+A **pull request** from a fork will **default to setting the `master` as `BASE`** for difference (**diff**) comparison and yours as the `HEAD`. This compares commits in `your-fork` to the `master` and allows you to offer any diffs for merging to the `master`. 
+
+In this situation you want to achieve the reverse, ie merge any changes in the `master` repo to  `your-fork` . You therefore need to set `your-fork` to `BASE` and `master` to `HEAD`. 
+
+<img src="assets/compare_changes.png" width="700px">
+
+<br>
+
+## select `BASE` branch
+
+- set `your-fork` to `BASE`
+
+<img src="assets/select_base.png" width="700px">
+
+
+<br>
+
+## click compare forks
+Because you temporarily set both `HEAD` and `BASE` to the same repo (`your-fork`), it collapses to a comparison of branches within it. To get back to a fork comparison panel click **compare across forks**.
+
+<img src="assets/compare_forks.png" width="700px">
+
+<br>
+
+## select `HEAD` branch
+
+- set `master` repo to `HEAD`.
+
+<img src="assets/select_head.png" width="700px">
+
+<br>
+
+# create pull request
+
+When the comparison is complete and if no conflicts are detected, the panel will allow you to go ahead and make a pull request.
+
+<br>
+
+<img src="assets/pull_request.png" width="700px">
+
+<br>
+
+## complete pull request details
+
+This opens a dialog box for you to enter details of the pull request. It may in defaults to the details in the last commit in the `master`. Complete and click **Create pull request**.
+
+<img src="assets/open_pull.png" width="700px">
+
+<br>
+
+# merge pull request
+
+Because you have just made a pull request to `your-fork`, the request proceeds straight to the **merge** panel, where you can **accept it straight away**.
+
+<img src="assets/merge.png" width="700px">
+
+<br>
+<br>
+
+# `your-fork` is now up to date with the diffs in the `master`!
+
+<img src="assets/merged.png" width="700px">
+
+<br>
+
+# pull to **RStudio project**
+
+Once `your-fork` is up to date, pull the diffs down to your local RStudio project. 
+
+
+<img src="assets/pull_down.png" width="700px">
+
+<br>
+
+There is always potential for merge issues here if you have made changes to files that conflict with changes trying to be pulled down. This is a complicated issue not to be addressed here. General advice is to **work (make changes to files) in a** [**separate branch**](https://guides.github.com/introduction/flow/) **within `your-fork`** allowing for smooth update from the `master` to your master branch. You can then selectively merge code into your working branch. Resolving conflicts between any branch requires at the very least interaction with git through the terminal. Learn more [here](https://githowto.com/resolving_conflicts). Complicated merges might require a [visual merge tool](http://stackoverflow.com/questions/137102/whats-the-best-visual-merge-tool-for-git). Find out more about managing [conflicts](http://weblog.masukomi.org/2008/07/12/handling-and-avoiding-conflicts-in-git/),  [branches](https://github.com/blog/1377-create-and-delete-branches) and [merging](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging).
+
+At the very least, minimise conflicts by **only extending work through creating whole new files** and **maintaining integrity of original materials in the `master` branch of `your-fork`**. If all else fails, copy your local files to somewhere else, delete the entire RStudio project, create new project and check out from `your-fork` again. You can selectively re-introduce any relevant missing files. Or learn more about [git rebasing](https://help.github.com/articles/about-git-rebase/).
+
