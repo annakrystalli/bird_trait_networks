@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = F, message = F, warning=F, cache=F)
 ```{r, echo=TRUE}
 wkf = "goodmankruskal"
 param = "goodmankruskal.R"
-file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+file_setup_path <- "../file_setup.R"
 source(file_setup_path)
 source(paste(script.folder, "project_ui.R", sep = ""))
 

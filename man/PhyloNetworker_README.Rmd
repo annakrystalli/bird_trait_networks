@@ -3,7 +3,7 @@ title: "PhyloNetworker_README"
 date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: html_document
 params:
-  file_setup_path: ~/Documents/workflows/bird_trait_networks/file_setup.R
+  file_setup_path: ../file_setup.R
   save: FALSE
 ---
 

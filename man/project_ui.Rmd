@@ -16,7 +16,7 @@ The project_ui.R script launces an analysis environment. At the minimum, the por
 ```{r md-setup, message=F, warning=F, include=FALSE}
 require(knitr)
 opts_chunk$set(echo=TRUE, message=F, warning=F, cache=FALSE)
-file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+file_setup_path <- "../file_setup.R"
 read_chunk(file_setup_path)
 source(file_setup_path)
 

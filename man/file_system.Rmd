@@ -1,9 +1,9 @@
 ---
 title: "file.system"
-author: "Anna Krystalli"
-date: "24/01/2017"
+date: "Last rendered: `r Sys.time()`"
 output: 
   html_document:
+    theme: cerulean
     toc: true
     toc_float: true
 ---
@@ -98,24 +98,41 @@ Information regarding the project and data, including admin. Includes action pla
 
 <br>
 
-### **R/**
+- ### **R/**
   folder containing scripts either sourced by primary workflows, or relating to secondary workflows.  
-  - **PhyloNetworker_functions.R** : functions sourced for a number of workflows (see [`load_environment](https://github.com/annakrystalli/bird_trait_networks/blob/master/R/load_environment.R) to process data, determine trait associations and fit and visualise networks.
-  - **PhyloNetworker_setup.R** : workflow script, sourced to prepare data and associated objects for analysis.
-   - **add amniote synonyms.R** : script to extract synonyms from supplied synonym list with `Amniote_Databsae`
-   - **goodmankruskal.R** : GK  τ determination workflow for categorical variables.
-   - **helper_functions.R** : project wide helper functions loaded during `project_ui`.
-   - **impute_mgm.R** : script sourced during `mgm` wkf to impute missing data prior to mode fitting.
-   - **load_dependencies.R** : script to load dependencies during `project_ui`.
-   - **load_environment.R** : script to load wkf environment (functions and perform pre-processing) during `project_ui`.
-   - **load_files.R** : loads `ref_system` files 
-   - **load_global.R** :
-   - **mgm_dataprep.R** :
-   - **pkgs.R** :
-   - **rerun_phylosig.R** :
-   - **select_tree.R** :
-   - **test_impute.R** :
-   - **test_impute_functions.R** :
-   - **test_impute_tools.R** :
-   
-   
+    
+    - **PhyloNetworker_functions.R** : functions sourced for a number of workflows (see [`load_environment](https://github.com/annakrystalli/bird_trait_networks/blob/master/R/load_environment.R) to process data, determine trait associations and fit and visualise networks.
+    - **PhyloNetworker_setup.R** : workflow script, sourced to prepare data and associated objects for analysis.
+    - **add amniote synonyms.R** : script to extract synonyms from supplied synonym list with `Amniote_Databsae`
+    - **goodmankruskal.R** : GK  τ determination workflow for categorical variables.
+    - **helper_functions.R** : project wide helper functions loaded during `project_ui`.
+    - **impute_mgm.R** : script sourced during `mgm` wkf to impute missing data prior to mode fitting.
+    - **load_dependencies.R** : script to load dependencies during `project_ui`.
+    - **load_environment.R** : script to load wkf environment (functions and perform pre-processing) during `project_ui`.
+    - **load_files.R** : loads `ref_system` files 
+    - **load_global.R** :
+    - **mgm_dataprep.R** :
+    - **pkgs.R** :
+    - **rerun_phylosig.R** :
+    - **select_tree.R** :
+    - **test_impute.R** :
+    - **test_impute_functions.R** :
+    - **test_impute_tools.R** :
+
+- ### **docs/** :
+  folder to which gh-pages is set. Contains html files comprising public project documentation. Use script `render.R` to render site.
+    - **GoodmanKruskal.nb.html** : GoodmanKruskal workflow documentation.
+    - **Hierarchical_Networks.html** : Theory and `R` tools behind Hierarchical network analysis.
+    -**Network_
+- ### **man/**  
+- ### **params/**  
+- ### **process/**  
+- ### **reports/** 
+    - #### **results/** :
+         - **Categorical_phylocors.Rmd** : Report on distribution of expected GKtau between pair of traits simulated from the phylogeny. 
+        - **CorNetwork_plots.html** : early report ("nn" trait pairs only) on trait association network structure. Flat network plots.
+        - **data_gap_eval.Rmd** : Report on data availability across traits. Include assessment of taxonomic distinctness of available trait data subsambles.
+        - **hrg.Rmd** : Demo of fitting a hierarchical graphical model.
+        - **mgm_viz.Rmd** : Visualisation of mixed graphical model (mgm) network
+        - **Network_viz.Rmd** : Vizualisation of phylonetworker networks
+     

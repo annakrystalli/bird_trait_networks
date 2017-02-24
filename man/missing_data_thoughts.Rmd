@@ -33,8 +33,9 @@ require(plotly)
 require(knitr)
 require(RColorBrewer)
 
-output.folder <- "/Users/Anna/Google Drive/bird trait networks/outputs/"
-input.folder <- "/Users/Anna/Google Drive/bird trait networks/inputs/data/"
+file_setup_path <- "../file_setup.R"
+source(file_setup_path)
+
 
 # FILES ##################################################################
 
