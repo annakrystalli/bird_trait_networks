@@ -220,7 +220,7 @@ Edge determination for `pair.type = "cc"` proceeds in two steps
 
 ```
 
-2. Information is extracted from the list and returned as a data.frame, alignable with `pglsPhyloCor` ouputs for `pair.type = "nn"` or `"nc"` (more details in [**`pglsPhyloCor` README**]()).    
+2. Information is extracted from the list and returned as a data.frame, alignable with `pglsPhyloCor` ouputs for `pair.type = "nn"` or `"nc"` (more details in [**`pglsPhyloCor` README**](http://annakrystalli.github.io/bird_trait_networks/pglsPhyloCor_README.nb.html).    
 ```{r pn-cc, eval=FALSE}
 
 ```
