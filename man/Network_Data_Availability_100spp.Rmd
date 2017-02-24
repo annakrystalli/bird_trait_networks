@@ -1,5 +1,5 @@
 ---
-title: "Network data availability"
+title: "Network data availability 100spp"
 date: "Last rendered: `r format(Sys.time(), '%d %b %Y %H:%M:%S')`"
 output: html_document
 ---
