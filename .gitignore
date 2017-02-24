@@ -4,6 +4,7 @@
 .Rapp.history
 .RData
 README.html
+man/assets/
 packrat/lib*/
 Network_Data_Availability_100spp.html
 mgm.html
