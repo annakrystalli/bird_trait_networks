@@ -4,6 +4,7 @@
 .Rapp.history
 .RData
 README.html
+file_setup.R
 R/reset_metadata.R
 man/assets/
 packrat/lib*/
