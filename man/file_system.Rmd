@@ -3,8 +3,9 @@ title: "file.system"
 date: "Last rendered: `r Sys.time()`"
 output: 
   html_document:
-    theme: cerulean
+    theme: journal
     toc: true
+    toc_depth : 2
     toc_float: true
 ---
 
@@ -12,78 +13,105 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# google drive folder
+***
 
-### **info/**
+# **google drive folder**
+
+<br>
+
+## **info/**
 
 Information regarding the project and data, including admin. Includes action plans and literature reviews
 
-- #### **invoicing/**
+- ### **invoicing/**
     - **Leave Sheet.gsheet:** googlesheet of booked holiday
     - **`invoice_id`-Bird Train Networks `purchase_order_id`:** copies of issued invoices.
-- #### **Literature/**
+- ### **Literature/**
   useful literature
 
-### **inputs/**
+## **inputs/**
 
-- #### **data/**
-  input data and metadata folder. Many input folders (`{rmacroRDM}`) are required by the functions of  `rmacroRDM`. Please do not alter the structure of these folders. For more details see [**rmacroRDM README**]()
-    - **analytical/** 
-        - **`master.csv`** : master (long) analytical dataset. Output of `wkf = "rmacroRDM"` in `match.workflow.R`
-        - **`master wide.csv`** : master wide analytical dataset. Output of `wkf = "rmacroRDM"` in `match.workflow.R`
-    - **metadata/ {rmarcroRDM folder}**
+- ### **data/**
+  input data and metadata folder. Many input folders (`{rmacroRDM}`) are required by the functions of  `rmacroRDM`. Please do not alter the structure of these folders. For more details see [**rmacroRDM README**](http://annakrystalli.github.io/bird_trait_networks/rmacroRDM.nb.html). 
+  
+    - #### **analytical/**  
+        - **`master.csv`** : master (long) analytical dataset. Output of `wkf = "rmacroRDM"` in `match.workflow.R` 
+        - **`master wide.csv`** : master wide analytical dataset. Output of `wkf = "rmacroRDM"` in `match.workflow.R` 
+    - #### **metadata/ {rmacroRDM folder}**
         - **`data_log.csv`** : metadata on raw datasets used to compile analytical
         - **`vnames.csv`** : metadata on raw data variable name matching to master
         - **`outliers.csv`** : table identifying outliers in duplicate `spp:var` entries
         - **`outlier_refs.csv`** : references supporting outlier identification
-    - **pre/ {rmarcroRDM folder}** : contains `meta.var` folders, used to supply data to the `rmacroRDM` compilation functions. Dataset details can be found in `data_log.csv`.
-        - **csv/**
-        - **n/**
-        - **notes/**
-        - **observer/**
-        - **qc/**
-        - **ref/**
-    - **post/ {rmarcroRDM folder}** : mirror folders of contents of **pre/** where post processed raw data is saved.
-        - **csv/**
-        - **n/**
-        - **notes/**
-        - **observer/**
-        - **qc/**
-        - **ref/**
-    - **taxo/ {rmarcroRDM folder}** : contains taxonomic metadata.
-        - **match data/** : data relating to the taxonomic match workflow. Includes:
+    - #### **pre/ {rmacroRDM folder}** :  
+      contains `meta.var` folders, used to supply data to the `rmacroRDM` compilation functions. Dataset details can be found in `data_log.csv`.
+        - ##### **csv/**
+            - **Amniote_Database_Aug_2015.csv** : preprocessed amniote database **data** csv.
+            - **Table.csv** : preprocessed original data csv.
+        - ##### **n/**
+            - **Amniote_Range_Count_Aug_2015.csv** : preprocessed amniote database **n** csv.
+        - ##### **notes/**
+        - ##### **observer/**
+        - ##### **qc/**
+        - ##### **ref/**
+            - **Amniote_Database_References_Aug_2015.csv** : preprocessed amniote database **ref** csv. 
+    - #### **post/ {rmacroRDM folder}** :  
+      Folder where processed csvs are stored. Should mirror folders of contents of **pre/** folder.
+        - ##### **csv/**
+            - **Amniote_Database_Aug_2015.csv** : postprocessed amniote database **data** csv.
+            - **Table.csv** : postprocessed original data csv.
+        - ##### **n/**
+            - **Amniote_Range_Count_Aug_2015.csv** : postprocessed amniote database **n** csv.
+            - **Amniote_Database_Aug_2015_n_group.csv** : cross reference table confirming metadata column name assignment. Required when metavar information for variables is missing. Also used to assign metavar column names to multiple traits (e.g. if the same **n** referes to the sample size on which multiple trait data are based on.
+        - ##### **notes/**
+        - ##### **observer/**
+        - ##### **qc/**
+        - ##### **ref/**
+            - **Amniote_Database_References_Aug_2015.csv** : postprocessed amniote database **ref** csv.     
+    - #### **taxo/ {rmacroRDM folder}** : contains taxonomic metadata.
+        - ##### **match data/** : 
+          data relating to the taxonomic match workflow. Includes:
             - `mmatch` and `mmatched` match output `.csv`s used to complete manual matching (deprecated: compiled to syn.links sheet). 
             - match `m .RData` object for each dataset matched to the project `spp.list` (ie in our case `D1` and the `tree`)
-        - **synonyms/** : various synonym lists from which `syn.links` were extracted.
+        - ##### **synonyms/** : 
+          various synonym lists from which `syn.links` were extracted.
         - **100spp.csv** : list of 100 species for subset analysis.
         - **`an.ID`species_ranks.RData** : Loaded during `Phylonetworker_setup.R` in `wkf = "phylonetworker"`. Contains: 
             - **`spp.rank`** : rank of sum of each species datapoint contribution across all possible trait pairs.
-        - **`dcode`_taxo.csv** : taxonomic data extracted from matched dataset `dcode`
+        - **`dcode`**_**taxo.csv** : taxonomic data extracted from matched dataset `dcode`
         - **syn.links.csv** : synonym links lookup table. 
         - **TD_`an.ID`.Rdata** : table of taxonomic distincteness assessment outputs of trait data subset taxonomic makeup. Loaded during `Phylonetworker_setup.R` in `wkf = "phylonetworker"`.
-    - **tree/** : contains files relating to the phylogenetic tree used in the analysis
+    - #### **tree/** : 
+      contains files relating to the phylogenetic tree used in the analysis
         - **tree.RData** : tree used in analysis. Extracted from `Stage2_MayrAll_Hackett_set10_decisive.tre`.
 
-### **outputs/**
+## **outputs/**
 
-- #### **data/**
-    - **hrg/** : outputs of experimentation with fiting consensus hierarchical networks using the `hrg` package
-    - **imputed_data/** : outputs of missing data imputation (for data preparation for `mgm` analysis) using different subsets of the original data. Subselection of data uses the ranks of variable and species to the total data pool and is accomplished by setting the **proportion of top var/species** to be used through parameters **`v`** and **`s`** respectively. 
+- ### **data/**
+    - #### **hrg/** : 
+      outputs of experimentation with fiting consensus hierarchical networks using the `hrg` package.
+    - #### **imputed_data/** : 
+      outputs of missing data imputation (for data preparation for `mgm` analysis) using different subsets of the original data. Subselection of data uses the ranks of variable and species to the total data pool and is accomplished by setting the **proportion of top var/species** to be used through parameters **`v`** and **`s`** respectively. 
         - file naming: **`an.ID`spp-v`v`-s`s`.Rdata** 
-    - **match objects/** : m object resulting from processing and matching D1 data. {rmacroRDM}
-    - **mgm/** : mixed graphical models. filenaming **`an.ID`-`v`-`s`-`min.n`-`min.cat`**. {mgm}
-    - **networks/** : rnetcarto network outputs (as .Rdata as well as flat .csv). {phylonetworker}
+    - #### **match objects/** : 
+      m object resulting from processing and matching D1 data. {rmacroRDM}
+    - #### **mgm/** : 
+    mixed graphical models. filenaming **`an.ID`-`v`-`s`-`min.n`-`min.cat`**. {mgm}
+    - #### **networks/** : 
+      rnetcarto network outputs (as .Rdata as well as flat .csv). {phylonetworker}
         - Filenames: **`an.ID`_net_mn`min.n`_`log`**...
-    - **phylocors/** : outputs of phylogenetically corrected trait pair correlation analysis. {phylonetworker} 
+    - #### **phylocors/** : 
+      outputs of phylogenetically corrected trait pair correlation analysis. {phylonetworker} 
         - Filenames: **`an.ID`_phylocor_mn`min.n`_`log`_`pair.type`.Rdata**.   
         -   All `pair.type` results complied into **`all_phylocor_mn50_log_allDT.csv`**.
-    - ##### **`master.rda`** : master object resulting from {rmacroRDM} workflow
+    - **`master.rda`** : master object resulting from {rmacroRDM} workflow
     
 
 
-- #### **reports/**
-    - **progress reports/** : Rendered (html) progress reports 01-05 and associated files
-    - **Results/** : Rendered (html) results reports
+- ### **reports/**
+    - #### **progress reports/** : 
+      Rendered (html) progress reports 01-05 and associated files
+    - #### **Results/** : 
+      Rendered (html) results reports
         - **Categorical_phylocors.nb.html** : Report on distribution of expected GKtau between pair of traits simulated from the phylogeny. 
         - **CorNetwork_plots.html** : early report ("nn" trait pairs only) on trait association network structure. Flat network plots.
         - **data_gap_eval.nb.html** : Report on data availability across traits. Include assessment of taxonomic distinctness of available trait data subsambles.
@@ -98,41 +126,130 @@ Information regarding the project and data, including admin. Includes action pla
 
 <br>
 
-- ### **R/**
+The main folder contains the scripts to the primary workflows. The rest of the materials are organised in a system of folders. 
+
+- **Phylonetworker.R** : `phylonetworker` workflow.
+- **README** : repo README (landing page on online github repo).
+- **configure_sys_ref.R** : script to intiate an rmacroRDM project and set up system reference files. Includes launching the **`sys_ref_configurator` app**. {rmacroRDM}
+- **file_setup.R** : the first script to be modified. Sets project local folder pathways. {project_ui}
+- **mgm.R** : `mgm` workflow.
+- **project_ui.R** : script sourced at the beginning of any analysis to initialise the required environment. 
+- **rmacroRDM_data.R** : `rmacro` workflow. Merging of the original with the amniote dataset.
+- **rmacroRDM_data.R** : `rmacro` workflow. Synonym matching of `tree` to master `spp.list`.  
+- ## **R/**
   folder containing scripts either sourced by primary workflows, or relating to secondary workflows.  
     
-    - **PhyloNetworker_functions.R** : functions sourced for a number of workflows (see [`load_environment](https://github.com/annakrystalli/bird_trait_networks/blob/master/R/load_environment.R) to process data, determine trait associations and fit and visualise networks.
-    - **PhyloNetworker_setup.R** : workflow script, sourced to prepare data and associated objects for analysis.
+    - **PhyloNetworker_functions.R** : functions sourced for a number of workflows (see [**project_ui README**](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html) for more details) to process data, determine trait associations and fit and vixsualise networks.
+    - **PhyloNetworker_setup.R** : workflow script, sourced to prepare data and associated objects for analysis. `{project_ui}` 
     - **add amniote synonyms.R** : script to extract synonyms from supplied synonym list with `Amniote_Databsae`
     - **goodmankruskal.R** : GK  τ determination workflow for categorical variables.
-    - **helper_functions.R** : project wide helper functions loaded during `project_ui`.
-    - **impute_mgm.R** : script sourced during `mgm` wkf to impute missing data prior to mode fitting.
-    - **load_dependencies.R** : script to load dependencies during `project_ui`.
+    - **helper_functions.R** : project wide helper functions. `{project_ui}`
+    - **impute_mgm.R** : script sourced during `mgm` wkf to impute missing data prior to mode fitting. `{mgm}`
+    - **load_dependencies.R** : script to load dependencies. `{project_ui}`
     - **load_environment.R** : script to load wkf environment (functions and perform pre-processing) during `project_ui`.
-    - **load_files.R** : loads `ref_system` files 
-    - **load_global.R** :
-    - **mgm_dataprep.R** :
-    - **pkgs.R** :
-    - **rerun_phylosig.R** :
-    - **select_tree.R** :
-    - **test_impute.R** :
-    - **test_impute_functions.R** :
-    - **test_impute_tools.R** :
+    - **load_files.R** : loads `ref_system` files. `{project_ui}`
+    - **load_global.R** : . `{project_ui}`
+    - **mgm_dataprep.R** : sourced data preparation script `{mgm}`
+    - **pkgs.R** : . `{project_ui}`
+    - **rerun_phylosig.R** : script to re-extract lambda for traits using trait pair data subsamples. `{phylonetworker}`
+    - **select_tree.R** : script to select tree. `{phylonetworker}`
+    - **test_impute.R** : test to determine trait contribution to imputation error. Computationally expensive. `{mgm}`
+    - **test_impute_functions.R** : functions required for `test_impute.R`. `{mgm}`
 
-- ### **docs/** :
-  folder to which gh-pages is set. Contains html files comprising public project documentation. Use script `render.R` to render site.
-    - **GoodmanKruskal.nb.html** : GoodmanKruskal workflow documentation.
+- ## **docs/** 
+  folder to which **[gh-pages](https://pages.github.com/) is set (the project website)**. Contains **html** files comprising **public project documentation**. Use script `render.R` to render site.
+  
+    - **GoodmanKruskal.nb.html** : `goodmankruskal` workflow documentation.
     - **Hierarchical_Networks.html** : Theory and `R` tools behind Hierarchical network analysis.
-    -**Network_
-- ### **man/**  
-- ### **params/**  
-- ### **process/**  
-- ### **reports/** 
-    - #### **results/** :
+    - **Network_Data_Availability_`an.ID`.nb.html** : Data availability across all trait pairs in `an.ID` analytical dataset.
+    - **PhyloNetworker_README.nb.html** : `phylonetworker` workflow documentation.
+    - **data_gap_eval.nb.html** : analysis of taxonomic bias across trait pair data subsets.
+    - **file_system.html** : project file documentation.
+    - **mgm.html** : `mgm` workflow documentation.
+    - **mgm_viz.nb.html** : `mgm` network report & visualisation
+    - **missing_data_thoughts.nb.html** : notes on approaches to deal with missing data.
+    - **pglsPhyloCor_README.nb.html** : `pglsPhyloCor()` function documenation. Used in `phylonetworker` wkf.
+    - **project_README.nb.html** : project README.
+    - **project_ui.nb.html** : `project_ui.R` documentation. Script is sourced to initialise an analysis environment within the project. Environment specified through character strings `wkf` and `param`.
+    - **pulling_repo.html** : documentation for making a pull request.
+    - **rmacroRDM.nb.html** : rmacroRDM workflow documentation (needs updating)
+- ## **man/**  
+  Folder contains the **Rmd** files used to produced **html** documentation in `docs/` folder. Use **`render.R`** to render **Rmd**s to **.html**.
+  
+    - **GoodmanKruskal.Rmd** : `goodmankruskal` workflow documentation.
+    - **Hierarchical_Networks.Rmd** : Theory and `R` tools behind Hierarchical network analysis.
+    - **Network_Data_Availability_`an.ID`.Rmd** : Data availability across all trait pairs in `an.ID` analytical dataset.
+    - **PhyloNetworker_README.Rmd** : `phylonetworker` workflow documentation.
+    - **file_system.Rmd** : project file documentation.
+    - **missing_data_thoughts.Rmd** : notes on approaches to deal with missing data.
+    - **pglsPhyloCor_README.Rmd** : `pglsPhyloCor()` function documenation. Used in `phylonetworker` wkf.
+    - **project_README.Rmd** : project README.
+    - **project_ui.Rmd** : `project_ui.R` documentation. Script is sourced to initialise an analysis environment within the
+    project. Environment specified through character strings `wkf` and `param`.
+    - **pulling_repo.Rmd** : documentation for making a pull request.
+    - **render.R** : documentation render workflow. Batch render and set theme.
+    - **rmacroRDM.Rmd** : rmacroRDM workflow documentation (needs updating).
+- ## **params/ {project_ui}**
+    scripts to define workflow parameters. Sourced during `project_ui` by specifying name of file to source through object `"param"` Create new parametarisation by creating and specifying new parameter scripts scripts or modifying original files and re-running.
+    
+    - **goodmankruskal.R** : goodmankruskal parameters.
+    - **mgm.R** : `mgm` parameters.
+    - **min.n.test.R** : minimum n test workflow parameters.
+    - **phylonetworker.R** : `phylonetworker` parameters.
+    - **project_ui.R** : global `project_ui` parameters.
+    - **rmacro.R** : rmacroRDM parameters.
+    - **var_imput_test.R** : assessment of variable imputation error contribution.
+- ## **process/ {rmacroRDM}**  
+  folder containing custom scripts for processing individual rmacroRDM datasets stored in the **csv/** folder. They are sourced when `process_csv()` is called. Scripts are sourced either:
+    + **pre-processing** : any computation will be performed on the raw data.fame as first loaded from the **pre/** `rmacroRDM` folder. Processing script names **should be appended with `_pre`**.
+    + **post-processing** : any computation will be performed on the data.fame produced post processing, prior to being saved in the **post/** `rmacroRDM` folder. 
+    Processing script are **named as the dataset `file.name` and appended with `_post`**.
+    
+      - **Amniote_Database_Aug_2015_post.R** 
+      - **Amniote_Database_Aug_2015_pre.R** 
+      - **Amniote_Database_References_Aug_2015_pre.R** 
+      - **Amniote_Range_Count_Aug_2015_pre.R** 
+      - **Table_post.R** 
+      - **Table_pre.R** 
+- ## **reports/** 
+    - ### **results/** 
+      Folder contains **Rmd** documents used to generate results **html** documents in **`output.folder`/reports/results/**.
+      
          - **Categorical_phylocors.Rmd** : Report on distribution of expected GKtau between pair of traits simulated from the phylogeny. 
-        - **CorNetwork_plots.html** : early report ("nn" trait pairs only) on trait association network structure. Flat network plots.
+        - **CorNetwork_plots.Rmd** : early report ("nn" trait pairs only) on trait association network structure. Flat network plots.
+        - **Network_viz.Rmd** : Vizualisation of phylonetworker networks
         - **data_gap_eval.Rmd** : Report on data availability across traits. Include assessment of taxonomic distinctness of available trait data subsambles.
         - **hrg.Rmd** : Demo of fitting a hierarchical graphical model.
         - **mgm_viz.Rmd** : Visualisation of mixed graphical model (mgm) network
-        - **Network_viz.Rmd** : Vizualisation of phylonetworker networks
-     
+
+
+***
+
+# **parameters**
+
+<br>
+
+Parameters for analysis environments are supplied through scripts in the **params/** folder and called by specifying a **`param`** character string of the name of the required **params/** file, e.g.
+```{r}
+param <- "phylonetworker.R"
+```
+prior to sourcing `project_ui.R`. The **`params/project_ui.R`** is a required global parameter file and is called as part of `project_ui` sourcing. Please do not delete any files. Add new ones to parametarise your own analysis.
+
+## `project_ui` parameters:
+
+- **na.strings** : character vector defining values to be encoded as `NA` when reading **csv**s.
+- **fileEncoding** : character vector specifying global `fileEncoding` to be used when reading in csvs in primary workflows. rmacroRDM handles fileEncodings on an individual file basis and is not affected by this setting. But loadiing the master outputs of the `rmacroRDM` workflow in downstream analysis might required fiddling with this setting (especially for `metadata.csv` and `master.csv`). If you're getting funny characters on check out the [**fileEncoding_checker**](https://annakrystalli.shinyapps.io/fileEncoding_checker/) to test fileEncoding on your system.  
+
+## `wkf` parameters:
+- **an.ID** : character string identifying analysis. Either **`"all"`** to use all available species data or **`"100spp"`**, for subsetting data to the 100 species subset defined in **taxo/100spp.csv**.
+- **min.n** : minimum number of shared datapoints required for a trait pair to be included in association analysis.
+- **log** : logical, whether to log numeric traits, specified as `log.vars` through the logical **log** column in `metadata.csv`.
+- **cutoff** : cut-off level used to delimit association between trait pairs. Defaults to 0.35
+- **min.cat** : Minimum accepted count per category. if the count of any category falls below this threshold, categories affected are attempted to be re-encoded as a single "other" category. If this still doesn't result in > min.cat counts, the affected category and datpoints are removed. Defaults to 5.
+- **remove_dtips** : whether to remove tips from tree which have resulted as duplicates through matching the taxonomy to the master spp.list. Defaults to `T` for smooth matching of tree to data.
+**dist.types** : character vector. Either **`"all"`** to incidate inclusion of all distribution (data) types or a vector indicating the **`"mgm_types"`** to be included.
+- **save** : T
+
+### mgm parameters
+- **v.p** : proportion of variables to be included in `mgm` analysis. Variables are selected from a lists of variables ranked according to their cumulative datapoint contribution across all trait pairs.
+- **s.p** : proportion of species to be included in `mgm` analysis. Species are selected from a lists of variables ranked according to their cumulative datapoint contribution across all trait pairs.
