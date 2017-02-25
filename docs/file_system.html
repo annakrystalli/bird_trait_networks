@@ -122,7 +122,7 @@ $(document).ready(function ()  {
 
     // establish options
     var options = {
-      selectors: "h1,h2,h3",
+      selectors: "h1,h2",
       theme: "bootstrap3",
       context: '.toc-content',
       hashGenerator: function (text) {
@@ -214,114 +214,151 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">file.system</h1>
-<h4 class="date"><em>Last rendered: 2017-02-24 15:02:21</em></h4>
+<h4 class="date"><em>Last rendered: 2017-02-25 09:47:26</em></h4>
 
 </div>
 
 
+<hr />
 <div id="google-drive-folder" class="section level1">
-<h1>google drive folder</h1>
-<div id="info" class="section level3">
-<h3><strong>info/</strong></h3>
+<h1><strong>google drive folder</strong></h1>
+<p><br></p>
+<div id="info" class="section level2">
+<h2><strong>info/</strong></h2>
 <p>Information regarding the project and data, including admin. Includes action plans and literature reviews</p>
 <ul>
-<li><h4 id="invoicing"><strong>invoicing/</strong></h4>
+<li><h3 id="invoicing"><strong>invoicing/</strong></h3>
 <ul>
 <li><strong>Leave Sheet.gsheet:</strong> googlesheet of booked holiday</li>
 <li><strong><code>invoice_id</code>-Bird Train Networks <code>purchase_order_id</code>:</strong> copies of issued invoices.</li>
 </ul></li>
-<li><h4 id="literature"><strong>Literature/</strong></h4>
+<li><h3 id="literature"><strong>Literature/</strong></h3>
 useful literature</li>
 </ul>
 </div>
-<div id="inputs" class="section level3">
-<h3><strong>inputs/</strong></h3>
+<div id="inputs" class="section level2">
+<h2><strong>inputs/</strong></h2>
 <ul>
-<li><h4 id="data"><strong>data/</strong></h4>
-input data and metadata folder. Many input folders (<code>{rmacroRDM}</code>) are required by the functions of <code>rmacroRDM</code>. Please do not alter the structure of these folders. For more details see <a href><strong>rmacroRDM README</strong></a>
+<li><h3 id="data"><strong>data/</strong></h3>
+<p>input data and metadata folder. Many input folders (<code>{rmacroRDM}</code>) are required by the functions of <code>rmacroRDM</code>. Please do not alter the structure of these folders. For more details see <a href="http://annakrystalli.github.io/bird_trait_networks/rmacroRDM.nb.html"><strong>rmacroRDM README</strong></a>.</p>
 <ul>
-<li><strong>analytical/</strong>
+<li><h4 id="analytical"><strong>analytical/</strong></h4>
 <ul>
 <li><strong><code>master.csv</code></strong> : master (long) analytical dataset. Output of <code>wkf = &quot;rmacroRDM&quot;</code> in <code>match.workflow.R</code></li>
 <li><strong><code>master wide.csv</code></strong> : master wide analytical dataset. Output of <code>wkf = &quot;rmacroRDM&quot;</code> in <code>match.workflow.R</code></li>
 </ul></li>
-<li><strong>metadata/ {rmarcroRDM folder}</strong>
+<li><h4 id="metadata-rmacrordm-folder"><strong>metadata/ {rmacroRDM folder}</strong></h4>
 <ul>
 <li><strong><code>data_log.csv</code></strong> : metadata on raw datasets used to compile analytical</li>
 <li><strong><code>vnames.csv</code></strong> : metadata on raw data variable name matching to master</li>
 <li><strong><code>outliers.csv</code></strong> : table identifying outliers in duplicate <code>spp:var</code> entries</li>
 <li><strong><code>outlier_refs.csv</code></strong> : references supporting outlier identification</li>
 </ul></li>
-<li><strong>pre/ {rmarcroRDM folder}</strong> : contains <code>meta.var</code> folders, used to supply data to the <code>rmacroRDM</code> compilation functions. Dataset details can be found in <code>data_log.csv</code>.
+<li><h4 id="pre-rmacrordm-folder"><strong>pre/ {rmacroRDM folder}</strong> :</h4>
+contains <code>meta.var</code> folders, used to supply data to the <code>rmacroRDM</code> compilation functions. Dataset details can be found in <code>data_log.csv</code>.
 <ul>
-<li><strong>csv/</strong></li>
-<li><strong>n/</strong></li>
-<li><strong>notes/</strong></li>
-<li><strong>observer/</strong></li>
-<li><strong>qc/</strong></li>
-<li><strong>ref/</strong></li>
+<li><h5 id="csv"><strong>csv/</strong></h5>
+<ul>
+<li><strong>Amniote_Database_Aug_2015.csv</strong> : preprocessed amniote database <strong>data</strong> csv.</li>
+<li><strong>Table.csv</strong> : preprocessed original data csv.</li>
 </ul></li>
-<li><strong>post/ {rmarcroRDM folder}</strong> : mirror folders of contents of <strong>pre/</strong> where post processed raw data is saved.
+<li><h5 id="n"><strong>n/</strong></h5>
 <ul>
-<li><strong>csv/</strong></li>
-<li><strong>n/</strong></li>
-<li><strong>notes/</strong></li>
-<li><strong>observer/</strong></li>
-<li><strong>qc/</strong></li>
-<li><strong>ref/</strong></li>
+<li><strong>Amniote_Range_Count_Aug_2015.csv</strong> : preprocessed amniote database <strong>n</strong> csv.</li>
 </ul></li>
-<li><strong>taxo/ {rmarcroRDM folder}</strong> : contains taxonomic metadata.
+<li><h5 id="notes"><strong>notes/</strong></h5></li>
+<li><h5 id="observer"><strong>observer/</strong></h5></li>
+<li><h5 id="qc"><strong>qc/</strong></h5></li>
+<li><h5 id="ref"><strong>ref/</strong></h5>
 <ul>
-<li><strong>match data/</strong> : data relating to the taxonomic match workflow. Includes:
+<li><strong>Amniote_Database_References_Aug_2015.csv</strong> : preprocessed amniote database <strong>ref</strong> csv.</li>
+</ul></li>
+</ul></li>
+<li><h4 id="post-rmacrordm-folder"><strong>post/ {rmacroRDM folder}</strong> :</h4>
+Folder where processed csvs are stored. Should mirror folders of contents of <strong>pre/</strong> folder.
+<ul>
+<li><h5 id="csv-1"><strong>csv/</strong></h5>
+<ul>
+<li><strong>Amniote_Database_Aug_2015.csv</strong> : postprocessed amniote database <strong>data</strong> csv.</li>
+<li><strong>Table.csv</strong> : postprocessed original data csv.</li>
+</ul></li>
+<li><h5 id="n-1"><strong>n/</strong></h5>
+<ul>
+<li><strong>Amniote_Range_Count_Aug_2015.csv</strong> : postprocessed amniote database <strong>n</strong> csv.</li>
+<li><strong>Amniote_Database_Aug_2015_n_group.csv</strong> : cross reference table confirming metadata column name assignment. Required when metavar information for variables is missing. Also used to assign metavar column names to multiple traits (e.g. if the same <strong>n</strong> referes to the sample size on which multiple trait data are based on.</li>
+</ul></li>
+<li><h5 id="notes-1"><strong>notes/</strong></h5></li>
+<li><h5 id="observer-1"><strong>observer/</strong></h5></li>
+<li><h5 id="qc-1"><strong>qc/</strong></h5></li>
+<li><h5 id="ref-1"><strong>ref/</strong></h5>
+<ul>
+<li><strong>Amniote_Database_References_Aug_2015.csv</strong> : postprocessed amniote database <strong>ref</strong> csv.<br />
+</li>
+</ul></li>
+</ul></li>
+<li><h4 id="taxo-rmacrordm-folder-contains-taxonomic-metadata."><strong>taxo/ {rmacroRDM folder}</strong> : contains taxonomic metadata.</h4>
+<ul>
+<li><h5 id="match-data"><strong>match data/</strong> :</h5>
+data relating to the taxonomic match workflow. Includes:
 <ul>
 <li><code>mmatch</code> and <code>mmatched</code> match output <code>.csv</code>s used to complete manual matching (deprecated: compiled to syn.links sheet).</li>
 <li>match <code>m .RData</code> object for each dataset matched to the project <code>spp.list</code> (ie in our case <code>D1</code> and the <code>tree</code>)</li>
 </ul></li>
-<li><strong>synonyms/</strong> : various synonym lists from which <code>syn.links</code> were extracted.</li>
+<li><h5 id="synonyms"><strong>synonyms/</strong> :</h5>
+various synonym lists from which <code>syn.links</code> were extracted.</li>
 <li><strong>100spp.csv</strong> : list of 100 species for subset analysis.</li>
 <li><strong><code>an.ID</code>species_ranks.RData</strong> : Loaded during <code>Phylonetworker_setup.R</code> in <code>wkf = &quot;phylonetworker&quot;</code>. Contains:
 <ul>
 <li><strong><code>spp.rank</code></strong> : rank of sum of each species datapoint contribution across all possible trait pairs.</li>
 </ul></li>
-<li>**<code>dcode</code>_taxo.csv** : taxonomic data extracted from matched dataset <code>dcode</code></li>
+<li><strong><code>dcode</code></strong>_<strong>taxo.csv</strong> : taxonomic data extracted from matched dataset <code>dcode</code></li>
 <li><strong>syn.links.csv</strong> : synonym links lookup table.</li>
 <li><strong>TD_<code>an.ID</code>.Rdata</strong> : table of taxonomic distincteness assessment outputs of trait data subset taxonomic makeup. Loaded during <code>Phylonetworker_setup.R</code> in <code>wkf = &quot;phylonetworker&quot;</code>.</li>
 </ul></li>
-<li><strong>tree/</strong> : contains files relating to the phylogenetic tree used in the analysis
+<li><h4 id="tree"><strong>tree/</strong> :</h4>
+contains files relating to the phylogenetic tree used in the analysis
 <ul>
 <li><strong>tree.RData</strong> : tree used in analysis. Extracted from <code>Stage2_MayrAll_Hackett_set10_decisive.tre</code>.</li>
 </ul></li>
 </ul></li>
 </ul>
 </div>
-<div id="outputs" class="section level3">
-<h3><strong>outputs/</strong></h3>
+<div id="outputs" class="section level2">
+<h2><strong>outputs/</strong></h2>
 <ul>
-<li><h4 id="data-1"><strong>data/</strong></h4>
+<li><h3 id="data-1"><strong>data/</strong></h3>
 <ul>
-<li><strong>hrg/</strong> : outputs of experimentation with fiting consensus hierarchical networks using the <code>hrg</code> package</li>
-<li><strong>imputed_data/</strong> : outputs of missing data imputation (for data preparation for <code>mgm</code> analysis) using different subsets of the original data. Subselection of data uses the ranks of variable and species to the total data pool and is accomplished by setting the <strong>proportion of top var/species</strong> to be used through parameters <strong><code>v</code></strong> and <strong><code>s</code></strong> respectively.
+<li><h4 id="hrg"><strong>hrg/</strong> :</h4>
+outputs of experimentation with fiting consensus hierarchical networks using the <code>hrg</code> package.</li>
+<li><h4 id="imputed_data"><strong>imputed_data/</strong> :</h4>
+outputs of missing data imputation (for data preparation for <code>mgm</code> analysis) using different subsets of the original data. Subselection of data uses the ranks of variable and species to the total data pool and is accomplished by setting the <strong>proportion of top var/species</strong> to be used through parameters <strong><code>v</code></strong> and <strong><code>s</code></strong> respectively.
 <ul>
 <li>file naming: <strong><code>an.ID</code>spp-v<code>v</code>-s<code>s</code>.Rdata</strong></li>
 </ul></li>
-<li><strong>match objects/</strong> : m object resulting from processing and matching D1 data. {rmacroRDM}</li>
-<li><strong>mgm/</strong> : mixed graphical models. filenaming <strong><code>an.ID</code>-<code>v</code>-<code>s</code>-<code>min.n</code>-<code>min.cat</code></strong>. {mgm}</li>
-<li><strong>networks/</strong> : rnetcarto network outputs (as .Rdata as well as flat .csv). {phylonetworker}
+<li><h4 id="match-objects"><strong>match objects/</strong> :</h4>
+m object resulting from processing and matching D1 data. {rmacroRDM}</li>
+<li><h4 id="mgm"><strong>mgm/</strong> :</h4>
+mixed graphical models. filenaming <strong><code>an.ID</code>-<code>v</code>-<code>s</code>-<code>min.n</code>-<code>min.cat</code></strong>. {mgm}</li>
+<li><h4 id="networks"><strong>networks/</strong> :</h4>
+rnetcarto network outputs (as .Rdata as well as flat .csv). {phylonetworker}
 <ul>
 <li>Filenames: <strong><code>an.ID</code><em>net_mn<code>min.n</code></em><code>log</code></strong>…</li>
 </ul></li>
-<li><strong>phylocors/</strong> : outputs of phylogenetically corrected trait pair correlation analysis. {phylonetworker}
+<li><h4 id="phylocors"><strong>phylocors/</strong> :</h4>
+outputs of phylogenetically corrected trait pair correlation analysis. {phylonetworker}
 <ul>
 <li>Filenames: **<code>an.ID</code><em>phylocor_mn<code>min.n</code></em><code>log</code>_<code>pair.type</code>.Rdata**.<br />
 </li>
 <li>All <code>pair.type</code> results complied into <strong><code>all_phylocor_mn50_log_allDT.csv</code></strong>.</li>
 </ul></li>
-<li><h5 id="master.rda-master-object-resulting-from-rmacrordm-workflow"><strong><code>master.rda</code></strong> : master object resulting from {rmacroRDM} workflow</h5></li>
+<li><strong><code>master.rda</code></strong> : master object resulting from {rmacroRDM} workflow</li>
 </ul></li>
-<li><h4 id="reports"><strong>reports/</strong></h4>
+<li><h3 id="reports"><strong>reports/</strong></h3>
 <ul>
-<li><strong>progress reports/</strong> : Rendered (html) progress reports 01-05 and associated files</li>
-<li><strong>Results/</strong> : Rendered (html) results reports
+<li><h4 id="progress-reports"><strong>progress reports/</strong> :</h4>
+Rendered (html) progress reports 01-05 and associated files</li>
+<li><h4 id="results"><strong>Results/</strong> :</h4>
+Rendered (html) results reports
 <ul>
 <li><strong>Categorical_phylocors.nb.html</strong> : Report on distribution of expected GKtau between pair of traits simulated from the phylogeny.</li>
 <li><strong>CorNetwork_plots.html</strong> : early report (“nn” trait pairs only) on trait association network structure. Flat network plots.</li>
@@ -338,50 +375,142 @@ input data and metadata folder. Many input folders (<code>{rmacroRDM}</code>) ar
 <div id="github-folder" class="section level1">
 <h1>github folder</h1>
 <p><br></p>
+<p>The main folder contains the scripts to the primary workflows. The rest of the materials are organised in a system of folders.</p>
 <ul>
-<li><h3 id="r"><strong>R/</strong></h3>
+<li><strong>Phylonetworker.R</strong> : <code>phylonetworker</code> workflow.</li>
+<li><strong>README</strong> : repo README (landing page on online github repo).</li>
+<li><strong>configure_sys_ref.R</strong> : script to intiate an rmacroRDM project and set up system reference files. Includes launching the <strong><code>sys_ref_configurator</code> app</strong>. {rmacroRDM}</li>
+<li><strong>file_setup.R</strong> : the first script to be modified. Sets project local folder pathways. {project_ui}</li>
+<li><strong>mgm.R</strong> : <code>mgm</code> workflow.</li>
+<li><strong>project_ui.R</strong> : script sourced at the beginning of any analysis to initialise the required environment.</li>
+<li><strong>rmacroRDM_data.R</strong> : <code>rmacro</code> workflow. Merging of the original with the amniote dataset.</li>
+<li><strong>rmacroRDM_data.R</strong> : <code>rmacro</code> workflow. Synonym matching of <code>tree</code> to master <code>spp.list</code>.<br />
+</li>
+<li><h2 id="r"><strong>R/</strong></h2>
 <p>folder containing scripts either sourced by primary workflows, or relating to secondary workflows.</p>
 <ul>
-<li><strong>PhyloNetworker_functions.R</strong> : functions sourced for a number of workflows (see <a href="https://github.com/annakrystalli/bird_trait_networks/blob/master/R/load_environment.R">`load_environment</a> to process data, determine trait associations and fit and visualise networks.</li>
-<li><strong>PhyloNetworker_setup.R</strong> : workflow script, sourced to prepare data and associated objects for analysis.</li>
+<li><strong>PhyloNetworker_functions.R</strong> : functions sourced for a number of workflows (see <a href="http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html"><strong>project_ui README</strong></a> for more details) to process data, determine trait associations and fit and vixsualise networks.</li>
+<li><strong>PhyloNetworker_setup.R</strong> : workflow script, sourced to prepare data and associated objects for analysis. <code>{project_ui}</code></li>
 <li><strong>add amniote synonyms.R</strong> : script to extract synonyms from supplied synonym list with <code>Amniote_Databsae</code></li>
 <li><strong>goodmankruskal.R</strong> : GK τ determination workflow for categorical variables.</li>
-<li><strong>helper_functions.R</strong> : project wide helper functions loaded during <code>project_ui</code>.</li>
-<li><strong>impute_mgm.R</strong> : script sourced during <code>mgm</code> wkf to impute missing data prior to mode fitting.</li>
-<li><strong>load_dependencies.R</strong> : script to load dependencies during <code>project_ui</code>.</li>
+<li><strong>helper_functions.R</strong> : project wide helper functions. <code>{project_ui}</code></li>
+<li><strong>impute_mgm.R</strong> : script sourced during <code>mgm</code> wkf to impute missing data prior to mode fitting. <code>{mgm}</code></li>
+<li><strong>load_dependencies.R</strong> : script to load dependencies. <code>{project_ui}</code></li>
 <li><strong>load_environment.R</strong> : script to load wkf environment (functions and perform pre-processing) during <code>project_ui</code>.</li>
-<li><strong>load_files.R</strong> : loads <code>ref_system</code> files</li>
-<li><strong>load_global.R</strong> :</li>
-<li><strong>mgm_dataprep.R</strong> :</li>
-<li><strong>pkgs.R</strong> :</li>
-<li><strong>rerun_phylosig.R</strong> :</li>
-<li><strong>select_tree.R</strong> :</li>
-<li><strong>test_impute.R</strong> :</li>
-<li><strong>test_impute_functions.R</strong> :</li>
-<li><strong>test_impute_tools.R</strong> :</li>
+<li><strong>load_files.R</strong> : loads <code>ref_system</code> files. <code>{project_ui}</code></li>
+<li><strong>load_global.R</strong> : . <code>{project_ui}</code></li>
+<li><strong>mgm_dataprep.R</strong> : sourced data preparation script <code>{mgm}</code></li>
+<li><strong>pkgs.R</strong> : . <code>{project_ui}</code></li>
+<li><strong>rerun_phylosig.R</strong> : script to re-extract lambda for traits using trait pair data subsamples. <code>{phylonetworker}</code></li>
+<li><strong>select_tree.R</strong> : script to select tree. <code>{phylonetworker}</code></li>
+<li><strong>test_impute.R</strong> : test to determine trait contribution to imputation error. Computationally expensive. <code>{mgm}</code></li>
+<li><strong>test_impute_functions.R</strong> : functions required for <code>test_impute.R</code>. <code>{mgm}</code></li>
 </ul></li>
-<li><h3 id="docs"><strong>docs/</strong> :</h3>
-folder to which gh-pages is set. Contains html files comprising public project documentation. Use script <code>render.R</code> to render site.
+<li><h2 id="docs"><strong>docs/</strong></h2>
+<p>folder to which <strong><a href="https://pages.github.com/">gh-pages</a> is set (the project website)</strong>. Contains <strong>html</strong> files comprising <strong>public project documentation</strong>. Use script <code>render.R</code> to render site.</p>
 <ul>
-<li><strong>GoodmanKruskal.nb.html</strong> : GoodmanKruskal workflow documentation.</li>
-<li><strong>Hierarchical_Networks.html</strong> : Theory and <code>R</code> tools behind Hierarchical network analysis. -**Network_</li>
+<li><strong>GoodmanKruskal.nb.html</strong> : <code>goodmankruskal</code> workflow documentation.</li>
+<li><strong>Hierarchical_Networks.html</strong> : Theory and <code>R</code> tools behind Hierarchical network analysis.</li>
+<li><strong>Network_Data_Availability_<code>an.ID</code>.nb.html</strong> : Data availability across all trait pairs in <code>an.ID</code> analytical dataset.</li>
+<li><strong>PhyloNetworker_README.nb.html</strong> : <code>phylonetworker</code> workflow documentation.</li>
+<li><strong>data_gap_eval.nb.html</strong> : analysis of taxonomic bias across trait pair data subsets.</li>
+<li><strong>file_system.html</strong> : project file documentation.</li>
+<li><strong>mgm.html</strong> : <code>mgm</code> workflow documentation.</li>
+<li><strong>mgm_viz.nb.html</strong> : <code>mgm</code> network report &amp; visualisation</li>
+<li><strong>missing_data_thoughts.nb.html</strong> : notes on approaches to deal with missing data.</li>
+<li><strong>pglsPhyloCor_README.nb.html</strong> : <code>pglsPhyloCor()</code> function documenation. Used in <code>phylonetworker</code> wkf.</li>
+<li><strong>project_README.nb.html</strong> : project README.</li>
+<li><strong>project_ui.nb.html</strong> : <code>project_ui.R</code> documentation. Script is sourced to initialise an analysis environment within the project. Environment specified through character strings <code>wkf</code> and <code>param</code>.</li>
+<li><strong>pulling_repo.html</strong> : documentation for making a pull request.</li>
+<li><strong>rmacroRDM.nb.html</strong> : rmacroRDM workflow documentation (needs updating)</li>
 </ul></li>
-<li><h3 id="man"><strong>man/</strong></h3></li>
-<li><h3 id="params"><strong>params/</strong></h3></li>
-<li><h3 id="process"><strong>process/</strong></h3></li>
-<li><h3 id="reports-1"><strong>reports/</strong></h3>
+<li><h2 id="man"><strong>man/</strong></h2>
+<p>Folder contains the <strong>Rmd</strong> files used to produced <strong>html</strong> documentation in <code>docs/</code> folder. Use <strong><code>render.R</code></strong> to render <strong>Rmd</strong>s to <strong>.html</strong>.</p>
 <ul>
-<li><h4 id="results"><strong>results/</strong> :</h4>
+<li><strong>GoodmanKruskal.Rmd</strong> : <code>goodmankruskal</code> workflow documentation.</li>
+<li><strong>Hierarchical_Networks.Rmd</strong> : Theory and <code>R</code> tools behind Hierarchical network analysis.</li>
+<li><strong>Network_Data_Availability_<code>an.ID</code>.Rmd</strong> : Data availability across all trait pairs in <code>an.ID</code> analytical dataset.</li>
+<li><strong>PhyloNetworker_README.Rmd</strong> : <code>phylonetworker</code> workflow documentation.</li>
+<li><strong>file_system.Rmd</strong> : project file documentation.</li>
+<li><strong>missing_data_thoughts.Rmd</strong> : notes on approaches to deal with missing data.</li>
+<li><strong>pglsPhyloCor_README.Rmd</strong> : <code>pglsPhyloCor()</code> function documenation. Used in <code>phylonetworker</code> wkf.</li>
+<li><strong>project_README.Rmd</strong> : project README.</li>
+<li><strong>project_ui.Rmd</strong> : <code>project_ui.R</code> documentation. Script is sourced to initialise an analysis environment within the project. Environment specified through character strings <code>wkf</code> and <code>param</code>.</li>
+<li><strong>pulling_repo.Rmd</strong> : documentation for making a pull request.</li>
+<li><strong>render.R</strong> : documentation render workflow. Batch render and set theme.</li>
+<li><strong>rmacroRDM.Rmd</strong> : rmacroRDM workflow documentation (needs updating).</li>
+</ul></li>
+<li><h2 id="params-project_ui"><strong>params/ {project_ui}</strong></h2>
+<p>scripts to define workflow parameters. Sourced during <code>project_ui</code> by specifying name of file to source through object <code>&quot;param&quot;</code> Create new parametarisation by creating and specifying new parameter scripts scripts or modifying original files and re-running.</p>
+<ul>
+<li><strong>goodmankruskal.R</strong> : goodmankruskal parameters.</li>
+<li><strong>mgm.R</strong> : <code>mgm</code> parameters.</li>
+<li><strong>min.n.test.R</strong> : minimum n test workflow parameters.</li>
+<li><strong>phylonetworker.R</strong> : <code>phylonetworker</code> parameters.</li>
+<li><strong>project_ui.R</strong> : global <code>project_ui</code> parameters.</li>
+<li><strong>rmacro.R</strong> : rmacroRDM parameters.</li>
+<li><strong>var_imput_test.R</strong> : assessment of variable imputation error contribution.</li>
+</ul></li>
+<li><h2 id="process-rmacrordm"><strong>process/ {rmacroRDM}</strong></h2>
+folder containing custom scripts for processing individual rmacroRDM datasets stored in the <strong>csv/</strong> folder. They are sourced when <code>process_csv()</code> is called. Scripts are sourced either:
+<ul>
+<li><strong>pre-processing</strong> : any computation will be performed on the raw data.fame as first loaded from the <strong>pre/</strong> <code>rmacroRDM</code> folder. Processing script names <strong>should be appended with <code>_pre</code></strong>.</li>
+<li><p><strong>post-processing</strong> : any computation will be performed on the data.fame produced post processing, prior to being saved in the <strong>post/</strong> <code>rmacroRDM</code> folder. Processing script are <strong>named as the dataset <code>file.name</code> and appended with <code>_post</code></strong>.</p></li>
+<li><strong>Amniote_Database_Aug_2015_post.R</strong></li>
+<li><strong>Amniote_Database_Aug_2015_pre.R</strong></li>
+<li><strong>Amniote_Database_References_Aug_2015_pre.R</strong></li>
+<li><strong>Amniote_Range_Count_Aug_2015_pre.R</strong></li>
+<li><strong>Table_post.R</strong></li>
+<li><strong>Table_pre.R</strong></li>
+</ul></li>
+<li><h2 id="reports-1"><strong>reports/</strong></h2>
+<ul>
+<li><h3 id="results-1"><strong>results/</strong></h3>
+<p>Folder contains <strong>Rmd</strong> documents used to generate results <strong>html</strong> documents in <strong><code>output.folder</code>/reports/results/</strong>.</p>
 <ul>
 <li><strong>Categorical_phylocors.Rmd</strong> : Report on distribution of expected GKtau between pair of traits simulated from the phylogeny.</li>
-<li><strong>CorNetwork_plots.html</strong> : early report (“nn” trait pairs only) on trait association network structure. Flat network plots.</li>
+<li><strong>CorNetwork_plots.Rmd</strong> : early report (“nn” trait pairs only) on trait association network structure. Flat network plots.</li>
+<li><strong>Network_viz.Rmd</strong> : Vizualisation of phylonetworker networks</li>
 <li><strong>data_gap_eval.Rmd</strong> : Report on data availability across traits. Include assessment of taxonomic distinctness of available trait data subsambles.</li>
 <li><strong>hrg.Rmd</strong> : Demo of fitting a hierarchical graphical model.</li>
 <li><strong>mgm_viz.Rmd</strong> : Visualisation of mixed graphical model (mgm) network</li>
-<li><strong>Network_viz.Rmd</strong> : Vizualisation of phylonetworker networks</li>
 </ul></li>
 </ul></li>
 </ul>
+<hr />
+</div>
+<div id="parameters" class="section level1">
+<h1><strong>parameters</strong></h1>
+<p><br></p>
+<p>Parameters for analysis environments are supplied through scripts in the <strong>params/</strong> folder and called by specifying a <strong><code>param</code></strong> character string of the name of the required <strong>params/</strong> file, e.g.</p>
+<pre class="r"><code>param &lt;- &quot;phylonetworker.R&quot;</code></pre>
+<p>prior to sourcing <code>project_ui.R</code>. The <strong><code>params/project_ui.R</code></strong> is a required global parameter file and is called as part of <code>project_ui</code> sourcing. Please do not delete any files. Add new ones to parametarise your own analysis.</p>
+<div id="project_ui-parameters" class="section level2">
+<h2><code>project_ui</code> parameters:</h2>
+<ul>
+<li><strong>na.strings</strong> : character vector defining values to be encoded as <code>NA</code> when reading <strong>csv</strong>s.</li>
+<li><strong>fileEncoding</strong> : character vector specifying global <code>fileEncoding</code> to be used when reading in csvs in primary workflows. rmacroRDM handles fileEncodings on an individual file basis and is not affected by this setting. But loadiing the master outputs of the <code>rmacroRDM</code> workflow in downstream analysis might required fiddling with this setting (especially for <code>metadata.csv</code> and <code>master.csv</code>). If you’re getting funny characters on check out the <a href="https://annakrystalli.shinyapps.io/fileEncoding_checker/"><strong>fileEncoding_checker</strong></a> to test fileEncoding on your system.</li>
+</ul>
+</div>
+<div id="wkf-parameters" class="section level2">
+<h2><code>wkf</code> parameters:</h2>
+<ul>
+<li><strong>an.ID</strong> : character string identifying analysis. Either <strong><code>&quot;all&quot;</code></strong> to use all available species data or <strong><code>&quot;100spp&quot;</code></strong>, for subsetting data to the 100 species subset defined in <strong>taxo/100spp.csv</strong>.</li>
+<li><strong>min.n</strong> : minimum number of shared datapoints required for a trait pair to be included in association analysis.</li>
+<li><strong>log</strong> : logical, whether to log numeric traits, specified as <code>log.vars</code> through the logical <strong>log</strong> column in <code>metadata.csv</code>.</li>
+<li><strong>cutoff</strong> : cut-off level used to delimit association between trait pairs. Defaults to 0.35</li>
+<li><strong>min.cat</strong> : Minimum accepted count per category. if the count of any category falls below this threshold, categories affected are attempted to be re-encoded as a single “other” category. If this still doesn’t result in &gt; min.cat counts, the affected category and datpoints are removed. Defaults to 5.</li>
+<li><strong>remove_dtips</strong> : whether to remove tips from tree which have resulted as duplicates through matching the taxonomy to the master spp.list. Defaults to <code>T</code> for smooth matching of tree to data. <strong>dist.types</strong> : character vector. Either <strong><code>&quot;all&quot;</code></strong> to incidate inclusion of all distribution (data) types or a vector indicating the <strong><code>&quot;mgm_types&quot;</code></strong> to be included.</li>
+<li><strong>save</strong> : T</li>
+</ul>
+<div id="mgm-parameters" class="section level3">
+<h3>mgm parameters</h3>
+<ul>
+<li><strong>v.p</strong> : proportion of variables to be included in <code>mgm</code> analysis. Variables are selected from a lists of variables ranked according to their cumulative datapoint contribution across all trait pairs.</li>
+<li><strong>s.p</strong> : proportion of species to be included in <code>mgm</code> analysis. Species are selected from a lists of variables ranked according to their cumulative datapoint contribution across all trait pairs.</li>
+</ul>
+</div>
+</div>
 </div>
 
 
