@@ -1,9 +1,9 @@
 ## ----global-setup, echo = F----------------------------------------------
+.rs.restartR()
 rm(list=ls())
 options(stringsAsFactors = F)
 
 wkf = "rmacro"
-param = "rmacro.R"
 
 if(exists("file_setup_path")){}else{
   file_setup_path <- "file_setup.R"
@@ -21,7 +21,8 @@ init_db(data.folder = data.folder,
 ##  ............................................................................
 ##  sys_ref_configurator-app                                                ####
 ## check or update sys_ref files using sys_ref_configurator app
-launch_sr_configurator(sr_configurator, file_setup_path)
+## DEACTIVATED
+# launch_sr_configurator(sr_configurator, file_setup_path)
 
 # ---- load-sy.ref ----
 load_sys.ref(view = F)
@@ -85,7 +86,7 @@ master <- updateMaster(master, output = output)
   
   # ---- save-outputs ----
   write.csv(master$data, file =  paste0(input.folder, "analytical/master.csv"), 
-            row.names = F, fileEncoding = "MAC")
+            row.names = F, fileEncoding = fileEncoding)
   save(master, file = paste(output.folder, "data/master.rda", sep = ""))
   
   
