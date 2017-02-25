@@ -71,7 +71,7 @@ Ideally it is the **path to an Rstudio project**, [**checked out**](http://www.m
 <br>
 
 ## **set up file.system**
-set path to `file_setup.R` script and source
+set path to `file_setup.R` script and source. **NOTE: please do not commit any changes to this file to git! Keep the changes local.**
 ```{r, eval = FALSE}
 file_setup_path <- "file_setup.R"
 source(file_setup_path)
