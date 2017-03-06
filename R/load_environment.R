@@ -4,7 +4,7 @@ if(exists("param")){
 }
 ## ---- source-wkf ----
 ## load_rmacro
-if(exists("wkf") & exists("param")){ 
+if(exists("wkf")){ 
   if(wkf == "rmacro"){
     eval(
       parse(text = 
