@@ -1,0 +1,221 @@
+---
+title: "R06: Var selection / ssd - 2nd stage"
+author: "Anna Krystalli"
+date: "07/04/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+require(ggplot2)
+require(tidyverse)
+
+options(stringsAsFactors = F)
+file_setup_path <- "../../file_setup.R"
+  source(file_setup_path)
+
+dat <- read.csv(paste0(input.folder, "analytical/master wide.csv" ))
+```
+
+
+### Syll.repert =/ song.repert
+```{r}
+p <- ggplot(dat, aes(song.repert, syll.repert))
+p + geom_point() + geom_abline(intercept = 0, slope = 1)
+
+dat %>% select(species, song.repert) %>% filter(song.repert >= 1000)
+
+```
+
+ref to *Toxostoma_rufum* song.reper: http://www2.clarku.edu/faculty/nthompson/1-websitestuff/Texts/1980-1984/Song_variety_in_the_brown_thrasher.pdf
+
+### latdist vs lat
+
+```{r}
+p <- ggplot(dat, aes(migrate.latdist, migrate.dist))
+p + geom_point()
+```
+
+
+### max.long vs long
+
+```{r}
+comp <- gather(dat[,c("species", "long","max.long")], key = "var", value = "value", c(long, max.long))
+comp <- comp[!is.na(comp$value),]
+
+c <- ggplot(comp, aes(factor(var)))
+c + geom_bar()
+
+long.spp <- comp %>% filter(var == "long") %>% select(species) %>% unlist()
+maxlong.spp <- comp %>% filter(var == "max.long") %>% select(species) %>% unlist()
+
+sum(!long.spp %in% maxlong.spp)
+
+```
+
+`max.long` has a few more datapoints than `long` (`r table(comp$var)`). `r sum(!long.spp %in% maxlong.spp)` species in `long` do not have data for `max.long` but the values, while stongly correlated do vary for some species.
+```{r}
+p <- ggplot(dat, aes(max.long, long))
+p + geom_point() + geom_abline(intercept = 0, slope = 1)
+```
+
+### survival vs mortality
+
+```{r}
+mort <- rbind(data.frame(var = "mortality.fa", mortality = dat$mortality.fa, 
+                         survival.a = dat[,"survival.a"]),
+              data.frame(var = "mortality.ma", mortality = dat$mortality.ma, 
+                         survival.a = dat[,"survival.a"]))
+
+p <- ggplot(mort, aes(mortality, survival.a))
+p + geom_point(aes(colour = factor(var)))
+```
+
+```{r}
+mort.dat <- !is.na(mort[is.na(mort$survival.a),"mortality"])
+```
+
+A total of `r sum(mort.dat)` data points split across the two sexes. These could be combined into `r sum(mort.dat)/2` mean across the sexes data points.
+
+```{r}
+c <- ggplot(mort[is.na(mort$survival.a),][mort.dat,], aes(factor(var)))
+c + geom_bar()
+```
+
+
+### bill len
+
+```{r}
+dat$bill.len.mean <- apply(dat[,c("bill.len.sf", "bill.len.sm")], 1, mean)
+p <- ggplot(dat, aes(bill.len.mean, bill.len))
+p + geom_point() + geom_abline(intercept = 0, slope = 1)
+```
+
+`bill.len` indeed appears to be the mean between `bill.len.sf` and `bill.len.sm`. Also appear to be the same sample size. But `bill.len.sf` has data for `r sum(dat$species[!is.na(dat$bill.len.sf)] %in% dat$species[!is.na(dat$bill.len)])` and `bill.len.sm` `r sum(dat$species[!is.na(dat$bill.len.sf)] %in% dat$species[!is.na(dat$bill.len)])` species not contained in `bill.len` (making an additional  `r sum(dat$species[!is.na(dat$bill.len.mean)] %in% dat$species[!is.na(dat$bill.len)])` mean datapoints available to add).
+
+```{r}
+bill.dat <- gather(dat[,c("species", "bill.len","bill.len.sf", "bill.len.sm")], key = "var", value = "value", c(bill.len, bill.len.sf, bill.len.sm))
+bill.dat <- bill.dat[!is.na(bill.dat$value),]
+
+c <- ggplot(bill.dat, aes(factor(var)))
+c + geom_bar()
+```
+
+### brain.mass
+
+Alex (?) you mention having additional brain.mass data? Can add if you like.
+
+
+### tarsus.len
+
+```{r}
+dat$tarsus.len.mean <- apply(dat[,c("tarsus.f", "tarsus.m")], 1, mean)
+p <- ggplot(dat, aes(tarsus.len.mean, tarsus.len))
+p + geom_point() + geom_abline(intercept = 0, slope = 1)
+```
+
+`tarsus.len` indeed appears to be the mean between `tarsus.f` and `tarsus.m`. `tarsus.f` has data for `r sum(dat$species[!is.na(dat$tarsus.f)] %in% dat$species[!is.na(dat$tarsus.len)])` and `tarsus.m` for `r sum(dat$species[!is.na(dat$tarsus.m)] %in% dat$species[!is.na(dat$tarsus.len)])` species not contained in `tarsus.len` (making an additional  `r sum(dat$species[!is.na(dat$tarsus.len.mean)] %in% dat$species[!is.na(dat$tarsus.len)])` mean datapoints available to add).
+
+```{r}
+tarsus.dat <- gather(dat[,c("species", "tarsus.len","tarsus.f", "tarsus.m")], key = "var", value = "value", c(tarsus.len, tarsus.f, tarsus.m))
+tarsus.dat <- tarsus.dat[!is.na(tarsus.dat$value),]
+
+c <- ggplot(tarsus.dat, aes(factor(var)))
+c + geom_bar()
+```
+
+### tail.len
+
+```{r}
+dat$tail.len.mean <- apply(dat[,c("tail.af", "tail.am")], 1, mean)
+dat$tail.len <- dat$tail.len
+p <- ggplot(dat, aes(tail.len.mean, tail.len))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+```
+
+`tail.len` indeed appears to be the mean between `tail.af` and `tail.am`. `tail.af` has data for `r sum(dat$species[!is.na(dat$tail.af)] %in% dat$species[!is.na(dat$tail.len)])` and `tail.am` for `r sum(dat$species[!is.na(dat$tail.am)] %in% dat$species[!is.na(dat$tail.len)])` species not contained in `tail.len` (making an additional  `r sum(dat$species[!is.na(dat$tail.len.mean)] %in% dat$species[!is.na(dat$tail.len)])` mean datapoints available to add).
+
+```{r}
+tail.dat <- gather(dat[,c("species", "tail.len","tail.af", "tail.am")], key = "var", value = "value", c(tail.len, tail.af, tail.am))
+tail.dat <- tail.dat[!is.na(tail.dat$value),]
+
+
+c <- ggplot(tail.dat, aes(factor(var)))
+c + geom_bar()
+```
+
+
+### Urop.size vs urop.mass
+
+Not sure how to supplement one with data from the other as one is mass ($g$) and the other volume ($mm^3$) and it's not that clear that the relationship is linear. 
+
+```{r}
+dat$uropyg.size <- dat$uropyg.size/1000
+urop.dat <- gather(dat[,c("species", "uropyg.size","uropyg.mass")], key = "var", value = "value", c(uropyg.size,uropyg.mass))
+urop.dat <- urop.dat[!is.na(urop.dat$value),]
+
+
+c <- ggplot(urop.dat, aes(factor(var)))
+c + geom_bar()
+
+p <- ggplot(dat, aes(uropyg.size,uropyg.mass))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+
+
+```
+
+### wing.len
+
+```{r}
+dat$wing.len.mean <- apply(dat[,c("wing.af", "wing.am")], 1, mean)
+dat$wing.len <- dat$wing.len * 1000
+p <- ggplot(dat, aes(wing.len.mean, wing.len))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+```
+
+`wing.len` indeed appears to be the mean between `wing.af` and `wing.am`. `wing.af` has data for `r sum(dat$species[!is.na(dat$wing.af)] %in% dat$species[!is.na(dat$wing.len)])` and `wing.am` for `r sum(dat$species[!is.na(dat$wing.am)] %in% dat$species[!is.na(dat$wing.len)])` species not contained in `wing.len` (making an additional  `r sum(dat$species[!is.na(dat$wing.len.mean)] %in% dat$species[!is.na(dat$wing.len)])` mean datapoints available to add).
+
+```{r}
+wing.dat <- gather(dat[,c("species", "wing.len","wing.af", "wing.am")], key = "var", value = "value", c(wing.len, wing.af, wing.am))
+wing.dat <- wing.dat[!is.na(wing.dat$value),]
+
+
+c <- ggplot(wing.dat, aes(factor(var)))
+c + geom_bar()
+
+p <- ggplot(dat, aes(wing.af, wing.am))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+
+p <- ggplot(dat, aes(wing.len, wing.am))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+
+p <- ggplot(dat, aes(wing.len, wing.af))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+
+```
+
+#### vs body.size
+
+```{r}
+p <- ggplot(dat, aes(body.mass, wing.len))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+
+p <- ggplot(dat, aes(body.mass, wing.am))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+
+p <- ggplot(dat, aes(body.mass, wing.af))
+p + geom_point() + geom_abline(intercept = 0, slope = 1) 
+```
+
+
+### Body.mass corrections
+
+Still need to decide on what to do about `bmr`, `tcell.a`, `tcell.n`
+
+
+### Genetic variables
+
+I see Alejandro has noted objections at deleting the well sampled variables. Keep them?

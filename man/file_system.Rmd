@@ -109,7 +109,7 @@ Information regarding the project and data, including admin. Includes action pla
 
 - ### **reports/**
     - #### **progress reports/** : 
-      Rendered (html) progress reports 01-05 and associated files
+      Rendered (html) progress reports 01-06 and associated files
     - #### **Results/** : 
       Rendered (html) results reports
         - **Categorical_phylocors.nb.html** : Report on distribution of expected GKtau between pair of traits simulated from the phylogeny. 
