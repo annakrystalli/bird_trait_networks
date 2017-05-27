@@ -11,6 +11,7 @@ source(paste(script.folder, "R/pkgs.R", sep = ""))
 ## ---- lg-load_pkgs ----
 #' install and load dependencies through pkg "pacman"
 if (!require("pacman")) install.packages("pacman")
+pacman::p_unload(pacman::p_loaded(), character.only = T)
 pacman::p_load(pkgs, character.only = T)
 
 
