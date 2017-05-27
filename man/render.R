@@ -98,8 +98,27 @@ file <- "project_README.Rmd"
   
   source(paste0(script.folder, "params/phylonetworker.R"))
   file <- "Network_viz.Rmd"
-  render(paste("reports/results/", file, sep =""), output_format = "html_notebook",
-         output_file = paste(output.folder,"Reports/Results/",gsub(".Rmd", paste0("_",an.ID), 
-                                                                   file), ".nb.html", sep =""))
-
+  for(an.ID in c("all", "100spp")){
+    for(edge_det in c("p-value", "phylocor")){
+      for(node_colour in c("module", "cat")){
+        render(paste("reports/results/", file, sep =""), 
+               output_format = "html_notebook",
+               #output_options = list(theme = theme),
+               output_file = paste(output.folder,"Reports/Results/network_visualisations/",
+                                   gsub(".Rmd", paste0("_",an.ID,
+                                                       "_net_mn", min.n, 
+                                                       "_", edge_det,
+                                                       "_node-col-", node_colour,
+                                                       if(alco){"_alco_"},
+                                                       if(log){"_log"}), 
+                                        file), ".nb.html", sep =""),
+               params = list(wkf = "phylonetworker",
+                             param = "phylonetworker.R",
+                             file_setup_path = "~/Documents/workflows/bird_trait_networks/file_setup.R",
+                             an.ID = an.ID, edge_det = edge_det,
+                             node_colour = node_colour))
+      }
+    }
+  }
+  
   
