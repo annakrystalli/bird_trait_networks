@@ -1,5 +1,5 @@
 ## ----global-setup, echo = F----------------------------------------------
-rm(list=ls())
+rm(list = ls(all.names = T))
 options(stringsAsFactors = F)
 .rs.restartR()
 
