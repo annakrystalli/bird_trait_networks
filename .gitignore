@@ -24,4 +24,5 @@ workflows/
 reports/render_te*
 reports/progress reports/*/*
 reports/progress reports/*/*.Rmd
+data/
 
