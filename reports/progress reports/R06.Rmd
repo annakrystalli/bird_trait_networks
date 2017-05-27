@@ -219,3 +219,43 @@ Still need to decide on what to do about `bmr`, `tcell.a`, `tcell.n`
 ### Genetic variables
 
 I see Alejandro has noted objections at deleting the well sampled variables. Keep them?
+
+> DELETE (Roger wins)
+
+
+
+
+
+### growth rate untis?
+
+It seems the are proportional increases so they are standardised already right? So no allometric correction.
+
+```{r}
+unique(dat$growth.rate)
+```
+
+
+### porosity?
+
+Does not appear proportional. Unit description:
+
+function of $(r + d)/r$  where:
+
+  - $2r$: width  
+  - $2d$: scaping 
+of the barbs and of barbules.
+
+so `TRUE` to allometric correction?
+
+```{r}
+unique(dat$porosity.v1)
+```
+
+```{r}
+unique(dat$porosity.v8)
+```
+
+
+
+
+
