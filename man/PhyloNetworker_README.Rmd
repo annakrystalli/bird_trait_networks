@@ -28,9 +28,13 @@ source(paste0(script.folder, "R/Phylonetworker_functions.R"))
 
 # **setup**
 
-First clear the workflow and set up the file system by **providing the path to `file_setup.R`**. Make sure `file_setup.R` also contains valid paths to the project files. 
-#### clear the workflow
+First clear the workflow and set up the file system by **providing the path to `file_setup.R`**. Make sure `file_setup.R` also contains valid paths to the project files.
+
+
 ```{r pn-clear-wkf, eval=FALSE}
+
+```
+```{r pn-setup, message=FALSE, warning=FALSE}
 
 ```
 
@@ -39,7 +43,7 @@ First clear the workflow and set up the file system by **providing the path to `
 ## Call project_ui
 
 To parametarise the analysis, `wkf` is set to **`"PhyloNetworker.R"`** and `param` to **`"phylonetworker.R"`**.
-```{r pn-setup, message=FALSE, warning=FALSE}
+```{r pn-project-ui, warning=FALSE}
 
 ```
 
@@ -224,7 +228,8 @@ kable(head(format(TDdf, digits = 2)))
 ```
 
 
-### Extract or load allometrically corrected residuals
+### Extract or load allometrically corrected residuals. 
+(Although created, currently this isn't used in the analysis. On hold to further notice)
 ```{r pn-alco-correct, eval=FALSE}
 
 ```
