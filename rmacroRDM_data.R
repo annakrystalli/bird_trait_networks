@@ -70,6 +70,17 @@ master <- updateMaster(master, output = output)
   spp.list <- output$spp.list
   
   # ---- post-process ----
+  # convert wing.a* variables from mm to m to merge with wing.len during
+  # Phylonetworker setup
+  master$data[
+    master$data$var %in% c("wing.af", "wing.am"),
+    "value"] <- master$data[
+      master$data$var %in% c("wing.af", "wing.am"),
+      "value"]/1000
+  sr$metadata[sr$metadata$code %in% c("wing.af", "wing.am"), "units"] <- "m"
+  write.csv(sr$metadata, ds$metadata.path, na = "", 
+            fileEncoding = sr$fileEncodings["metadata", "encoding"])
+  
   # remove outliers
   outliers <- read.csv(paste0(ds$input.folder, "metadata/outliers.csv"))
   outliers$data.ID <- "D0"
@@ -95,6 +106,5 @@ master <- updateMaster(master, output = output)
                       add.taxo = T)
   
   
-  write.csv(wide, file =   paste0(input.folder, "analytical/master wide.csv"), row.names = F, 
-            fileEncoding = ds$fileEncoding)
+  write.csv(wide, file =   paste0(input.folder, "analytical/master wide.csv"), row.names = F)
   
