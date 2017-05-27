@@ -23,21 +23,25 @@ source(paste0(script.folder, "R/Phylonetworker_functions.R"))
 ```
 
 ***
+
 <br>
 
 # **setup**
 
-First set up the file system by **providing the path to `file_setup.R`**. Make sure `file_setup.R` also contains valid paths to the project files. 
-
-To parametarise the analysis, `wkf` is set to **`"PhyloNetworker.R"`** and `param` to **`"phylonetworker.R"`**.
-
-```{r pn-setup}
+First clear the workflow and set up the file system by **providing the path to `file_setup.R`**. Make sure `file_setup.R` also contains valid paths to the project files. 
+#### clear the workflow
+```{r pn-clear-wkf, eval=FALSE}
 
 ```
 
 <br>
 
 ## Call project_ui
+
+To parametarise the analysis, `wkf` is set to **`"PhyloNetworker.R"`** and `param` to **`"phylonetworker.R"`**.
+```{r pn-setup, message=FALSE, warning=FALSE}
+
+```
 
 Next initialise the analysis by calling **`project_ui`**. This script calls a number of ***global*** and ***analysis specific*** setup scripts (for details see [**`project_ui_README`**](http://annakrystalli.github.io/bird_trait_networks/project_ui.nb.html)), including:
 
@@ -55,23 +59,19 @@ Next initialise the analysis by calling **`project_ui`**. This script calls a nu
 
 You don't need to worry about running this, calling `project_ui` does. But I'm just running through it so you understand how the data and objects used in the analysis have been processed and created.
 
-#### First, `log.vars` are extacted from `metadata.csv`
-
-```{r pns-get-log.vars, eval=FALSE}
-
-```
-
-#### Files required for the analysis are loaded or created:
+#### First, files required for the analysis are loaded or created:
 ```{r pns-load-files, eval=FALSE}
 
 ```
 
-These including:
+These include:
 
 - **`wide`:** trait data in wide format (output of `match_workflow.R`)
 - **`spp100`:** list of 100 species names for subset analysis
 - **`tree`:** the phylogenetic tree 
-- **`phylo.match`** taxonomic reference table linking species in tree to the data. 
+- **`phylo.match`** taxonomic reference table linking species in tree to the data.
+- **`pro.pars`:** processing parameters for combining mean and individual sex data.
+- **`alco.vars:`** (created) vector of variables to be allometrically corrected.
 
 #### Prepare taxonomic & phylogenetic objects
 ```{r pns-remove-dup-dftips, eval=FALSE}
@@ -81,7 +81,25 @@ These including:
 - remove species in wide data that correnspond to duplicate tree tip synonyms. This is to ensure smooth alignment of the tree with the trait data.
 - trim tree to species list in de-duplicated data.
 
-Next, tree tip labeles are renamed to match data taxonomy
+#### Merge mean and sexed traits and remove excluded traits
+
+Use parameters in `proc.pars` which specifies which traits to be used as primary and which to be used to supplement to merge into single trait. Also create `.ssd` (sex dimorphism traits) from sexed traits using equation: `trait`.ssd $= log(M/F)$
+```{r pns-sex-data-merge, eval=FALSE}
+
+```
+
+`sex_data_merge function`
+```{r}
+sex_data_merge
+```
+
+Use parameters in `proc.pars` to exclude indicated traits
+```{r pns-var.delete, eval=FALSE}
+
+```
+
+#### Rename tree tip labels and create `spp.list`
+Next, tree tip labels are renamed to match data taxonomy
 ```{r pns-rename-tip.labels, eval=FALSE}
 
 ```
@@ -98,6 +116,22 @@ and `spp.list` is created
 
 ```
 
+#### Create analysis metadata
+
+Subsets metadata to traits included in analysis. Creates metadata rows for merged and `.ssd` traits.
+```{r pns-create-analysis-metadata, eval=FALSE}
+
+```
+
+
+
+#### `log.vars` are extacted from `an_meta`
+
+```{r pns-get-log.vars, eval=FALSE}
+
+```
+
+
 #### Create data type reference objects
 ```{r pns-create-ref.obj, eval=FALSE}
 
@@ -109,6 +143,17 @@ head(vg)
 ```
 - **`ms_vars`:** character vector containing all unique trait names available for analysis.
 
+#### Trim `data` and `an_meta` to `ms_vars` traits
+```{r pns-trim-data, eval=FALSE}
+
+```
+
+#### Correct categories in factor traits which are not integers
+```{r pns-correct-cat, eval=TRUE}
+
+```
+
+#### create reference objects
 ```{r pns-types-ref}
 
 ```
@@ -137,17 +182,10 @@ head(meta_types)
 head(mgm_types)
 ```
 
+#### Center numeric data
 
-#### load / get trait taxonomic diversity profiles.
+```{r pns-center_dt}
 
-This chunck calculates the taxonomic diversity of subsamples dictated by data availability by trait. For each trait, the expected taxonic distinctness from a random subsample of the full pool of species of size $n_{trait}$
-
-```{r pns-get-TD, eval=FALSE}
-
-```
-
-```{r}
-kable(head(format(TDdf, digits = 2)))
 ```
 
 #### Create master analysis reference objects
@@ -171,6 +209,25 @@ head(spp.ranks)
 <br>
 
 # **Edge determinations**
+
+
+#### load / get trait taxonomic diversity profiles.
+
+This chunck calculates the taxonomic diversity of subsamples dictated by data availability by trait. For each trait, the expected taxonic distinctness from a random subsample of the full pool of species of size $n_{trait}$
+
+```{r pn-get-TD, eval=TRUE}
+
+```
+
+```{r}
+kable(head(format(TDdf, digits = 2)))
+```
+
+
+### Extract or load allometrically corrected residuals
+```{r pn-alco-correct, eval=FALSE}
+
+```
 
 
 ### Create `vg_dt`
@@ -237,7 +294,7 @@ Edge determination for `pair.type = "cc"` proceeds in two steps
 ```
 
 ```{r}
-kable(head(res))
+kable(head(res), row.names = F, digits =2)
 ```
 
 ***
@@ -246,39 +303,53 @@ kable(head(res))
 
 # **Network analysis**
 
-First subset edges to include only edges where determination did not result in error and with weights greater than `cutoff` = `r cutoff`. 
+Perform network analysis. The workflow uses the function `rnetcarto::netcarto()`. See further details on the [package](https://cran.r-project.org/web/packages/rnetcarto/vignettes/getting-started.html) and [theory](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2151742/). 
 
-```{r pn-sub-res, eval=FALSE}
-
-```
-
-Then perform network analysis. The workflow uses the function `rnetcarto::netcarto()`. See further details on the [package](https://cran.r-project.org/web/packages/rnetcarto/vignettes/getting-started.html) and [theory](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2151742/). 
-
-```{r pn-network, eval=FALSE}
+```{r pn-run-netcarto, eval=FALSE}
 
 ```
 
-The results are saved as the output of the `rnetcarto()` function and also collapsed into a single data.frame and saved as a csv. 
+The results are saved as the output of the `rnetcarto()` function and also collapsed into a single data.frame, appended with some useful trait level details, and saved as a `.csv` on folder **outputs/data/networks/. A `...net-stats.csv` containing network level statistics is also saved.
 
-Here's an example of the collapsed data.frame output
+Here's an example of the data.frame output. See **`NetworkViz.html`** for details or resulting data. 
 
-```{r, echo=FALSE}
-net.dat <- read.csv(paste(output.folder, "data/networks/", an.ID,"_net_mn", min.n, 
-                  if(log){"_log"},".csv", sep = ""))
-```
 ```{r}
-kable(head(net.dat))
+kable(head(run_netcarto(res, edge_det = "phylocor", alco, save = F)), 
+      row.names = F, digits =2)
 ```
 
 ## Visualise network
 
-To visualise the network analysis, render the `.Rmd` report [`"reports/results/Network_viz.Rmd""`](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Network_viz.Rmd)
+To visualise the network analysis, render the `.Rmd` report [`"reports/results/Network_viz.Rmd""`](https://github.com/annakrystalli/bird_trait_networks/blob/master/reports/results/Network_viz.Rmd). 
+
+Four reports are produced for each `an.ID` (total 8). A combination of each of determining network edges on the basis of either `"phylocor"` or `"p-value"`, and of displaying the resulting networks with nodes coloured according to either `"cat"` or `"module"`. Results reports are in the googledrive folder: **outputs/Reports/Results/network_visualisations/**.
 
 ```{r, eval=FALSE}
 require(rmarkdown)
-file <- "Network_viz.Rmd"
-render(paste("reports/results/", file, sep =""), output_format = "html_notebook",
-       output_file = paste(output.folder,"reports/results/",gsub(".Rmd", paste0("_",an.ID), 
-                                                         file), ".nb.html", sep =""))
+  file <- "Network_viz.Rmd"
+  for(an.ID in c("all", "100spp")){
+    for(edge_det in c("p-value", "phylocor")){
+      for(node_colour in c("module", "cat")){
+        render(paste("reports/results/", file, sep =""), 
+               output_format = "html_notebook",
+               #output_options = list(theme = theme),
+               output_file = paste(output.folder,"Reports/Results/network_visualisations/",
+                                   gsub(".Rmd", paste0("_",an.ID,
+                                                       "_net_mn", min.n, 
+                                                       "_", edge_det,
+                                                       "_node-col-", node_colour,
+                                                       if(alco){"_alco_"},
+                                                       if(log){"_log"}), 
+                                        file), ".nb.html", sep =""),
+               params = list(wkf = "phylonetworker",
+                             param = "phylonetworker.R",
+                             file_setup_path = "~/Documents/workflows/bird_trait_networks/file_setup.R",
+                             an.ID = an.ID, edge_det = edge_det,
+                             node_colour = node_colour))
+      }
+    }
+  }
 ```
+
+
 

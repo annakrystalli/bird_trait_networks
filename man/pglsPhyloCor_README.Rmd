@@ -7,7 +7,7 @@ output:
 ---
 ## pglsPhyloCor function
 
-The phylocors function calculates **phylogenetically corrected correlations** between pairs of traits (defined by the *character vector of the trait names* supplied to argument `pair`), which are then used as edge weights in the network. The method is determined by the argument `pair.types`. 
+The phylocors function calculates **phylogenetically corrected correlations** between pairs of traits (defined by the *character vector of the trait names* supplied to argument `pair`), which are then used as edge weights in the network. The method is determined by the argument `pair.types`. If the analysis has already been run for a particular pair trait, an output has been saved in **`script.folder` data/phy_models/** (files too large so currently I keep the data locally) and argument **`overwite = F`**, the function just loads model and extracts data.
 
   - `"nn"`: numeric vs numeric (includes poisson). If `log = T`, data for traits defined in `log.vars` are logged. Method uses `pgls()`.
   - `"nc"`: numeric vs categorical. (variables must be provided in the order "nc" in `data`). Method uses `pgls()`
