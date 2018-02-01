@@ -4,7 +4,7 @@ rm(list = ls(all.names = T))
 
 # ---- pn-setup ----
 if(exists("file_setup_path")){}else{
-  file_setup_path <- "~/Documents/workflows/bird_trait_networks/file_setup.R"
+  file_setup_path <- paste0(here::here(), "file_setup.R")
   source(file_setup_path)}
 wkf = "phylonetworker"
 param = "phylonetworker.R"
